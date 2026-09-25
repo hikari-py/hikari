@@ -8894,6 +8894,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         """Create a scheduled stage event.
@@ -8918,6 +8919,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -8962,6 +8965,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         """Create a scheduled voice event.
@@ -8986,6 +8990,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9030,6 +9036,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         """Create a scheduled external event.
@@ -9054,6 +9061,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9097,6 +9106,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         """Edit a scheduled event.
@@ -9137,6 +9147,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             `SCHEDULED` events can be set to `ACTIVE` and `CANCELED`.
             `ACTIVE` events can only be set to `COMPLETED`.
+        recurrence_rule
+            If provided, the new rule for how often this event should recur.
+            If [`None`][], the recurrence rule will be removed.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
