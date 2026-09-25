@@ -168,17 +168,20 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
-        await shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute)
-
-        _LOGGER.log(
-            ux.TRACE,
-            "waiting for voice events for connecting to voice channel %s in %s via shard %s",
-            channel,
-            guild,
-            shard_id,
-        )
-
         try:
+            # The shard may hold this back until it reconnects, so it counts towards the timeout too
+            await asyncio.wait_for(
+                shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute), timeout=timeout
+            )
+
+            _LOGGER.log(
+                ux.TRACE,
+                "waiting for voice events for connecting to voice channel %s in %s via shard %s",
+                channel,
+                guild,
+                shard_id,
+            )
+
             state_event, server_event = await asyncio.gather(
                 # Voice state update:
                 self._app.event_manager.wait_for(

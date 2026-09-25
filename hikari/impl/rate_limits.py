@@ -109,12 +109,15 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         being rate limited.
         """
 
-    @typing_extensions.override
-    def close(self) -> None:
-        """Close the rate limiter, and shut down any pending tasks."""
+    def _cancel_throttle_task(self) -> None:
         if self.throttle_task is not None:
             self.throttle_task.cancel()
             self.throttle_task = None
+
+    @typing_extensions.override
+    def close(self) -> None:
+        """Close the rate limiter, and shut down any pending tasks."""
+        self._cancel_throttle_task()
 
         failed_tasks = 0
         while self.queue:
@@ -127,6 +130,28 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             _LOGGER.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
             _LOGGER.debug("%s rate limiter closed", self.name)
+
+    def drop(self, exception: Exception) -> None:
+        """Drop all queued futures, failing them with the given exception.
+
+        Parameters
+        ----------
+        exception
+            The exception to fail the queued futures with.
+        """
+        self._cancel_throttle_task()
+
+        dropped = 0
+        while self.queue:
+            future = self.queue.pop(0)
+
+            # The waiter may have been cancelled while queued
+            if not future.done():
+                future.set_exception(exception)
+                dropped += 1
+
+        if dropped:
+            _LOGGER.debug("%s rate limiter dropped %s pending tasks: %s", self.name, dropped, exception)
 
     @property
     def is_empty(self) -> bool:
@@ -426,8 +451,14 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
                 await asyncio.sleep(sleep_for)
 
             while self.remaining > 0 and self.queue:
+                future = self.queue.pop(0)
+
+                # The waiter may have been cancelled while queued
+                if future.done():
+                    continue
+
                 self.remaining -= 1
-                self.queue.pop(0).set_result(None)
+                future.set_result(None)
 
         self.throttle_task = None
 

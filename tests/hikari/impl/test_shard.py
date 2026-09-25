@@ -24,6 +24,7 @@ import asyncio
 import contextlib
 import datetime
 import importlib.util
+import itertools
 import platform
 import re
 import sys
@@ -38,6 +39,7 @@ from hikari import intents
 from hikari import presences
 from hikari import urls
 from hikari.impl import config
+from hikari.impl import rate_limits
 from hikari.impl import shard
 from hikari.api import shard as shard_api
 from hikari.internal import aio
@@ -698,8 +700,8 @@ class TestGatewayShardImplAsync:
         join.assert_not_called()
         cancel_async_mock.assert_called_once_with()
         keep_alive_task.assert_awaited_once()
-        client._non_priority_rate_limit.close.assert_called_once_with()
-        client._total_rate_limit.close.assert_called_once_with()
+        client._non_priority_rate_limit.close.assert_not_called()
+        client._total_rate_limit.close.assert_not_called()
 
     async def test_join_when_not_alive(self, client):
         client._keep_alive_task = None
@@ -721,6 +723,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=True))
         data = object()
 
         await client._send_json(data)
@@ -728,11 +731,13 @@ class TestGatewayShardImplAsync:
         client._non_priority_rate_limit.acquire.assert_awaited_once_with()
         client._total_rate_limit.acquire.assert_awaited_once_with()
         client._ws.send_json.assert_awaited_once_with(data)
+        client._handshake_event.wait.assert_not_called()
 
     async def test__send_json_when_priority(self, client):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
         data = object()
 
         await client._send_json(data, priority=True)
@@ -740,6 +745,206 @@ class TestGatewayShardImplAsync:
         client._non_priority_rate_limit.acquire.assert_not_called()
         client._total_rate_limit.acquire.assert_awaited_once_with()
         client._ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_disconnected_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        ws = mock.AsyncMock()
+        data = object()
+
+        async def wait():
+            # Simulate a reconnect finishing while we wait
+            client._ws = ws
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        client._handshake_event.wait.assert_called_once_with()
+        assert client._non_priority_rate_limit.acquire.await_count == 2
+        assert client._total_rate_limit.acquire.await_count == 2
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_new_session_started_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        client._session_id = "old session"
+        client._shard_id = 20
+
+        async def wait():
+            client._ws = mock.AsyncMock()
+            client._session_id = "new session"
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.SessionInvalidatedError, match="shard 20 started a new session"):
+            await client._send_json(object())
+
+        client._ws.send_json.assert_not_called()
+
+    async def test__send_json_when_shard_shuts_down_while_waiting(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = event_loop.create_future()
+        event_loop.call_soon(client._keep_alive_task.set_result, None)
+
+        async def wait():
+            await asyncio.sleep(100)
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="has shut down"):
+            await client._send_json(object())
+
+        client._handshake_event.wait.assert_called_once_with()
+
+    async def test__send_json_when_disconnected_again_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        ws = mock.AsyncMock()
+        data = object()
+        waits = 0
+
+        async def wait():
+            nonlocal waits
+            waits += 1
+            # The first reconnect drops again before we get to send, the second one sticks
+            if waits == 2:
+                client._ws = ws
+                client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        assert client._handshake_event.wait.call_count == 2
+        assert client._non_priority_rate_limit.acquire.await_count == 3
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_dropped_while_queued(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock(
+            acquire=mock.AsyncMock(side_effect=[shard._DisconnectedError, None])
+        )
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        ws = mock.AsyncMock()
+        data = object()
+
+        async def wait():
+            client._ws = ws
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        client._handshake_event.wait.assert_called_once_with()
+        assert client._non_priority_rate_limit.acquire.await_count == 2
+        # First attempt never reached the total rate limit
+        client._total_rate_limit.acquire.assert_awaited_once_with()
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_shard_shuts_down_after_wait(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = event_loop.create_future()
+        client._session_id = "some session"
+        client._shard_id = 20
+
+        async def wait():
+            # Shut down while waiting, same session
+            client._keep_alive_task.set_result(None)
+            await asyncio.sleep(100)
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="shard 20 has shut down"):
+            await client._send_json(object())
+
+        # Must not acquire again
+        client._non_priority_rate_limit.acquire.assert_awaited_once_with()
+
+    async def test__send_json_with_real_rate_limits_when_shard_shuts_down_while_waiting(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._shard_id = 20
+        client._session_id = "some session"
+        client._handshake_event = asyncio.Event()
+        client._ws = None
+        client._non_priority_rate_limit.move_window(time.time())
+        client._non_priority_rate_limit.remaining = 0
+
+        async def keep_alive():
+            await asyncio.sleep(0)
+            # Mimic `_keep_alive` cleanup on shutdown
+            client._handshake_event.clear()
+            client._total_rate_limit.drop(shard._DisconnectedError())
+            client._non_priority_rate_limit.drop(shard._DisconnectedError())
+
+        client._keep_alive_task = event_loop.create_task(keep_alive())
+
+        with pytest.raises(errors.ComponentStateConflictError, match="shard 20 has shut down"):
+            await asyncio.wait_for(client._send_json(object()), timeout=1)
+
+        assert client._non_priority_rate_limit.queue == []
+        assert client._total_rate_limit.queue == []
+
+    async def test__send_json_with_real_rate_limits_when_resumed_while_waiting(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._session_id = "some session"
+        client._handshake_event = asyncio.Event()
+        client._ws = None
+        ws = mock.AsyncMock()
+        data = object()
+        client._non_priority_rate_limit.move_window(time.time())
+        client._non_priority_rate_limit.remaining = 0
+
+        async def keep_alive():
+            await asyncio.sleep(0)
+            # Mimic a disconnect, then a resume
+            client._total_rate_limit.drop(shard._DisconnectedError())
+            client._non_priority_rate_limit.drop(shard._DisconnectedError())
+            await asyncio.sleep(0)
+            client._total_rate_limit.move_window(time.time())
+            client._non_priority_rate_limit.move_window(time.time())
+            client._ws = ws
+            client._handshake_event.set()
+            await asyncio.sleep(100)
+
+        client._keep_alive_task = event_loop.create_task(keep_alive())
+
+        try:
+            await asyncio.wait_for(client._send_json(data), timeout=1)
+        finally:
+            client._keep_alive_task.cancel()
+
+        ws.send_json.assert_awaited_once_with(data)
+        assert client._non_priority_rate_limit.queue == []
+        assert client._total_rate_limit.queue == []
+
+    async def test__send_json_when_shard_not_running(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = None
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="has shut down"):
+            await client._send_json(object())
+
+        client._handshake_event.wait.assert_not_called()
 
     async def test_request_guild_members_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
         client._intents = intents.Intents.GUILD_INTEGRATIONS
@@ -893,6 +1098,17 @@ class TestGatewayShardImplAsync:
         send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
         check_if_alive.assert_called_once_with()
 
+    async def test_update_presence_when_session_invalidated(self, client):
+        # The presence is stored before sending, so IDENTIFY already carried it
+        with mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload") as presence:
+            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected"):
+                with mock.patch.object(
+                    shard.GatewayShardImpl, "_send_json", side_effect=errors.SessionInvalidatedError("nope")
+                ) as send_json:
+                    await client.update_presence(status=presences.Status.IDLE)
+
+        send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
+
     async def test_update_voice_state(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
             with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
@@ -958,6 +1174,8 @@ class TestGatewayShardImplAsync:
         client._gateway_url = "wss://somewhere.com?somewhere=true"
         client._resume_gateway_url = None
         client._token = "sometoken"
+        client._total_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
         client._seq = None
@@ -989,6 +1207,7 @@ class TestGatewayShardImplAsync:
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
         stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
+        stack.enter_context(mock.patch.object(time, "time", return_value=123456))
         stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
         stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
         stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
@@ -1018,6 +1237,10 @@ class TestGatewayShardImplAsync:
         )
         heartbeat.assert_called_once_with(0.01)
 
+        client._total_rate_limit.move_window.assert_called_once_with(123456)
+        client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
+        client._total_rate_limit.drop.assert_not_called()
+        client._non_priority_rate_limit.drop.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {
@@ -1036,7 +1259,8 @@ class TestGatewayShardImplAsync:
                     "capabilities": 32768,
                     "presence": serialize_and_store_presence_payload.return_value,
                 },
-            }
+            },
+            priority=True,
         )
 
         assert shield.call_count == 2
@@ -1053,6 +1277,8 @@ class TestGatewayShardImplAsync:
         client._gateway_url = "wss://somewhere.com?somewhere=false"
         client._resume_gateway_url = "wss://notsomewhere.com?somewhere=true"
         client._token = "sometoken"
+        client._total_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
         client._seq = 1234
@@ -1079,6 +1305,7 @@ class TestGatewayShardImplAsync:
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
         stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
+        stack.enter_context(mock.patch.object(time, "time", return_value=123456))
 
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
@@ -1104,9 +1331,13 @@ class TestGatewayShardImplAsync:
         )
         heartbeat.assert_called_once_with(0.01)
 
+        client._total_rate_limit.move_window.assert_called_once_with(123456)
+        client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
+        client._total_rate_limit.drop.assert_not_called()
+        client._non_priority_rate_limit.drop.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
-            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}
+            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
         )
 
         assert shield.call_count == 2
@@ -1135,8 +1366,235 @@ class TestGatewayShardImplAsync:
             code=1002, message=b"Expected HELLO op"
         )
 
-    @pytest.mark.skip("TODO")
-    async def test__keep_alive(self, client): ...
+    def _prepare_keep_alive(self, client):
+        client._logger = mock.Mock()
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=True))
+        client._event_manager.dispatch = mock.AsyncMock()
+        client._total_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
+
+    def _assert_keep_alive_dropped_queues(self, client, times):
+        for rate_limit in (client._total_rate_limit, client._non_priority_rate_limit):
+            assert rate_limit.drop.call_count == times
+            assert all(isinstance(call.args[0], shard._DisconnectedError) for call in rate_limit.drop.call_args_list)
+
+    async def test__keep_alive(self, client):
+        event_loop = asyncio.get_running_loop()
+        ws = mock.AsyncMock()
+        running_task = event_loop.create_task(asyncio.sleep(100))
+        done_task = event_loop.create_task(asyncio.sleep(0))
+        await done_task
+        self._prepare_keep_alive(client)
+
+        def connect():
+            client._ws = ws
+            return (running_task, done_task)
+
+        stack = contextlib.ExitStack()
+        connect = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_connect", side_effect=connect))
+        first_completed = stack.enter_context(
+            mock.patch.object(aio, "first_completed", side_effect=asyncio.CancelledError)
+        )
+        backoff = stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff"))
+        stack.enter_context(mock.patch.object(time, "time", return_value=100))
+
+        with stack:
+            await client._keep_alive()
+
+        connect.assert_awaited_once_with()
+        first_completed.assert_awaited_once_with(running_task, done_task)
+        backoff.return_value.reset.assert_not_called()
+        assert client._is_closing is True
+        assert client._ws is None
+        client._handshake_event.clear.assert_called_once_with()
+        assert running_task.cancelled()
+        self._assert_keep_alive_dropped_queues(client, 1)
+        ws.send_close.assert_awaited_once_with(
+            code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting permanently"
+        )
+        client._event_factory.deserialize_connected_event.assert_called_once_with(client)
+        client._event_factory.deserialize_disconnected_event.assert_called_once_with(client)
+        client._event_manager.dispatch.assert_has_awaits(
+            [
+                mock.call(client._event_factory.deserialize_connected_event.return_value, return_tasks=True),
+                mock.call(client._event_factory.deserialize_disconnected_event.return_value, return_tasks=True),
+            ]
+        )
+
+    async def test__keep_alive_when_lifetime_tasks_finish(self, client):
+        ws = mock.AsyncMock()
+        self._prepare_keep_alive(client)
+
+        def connect():
+            client._ws = ws
+            return ()
+
+        stack = contextlib.ExitStack()
+        connect = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_connect", side_effect=connect))
+        stack.enter_context(mock.patch.object(aio, "first_completed", side_effect=[None, asyncio.CancelledError]))
+        backoff = stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff"))
+        stack.enter_context(mock.patch.object(time, "time", side_effect=itertools.count(step=100)))
+
+        with stack:
+            await client._keep_alive()
+
+        assert connect.await_count == 2
+        backoff.return_value.reset.assert_called_once_with()
+        assert ws.send_close.await_count == 2
+        ws.send_close.assert_has_awaits(
+            [
+                mock.call(code=3000, message=b"shard disconnecting temporarily"),
+                mock.call(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting permanently"),
+            ]
+        )
+        assert client._event_manager.dispatch.await_count == 4
+        self._assert_keep_alive_dropped_queues(client, 2)
+
+    async def test__keep_alive_when_handshake_not_completed(self, client):
+        ws = mock.AsyncMock()
+        self._prepare_keep_alive(client)
+        client._handshake_event.is_set.return_value = False
+        connects = 0
+
+        def connect():
+            nonlocal connects
+            connects += 1
+            if connects == 2:
+                raise asyncio.CancelledError
+
+            client._ws = ws
+            return ()
+
+        stack = contextlib.ExitStack()
+        connect = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_connect", side_effect=connect))
+        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
+        stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff"))
+        stack.enter_context(mock.patch.object(time, "time", side_effect=itertools.count(step=100)))
+
+        with stack:
+            await client._keep_alive()
+
+        assert connect.await_count == 2
+        first_completed.assert_not_called()
+        client._event_manager.dispatch.assert_not_called()
+        ws.send_close.assert_awaited_once_with(code=3000, message=b"shard disconnecting temporarily")
+        self._assert_keep_alive_dropped_queues(client, 2)
+
+    @pytest.mark.parametrize(
+        ("exception", "backoff_resets"),
+        [
+            (ConnectionResetError(), 0),
+            (errors.GatewayConnectionError("some reason"), 0),
+            (errors.GatewayTransportError("some reason"), 0),
+            (errors.GatewayServerClosedConnectionError("some reason", code=4000, can_reconnect=True), 1),
+        ],
+    )
+    async def test__keep_alive_when_recoverable_error(self, client, exception, backoff_resets):
+        ws = mock.AsyncMock()
+        self._prepare_keep_alive(client)
+
+        def connect():
+            client._ws = ws
+            return ()
+
+        stack = contextlib.ExitStack()
+        connect = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_connect", side_effect=connect))
+        stack.enter_context(mock.patch.object(aio, "first_completed", side_effect=[exception, asyncio.CancelledError]))
+        backoff = stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff"))
+        stack.enter_context(mock.patch.object(time, "time", side_effect=itertools.count(step=100)))
+
+        with stack:
+            await client._keep_alive()
+
+        assert connect.await_count == 2
+        assert backoff.return_value.reset.call_count == backoff_resets
+        assert client._is_closing is True
+        ws.send_close.assert_has_awaits(
+            [
+                mock.call(code=3000, message=b"shard disconnecting temporarily"),
+                mock.call(code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting permanently"),
+            ]
+        )
+        assert client._event_factory.deserialize_disconnected_event.call_count == 2
+        self._assert_keep_alive_dropped_queues(client, 2)
+
+    async def test__keep_alive_when_server_closed_connection_permanently(self, client):
+        ws = mock.AsyncMock()
+        exception = errors.GatewayServerClosedConnectionError("some reason", code=4004, can_reconnect=False)
+        self._prepare_keep_alive(client)
+
+        def connect():
+            client._ws = ws
+            return ()
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(errors.GatewayServerClosedConnectionError))
+        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_connect", side_effect=connect))
+        stack.enter_context(mock.patch.object(aio, "first_completed", side_effect=exception))
+        stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff"))
+        stack.enter_context(mock.patch.object(time, "time", return_value=100))
+
+        with stack:
+            await client._keep_alive()
+
+        client._logger.info.assert_called_once_with(
+            "server has closed the connection permanently [code:%s, reason:%s]", 4004, "some reason"
+        )
+        assert client._is_closing is False
+        assert client._ws is None
+        ws.send_close.assert_awaited_once_with(code=3000, message=b"shard disconnecting temporarily")
+        client._event_factory.deserialize_disconnected_event.assert_called_once_with(client)
+        self._assert_keep_alive_dropped_queues(client, 1)
+
+    @pytest.mark.parametrize(
+        ("exception", "log_message"),
+        [
+            (errors.GatewayError("some reason"), "encountered gateway error"),
+            (RuntimeError("some reason"), "encountered some unhandled error"),
+        ],
+    )
+    async def test__keep_alive_when_fatal_error_while_connecting(self, client, exception, log_message):
+        self._prepare_keep_alive(client)
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(type(exception)))
+        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_connect", side_effect=exception))
+        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
+        stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff"))
+        stack.enter_context(mock.patch.object(time, "time", return_value=100))
+
+        with stack:
+            await client._keep_alive()
+
+        client._logger.exception.assert_called_once_with(log_message)
+        first_completed.assert_not_called()
+        # Never connected, so there is nothing to close or dispatch
+        client._event_manager.dispatch.assert_not_called()
+        self._assert_keep_alive_dropped_queues(client, 1)
+
+    async def test__keep_alive_backs_off_when_reconnecting_too_quickly(self, client):
+        self._prepare_keep_alive(client)
+        backoff = mock.MagicMock()
+        backoff.__next__ = mock.Mock(return_value=12.5)
+
+        stack = contextlib.ExitStack()
+        connect = stack.enter_context(
+            mock.patch.object(
+                shard.GatewayShardImpl, "_connect", side_effect=[ConnectionResetError, asyncio.CancelledError]
+            )
+        )
+        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
+        stack.enter_context(mock.patch.object(rate_limits, "ExponentialBackOff", return_value=backoff))
+        stack.enter_context(mock.patch.object(time, "time", return_value=100))
+
+        with stack:
+            await client._keep_alive()
+
+        assert connect.await_count == 2
+        backoff.__next__.assert_called_once_with()
+        sleep.assert_awaited_once_with(12.5)
+        client._logger.info.assert_called_once_with("backing off reconnecting for %.2fs", 12.5)
+        client._logger.warning.assert_called_once_with("connection got reset by server. Will retry shortly")
 
     async def test__send_heartbeat(self, client):
         client._last_heartbeat_sent = 0
