@@ -405,6 +405,18 @@ class ShardAware(
         """
 
     @abc.abstractmethod
+    async def request_soundboard_sounds(
+        self, guilds: typing.Sequence[snowflakes.SnowflakeishOr[guilds.PartialGuild]], /
+    ) -> None:
+        """Request for soundboard sounds.
+
+        Parameters
+        ----------
+        guilds
+            The guilds to request sounds for.
+        """
+
+    @abc.abstractmethod
     async def request_channel_info(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CustomEmoji", "Emoji", "KnownCustomEmoji", "UnicodeEmoji")
+__all__: typing.Sequence[str] = ("CustomEmoji", "Emoji", "EmojiAnimationType", "KnownCustomEmoji", "UnicodeEmoji")
 
 import abc
 import re
@@ -34,6 +34,7 @@ from hikari import files
 from hikari import snowflakes
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
 
@@ -43,6 +44,17 @@ if typing.TYPE_CHECKING:
 
 _TWEMOJI_PNG_BASE_URL: typing.Final[str] = "https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/"
 _CUSTOM_EMOJI_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"<(?P<flags>[^:]*):(?P<name>[^:]*):(?P<id>\d+)>")
+
+
+@typing.final
+class EmojiAnimationType(int, enums.Enum):
+    """The animation type of an emoji reaction in voice channels."""
+
+    PREMIUM = 0
+    """A fun animation, sent by a Nitro subscriber."""
+
+    BASIC = 1
+    """The standard animation."""
 
 
 class Emoji(files.WebResource, abc.ABC):
