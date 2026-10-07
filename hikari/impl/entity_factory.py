@@ -2048,9 +2048,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return guild_models.GuildWidget(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
-            instant_invite=payload.get("instant_invite"),
-            channels=[self.deserialize_partial_channel(channel) for channel in payload["channels"]],
-            members=[self.deserialize_user(member) for member in payload["members"]],
+            instant_invite=payload["instant_invite"],
+            channels=[
+                guild_models.GuildWidgetChannel(
+                    id=snowflakes.Snowflake(channel["id"]), name=channel["name"], position=channel["position"]
+                )
+                for channel in payload["channels"]
+            ],
+            members=[
+                guild_models.GuildWidgetMember(
+                    username=member["username"],
+                    status=presence_models.Status(member["status"]),
+                    avatar_url=files.URL(member["avatar_url"]),
+                )
+                for member in payload["members"]
+            ],
             presence_count=payload["presence_count"],
         )
 

@@ -76,6 +76,7 @@ from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -4241,6 +4242,21 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_widget_settings(response)
+
+    @typing_extensions.override
+    @deprecation.deprecated("Use 'edit_widget_settings' instead.")
+    async def edit_widget(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.GuildChannel]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.GuildWidgetSettings:
+        deprecation.warn_deprecated(
+            "edit_widget", removal_version="2.8.0", additional_info="Use 'edit_widget_settings' instead."
+        )
+        return await self.edit_widget_settings(guild, channel=channel, enabled=enabled, reason=reason)
 
     @typing_extensions.override
     async def edit_widget_settings(

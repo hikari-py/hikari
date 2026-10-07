@@ -1080,7 +1080,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.guilds.GuildWidget
+        hikari.guilds.GuildWidgetSettings
             The deserialized guild widget settings object.
         """
 

@@ -27,6 +27,7 @@ import pytest
 
 from hikari import channels as channels_
 from hikari import colors
+from hikari import files
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
@@ -695,6 +696,14 @@ class TestPartialGuild:
 
     def test_str_operator(self, model):
         assert str(model) == "hikari"
+
+    def test_make_widget_image_url(self, model):
+        assert model.make_widget_image_url() == files.URL(f"{urls.REST_API_URL}/guilds/90210/widget.png?style=shield")
+
+    def test_make_widget_image_url_with_style(self, model):
+        url = model.make_widget_image_url(style=guilds.GuildWidgetStyle.BANNER_2)
+
+        assert url == files.URL(f"{urls.REST_API_URL}/guilds/90210/widget.png?style=banner2")
 
     def test_shard_id_property(self, model):
         model.app.shard_count = 4

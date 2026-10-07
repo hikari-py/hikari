@@ -63,6 +63,7 @@ from hikari.impl import rate_limits
 from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -6335,6 +6336,22 @@ class TestRESTClientImplAsync:
             expected_route, json=expected_json, reason="this should have been enabled"
         )
         rest_client._entity_factory.deserialize_guild_widget_settings.assert_called_once_with({"id": "456"})
+
+    async def test_edit_widget(self, rest_client):
+        guild = StubModel(123)
+        channel = StubModel(456)
+        rest_client.edit_widget_settings = mock.AsyncMock()
+
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            returned = await rest_client.edit_widget(guild, channel=channel, enabled=True, reason="because")
+
+        warn_deprecated.assert_called_once_with(
+            "edit_widget", removal_version="2.8.0", additional_info="Use 'edit_widget_settings' instead."
+        )
+        assert returned is rest_client.edit_widget_settings.return_value
+        rest_client.edit_widget_settings.assert_awaited_once_with(
+            guild, channel=channel, enabled=True, reason="because"
+        )
 
     async def test_edit_widget_settings_without_optionals(self, rest_client):
         widget = StubModel(456)

@@ -416,6 +416,7 @@ POST_GUILD_CHANNELS: typing.Final[Route] = Route(POST, "/guilds/{guild}/channels
 PATCH_GUILD_CHANNELS: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/channels")
 
 GET_GUILD_WIDGET: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget.json")
+GET_GUILD_WIDGET_IMAGE: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget.png")
 GET_GUILD_WIDGET_SETTINGS: typing.Final[Route] = Route(GET, "/guilds/{guild}/widget")
 PATCH_GUILD_WIDGET_SETTINGS: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/widget")
 
