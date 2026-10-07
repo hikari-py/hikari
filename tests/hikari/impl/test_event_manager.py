@@ -1939,6 +1939,27 @@ class TestEventManagerImpl:
             event_factory.deserialize_soundboard_sounds_update_event.return_value
         )
 
+    def test_on_guild_soundboard_sounds_update_when_soundboard_sounds_cache_disabled(
+        self, entity_factory, shard, event_factory
+    ):
+        components = config.CacheComponents.ALL & ~config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+        event_manager_impl = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
+            entity_factory,
+            event_factory,
+            intents.Intents.ALL,
+            cache=mock.Mock(settings=config.CacheSettings(components=components)),
+        )
+        event_manager_impl.dispatch = mock.Mock()
+        event_manager_impl._cache.get_soundboard_sound.return_value = None
+        event_factory.deserialize_soundboard_sounds_update_event.return_value.sounds = []
+        payload = {"guild_id": "456", "soundboard_sounds": [{"sound_id": "1"}]}
+
+        event_manager_impl.on_guild_soundboard_sounds_update(shard, payload)
+
+        event_factory.deserialize_soundboard_sounds_update_event.assert_called_once_with(
+            shard, payload, old_sounds=None
+        )
+
     def test_on_guild_soundboard_sounds_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
         payload = {"guild_id": "456", "soundboard_sounds": []}
 

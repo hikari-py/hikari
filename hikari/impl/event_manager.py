@@ -1055,7 +1055,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sounds-update for more info."""  # noqa: E501
         old: list[soundboard_models.SoundboardSound] | None = None
-        if self._cache:
+        if self._cache and self._cache_enabled_for(config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
             old = []
             for sound_payload in payload["soundboard_sounds"]:
                 if cached := self._cache.get_soundboard_sound(snowflakes.Snowflake(sound_payload["sound_id"])):
