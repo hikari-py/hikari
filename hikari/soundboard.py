@@ -67,7 +67,8 @@ class SoundboardSound(snowflakes.Unique):
     user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """User who created the sound.
 
-    Only included with the `CREATE_GUILD_EXPRESSIONS` or `MANAGE_GUILD_EXPRESSIONS` permission.
+    Only included with the [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][] or
+    [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][] permission.
     """
 
     @property

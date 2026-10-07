@@ -2190,7 +2190,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_soundboard_sound(self, payload: data_binding.JSONObject) -> soundboard_models.SoundboardSound:
-        """Parse a raw payload from Discord into an soundboard sound object.
+        """Parse a raw payload from Discord into a soundboard sound object.
 
         Parameters
         ----------

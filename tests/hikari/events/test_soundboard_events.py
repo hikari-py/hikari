@@ -26,6 +26,7 @@ from hikari import intents
 from hikari import snowflakes
 from hikari import soundboard
 from hikari.events import base_events
+from hikari.events import shard_events
 from hikari.events import soundboard_events
 
 
@@ -58,7 +59,17 @@ def test_guild_events_require_guild_emojis_intent():
 
 
 def test_sounds_event_requires_no_intent():
-    assert base_events.get_required_intents_for(soundboard_events.SoundboardSoundsEvent) == [intents.Intents.NONE]
+    assert list(base_events.get_required_intents_for(soundboard_events.SoundboardSoundsEvent)) == list(
+        base_events.get_required_intents_for(shard_events.ChannelInfoEvent)
+    )
+
+
+def test_sounds_event_is_a_shard_event():
+    assert issubclass(soundboard_events.SoundboardSoundsEvent, shard_events.ShardEvent)
+
+
+def test_sounds_event_docstring_has_no_empty_intent_bullet():
+    assert " - \n" not in (soundboard_events.SoundboardSoundsEvent.__doc__ or "")
 
 
 def test_events_are_exported():

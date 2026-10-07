@@ -39,6 +39,7 @@ import attrs
 from hikari import intents
 from hikari.events import base_events
 from hikari.events import guild_events
+from hikari.events import shard_events
 from hikari.internal import attrs_extensions
 from hikari.internal import typing_extensions
 
@@ -160,8 +161,7 @@ class SoundboardSoundsUpdateEvent(SoundboardSoundEvent):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-@base_events.requires_intents(intents.Intents.NONE)
-class SoundboardSoundsEvent(SoundboardSoundEvent):
+class SoundboardSoundsEvent(shard_events.ShardEvent):
     """Event fired with a guild's soundboard sounds after they were requested.
 
     See [`hikari.api.shard.GatewayShard.request_soundboard_sounds`][].
@@ -174,7 +174,7 @@ class SoundboardSoundsEvent(SoundboardSoundEvent):
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflakes.Snowflake = attrs.field()
-    # <<inherited docstring from GuildEvent>>.
+    """ID of the guild the sounds belong to."""
 
     sounds: typing.Sequence[soundboard.SoundboardSound] = attrs.field()
     """All soundboard sounds of the guild."""

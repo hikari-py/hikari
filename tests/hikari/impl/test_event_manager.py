@@ -209,16 +209,6 @@ class TestEventManagerImpl:
             event_factory.deserialize_guild_channel_delete_event.return_value
         )
 
-    def test_on_voice_channel_effect_send(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
-
-        stateless_event_manager_impl.on_voice_channel_effect_send(shard, payload)
-
-        event_factory.deserialize_voice_channel_effect_send_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_voice_channel_effect_send_event.return_value
-        )
-
     def test_on_channel_pins_update(self, stateless_event_manager_impl, shard, event_factory):
         payload = {}
 
@@ -1581,6 +1571,16 @@ class TestEventManagerImpl:
 
         event_factory.deserialize_voice_channel_start_time_update_event.assert_called_once_with(shard, payload)
         event_manager_impl.dispatch.assert_called_once_with(event)
+
+    def test_on_voice_channel_effect_send(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_voice_channel_effect_send(shard, payload)
+
+        event_factory.deserialize_voice_channel_effect_send_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_voice_channel_effect_send_event.return_value
+        )
 
     def test_on_webhooks_update(self, event_manager_impl, shard, event_factory):
         payload = {}

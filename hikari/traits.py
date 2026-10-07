@@ -406,7 +406,7 @@ class ShardAware(
 
     @abc.abstractmethod
     async def request_soundboard_sounds(self, guilds: snowflakes.SnowflakeishSequence[guilds.PartialGuild], /) -> None:
-        """Request for soundboard sounds.
+        """Request the soundboard sounds of the given guilds.
 
         The response arrives as one [`hikari.events.soundboard_events.SoundboardSoundsEvent`][] per guild.
 

@@ -182,11 +182,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         self.dispatch(event)
 
-    @event_manager_base.filtered(voice_events.VoiceChannelEffectSendEvent)
-    def on_voice_channel_effect_send(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
-        """See https://discord.com/developers/docs/events/gateway-events#voice-channel-effect-send for more info."""
-        self.dispatch(self._event_factory.deserialize_voice_channel_effect_send_event(shard, payload))
-
     @event_manager_base.filtered((channel_events.GuildPinsUpdateEvent, channel_events.DMPinsUpdateEvent))
     def on_channel_pins_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#channel-pins-update for more info."""
@@ -883,6 +878,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://docs.discord.com/developers/events/gateway-events#voice-channel-start-time-update."""
         self.dispatch(self._event_factory.deserialize_voice_channel_start_time_update_event(shard, payload))
+
+    @event_manager_base.filtered(voice_events.VoiceChannelEffectSendEvent)
+    def on_voice_channel_effect_send(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#voice-channel-effect-send for more info."""
+        self.dispatch(self._event_factory.deserialize_voice_channel_effect_send_event(shard, payload))
 
     @event_manager_base.filtered(channel_events.WebhookUpdateEvent)
     def on_webhooks_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:

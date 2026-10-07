@@ -565,7 +565,6 @@ POST_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(POST, "/guilds/{guild}/
 PATCH_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/soundboard-sounds/{sound}")
 DELETE_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/soundboard-sounds/{sound}")
 
-
 # Webhooks
 GET_WEBHOOK: typing.Final[Route] = Route(GET, "/webhooks/{webhook}")
 PATCH_WEBHOOK: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}")

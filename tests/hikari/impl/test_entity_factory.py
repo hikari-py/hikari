@@ -38,7 +38,6 @@ from hikari import emojis as emoji_models
 from hikari import errors
 from hikari import files
 from hikari import guilds as guild_models
-from hikari import soundboard as soundboard_models
 from hikari import invites as invite_models
 from hikari import locales
 from hikari import messages as message_models
@@ -49,6 +48,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import soundboard as soundboard_models
 from hikari import stage_instances as stage_instance_models
 from hikari import stickers as sticker_models
 from hikari import traits

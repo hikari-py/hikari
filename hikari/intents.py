@@ -262,6 +262,7 @@ class Intents(enums.Flag):
     """Subscribes to the events listed below.
 
     * `VOICE_STATE_UPDATE`
+    * `VOICE_CHANNEL_EFFECT_SEND`
     """
 
     GUILD_PRESENCES = 1 << 8

@@ -21,7 +21,6 @@
 from __future__ import annotations
 
 import datetime
-from math import isnan
 import typing
 
 import mock
@@ -33,11 +32,9 @@ from hikari import colors as color_models
 from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
-from hikari import snowflakes
 from hikari import users as user_models
 from hikari.api import shard
 from hikari.events import application_events
-from hikari.events import soundboard_events
 from hikari.events import auto_mod_events
 from hikari.events import channel_events
 from hikari.events import guild_events
@@ -51,6 +48,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import soundboard_events
 from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
