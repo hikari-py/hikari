@@ -550,7 +550,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         self.dispatch(event)
 
-    @event_manager_base.filtered(guild_events.StickersUpdateEvent, config.CacheComponents.EMOJIS)
+    @event_manager_base.filtered(guild_events.StickersUpdateEvent, config.CacheComponents.GUILD_STICKERS)
     def on_guild_stickers_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-stickers-update for more info."""
         guild_id = snowflakes.Snowflake(payload["guild_id"])
