@@ -68,6 +68,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as messages_models
     from hikari import presences as presences_models
+    from hikari import soundboard as soundboard_models
     from hikari import stickers as sticker_models
     from hikari import traits
     from hikari import voices as voices_models
@@ -1255,58 +1256,64 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_soundboard_sound_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> soundboard_events.SoundboardSoundCreateEvent:
-        soundboard_sound = self._app.entity_factory.deserialize_soundboard_sound(payload)
-
         return soundboard_events.SoundboardSoundCreateEvent(
-            app=self._app,
-            shard=shard,
-            id=soundboard_sound.id,
-            name=soundboard_sound.name,
-            volume=soundboard_sound.volume,
-            emoji=soundboard_sound.emoji,
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-            is_available=soundboard_sound.is_available,
-            user=soundboard_sound.user,
+            app=self._app, shard=shard, sound=self._app.entity_factory.deserialize_soundboard_sound(payload)
         )
 
     @typing_extensions.override
     def deserialize_soundboard_sound_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_sound: soundboard_models.SoundboardSound | None = None,
     ) -> soundboard_events.SoundboardSoundUpdateEvent:
-        soundboard_sound = self._app.entity_factory.deserialize_soundboard_sound(payload)
-
         return soundboard_events.SoundboardSoundUpdateEvent(
             app=self._app,
             shard=shard,
-            id=soundboard_sound.id,
-            name=soundboard_sound.name,
-            volume=soundboard_sound.volume,
-            emoji=soundboard_sound.emoji,
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-            is_available=soundboard_sound.is_available,
-            user=soundboard_sound.user,
+            sound=self._app.entity_factory.deserialize_soundboard_sound(payload),
+            old_sound=old_sound,
         )
 
     @typing_extensions.override
     def deserialize_soundboard_sound_delete_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_sound: soundboard_models.SoundboardSound | None = None,
     ) -> soundboard_events.SoundboardSoundDeleteEvent:
         return soundboard_events.SoundboardSoundDeleteEvent(
             app=self._app,
             shard=shard,
-            id=snowflakes.Snowflake(payload["sound_id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            sound_id=snowflakes.Snowflake(payload["sound_id"]),
+            old_sound=old_sound,
         )
 
     @typing_extensions.override
     def deserialize_soundboard_sounds_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_sounds: typing.Sequence[soundboard_models.SoundboardSound] | None = None,
     ) -> soundboard_events.SoundboardSoundsUpdateEvent:
         return soundboard_events.SoundboardSoundsUpdateEvent(
             app=self._app,
             shard=shard,
-            soundboard_sounds=[
-                self._app.entity_factory.deserialize_soundboard_sound(sound) for sound in payload["soundboard_sounds"]
-            ],
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            sounds=[self._app.entity_factory.deserialize_soundboard_sound(s) for s in payload["soundboard_sounds"]],
+            old_sounds=old_sounds,
+        )
+
+    @typing_extensions.override
+    def deserialize_soundboard_sounds_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundsEvent:
+        return soundboard_events.SoundboardSoundsEvent(
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            sounds=[self._app.entity_factory.deserialize_soundboard_sound(s) for s in payload["soundboard_sounds"]],
         )

@@ -234,6 +234,7 @@ class Intents(enums.Flag):
     * `GUILD_SOUNDBOARD_SOUND_DELETE`
     * `GUILD_SOUNDBOARD_SOUNDS_UPDATE`
 
+    Discord calls this intent `GUILD_EXPRESSIONS`.
     """
 
     GUILD_INTEGRATIONS = 1 << 4

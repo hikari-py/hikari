@@ -27,6 +27,7 @@ __all__: typing.Sequence[str] = (
     "SoundboardSoundDeleteEvent",
     "SoundboardSoundEvent",
     "SoundboardSoundUpdateEvent",
+    "SoundboardSoundsEvent",
     "SoundboardSoundsUpdateEvent",
 )
 
@@ -37,33 +38,27 @@ import attrs
 
 from hikari import intents
 from hikari.events import base_events
-from hikari.events import shard_events
+from hikari.events import guild_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import emojis
     from hikari import snowflakes
     from hikari import soundboard
     from hikari import traits
-    from hikari import undefined
-    from hikari import users
     from hikari.api import shard as gateway_shard
 
 
 @base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
-class SoundboardSoundEvent(shard_events.ShardEvent, abc.ABC):
+class SoundboardSoundEvent(guild_events.GuildEvent, abc.ABC):
     """Event base for any event that involves guild soundboard sounds."""
 
     __slots__: typing.Sequence[str] = ()
 
-    @property
-    @abc.abstractmethod
-    def guild_id(self) -> snowflakes.Snowflake:
-        """ID of the guild that this event relates to."""
-
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class SoundboardSoundCreateEvent(SoundboardSoundEvent):
     """Event fired when a guild soundboard sound is created."""
 
@@ -73,30 +68,20 @@ class SoundboardSoundCreateEvent(SoundboardSoundEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
-    """ID of the sound."""
+    sound: soundboard.SoundboardSound = attrs.field()
+    """The created sound."""
 
-    name: str = attrs.field(hash=True, repr=True)
-    """The name of the sound."""
-
-    volume: float = attrs.field(hash=True, repr=True)
-    """The volume of the sound."""
-
-    emoji: emojis.UnicodeEmoji | emojis.CustomEmoji | None = attrs.field(hash=True, repr=True)
-    """The emoji of the sound."""
-
-    guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=False)
-    # <<inherited docstring from SoundboardSoundEvent>>.
-
-    is_available: bool = attrs.field(hash=True, repr=False)
-    """Whether this sound can be used, or lost due to insufficient boosting."""
-
-    user: undefined.UndefinedOr[users.PartialUser] = attrs.field(hash=True, repr=False)
-    """The user who created the sound."""
+    @property
+    @typing_extensions.override
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildEvent>>.
+        assert self.sound.guild_id is not None
+        return self.sound.guild_id
 
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class SoundboardSoundUpdateEvent(SoundboardSoundEvent):
     """Event fired when a guild soundboard sound is updated."""
 
@@ -106,30 +91,26 @@ class SoundboardSoundUpdateEvent(SoundboardSoundEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
-    """ID of the sound."""
+    sound: soundboard.SoundboardSound = attrs.field()
+    """The sound after the update."""
 
-    name: str = attrs.field(hash=True, repr=True)
-    """The name of the sound."""
+    old_sound: soundboard.SoundboardSound | None = attrs.field()
+    """The sound before the update.
 
-    volume: float = attrs.field(hash=True, repr=True)
-    """The volume of the sound."""
+    This will be [`None`][] if it's missing from the cache.
+    """
 
-    emoji: emojis.UnicodeEmoji | emojis.CustomEmoji | None = attrs.field(hash=True, repr=True)
-    """The emoji of the sound."""
-
-    guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=False)
-    # <<inherited docstring from SoundboardSoundEvent>>.
-
-    is_available: bool = attrs.field(hash=True, repr=False)
-    """Whether this sound can be used, or lost due to insufficient boosting."""
-
-    user: undefined.UndefinedOr[users.PartialUser] = attrs.field(hash=True, repr=False)
-    """The user who created the sound."""
+    @property
+    @typing_extensions.override
+    def guild_id(self) -> snowflakes.Snowflake:
+        # <<inherited docstring from GuildEvent>>.
+        assert self.sound.guild_id is not None
+        return self.sound.guild_id
 
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class SoundboardSoundDeleteEvent(SoundboardSoundEvent):
     """Event fired when a guild soundboard sound is deleted."""
 
@@ -140,16 +121,23 @@ class SoundboardSoundDeleteEvent(SoundboardSoundEvent):
     # <<inherited docstring from ShardEvent>>.
 
     guild_id: snowflakes.Snowflake = attrs.field()
-    # <<inherited docstring from SoundboardSoundEvent>>.
+    # <<inherited docstring from GuildEvent>>.
 
-    id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
-    """ID of the sound."""
+    sound_id: snowflakes.Snowflake = attrs.field()
+    """ID of the deleted sound."""
+
+    old_sound: soundboard.SoundboardSound | None = attrs.field()
+    """The deleted sound.
+
+    This will be [`None`][] if it's missing from the cache.
+    """
 
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.GUILD_EMOJIS)
 class SoundboardSoundsUpdateEvent(SoundboardSoundEvent):
-    """Event fired when a guild soundboard sound is created."""
+    """Event fired when multiple guild soundboard sounds are updated at once."""
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -157,8 +145,36 @@ class SoundboardSoundsUpdateEvent(SoundboardSoundEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    soundboard_sounds: typing.Sequence[soundboard.SoundboardSound] = attrs.field(hash=True, repr=False)
-    """The guilds soundboard sounds."""
+    guild_id: snowflakes.Snowflake = attrs.field()
+    # <<inherited docstring from GuildEvent>>.
 
-    guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
-    """The guild ID of the stage instance."""
+    sounds: typing.Sequence[soundboard.SoundboardSound] = attrs.field()
+    """The updated sounds."""
+
+    old_sounds: typing.Sequence[soundboard.SoundboardSound] | None = attrs.field()
+    """The updated sounds as they were before the update.
+
+    This will be [`None`][] if the soundboard sound cache is disabled. Sounds that were not cached are left out.
+    """
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+@base_events.requires_intents(intents.Intents.NONE)
+class SoundboardSoundsEvent(SoundboardSoundEvent):
+    """Event fired with a guild's soundboard sounds after they were requested.
+
+    See [`hikari.api.shard.GatewayShard.request_soundboard_sounds`][].
+    """
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attrs.field()
+    # <<inherited docstring from GuildEvent>>.
+
+    sounds: typing.Sequence[soundboard.SoundboardSound] = attrs.field()
+    """All soundboard sounds of the guild."""
