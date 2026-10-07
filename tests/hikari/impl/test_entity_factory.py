@@ -240,6 +240,20 @@ def user_payload(primary_guild_payload: dict[str, typing.Any]):
 
 
 @pytest.fixture
+def soundboard_sound_payload(user_payload):
+    return {
+        "name": "Yay",
+        "sound_id": "1106714396018884649",
+        "volume": 0.5,
+        "emoji_id": "989193655938064464",
+        "emoji_name": None,
+        "guild_id": "613425648685547541",
+        "available": True,
+        "user": user_payload,
+    }
+
+
+@pytest.fixture
 def custom_emoji_payload():
     return {"id": "691225175349395456", "name": "test", "animated": True}
 
@@ -8839,47 +8853,37 @@ class TestEntityFactoryImpl:
         assert result.trigger.regex_patterns == ["some", "regex", "patterns"]
         assert result.trigger.allow_list == ["allowed", "stuff"]
 
-    @pytest.fixture
-    def soundboard_sound_payload(self, user_payload):
-        return {
-            "name": "bark",
-            "sound_id": "4823948",
-            "volume": 0.341,
-            "emoji_id": "3993",
-            "emoji_name": "doggo",
-            "guild_id": "123",
-            "available": True,
-            "user": user_payload,
-        }
-
     def test_deserialize_soundboard_sound(self, entity_factory_impl, soundboard_sound_payload, user_payload):
-        soundboard_sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+        sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
 
-        assert soundboard_sound.id == snowflakes.Snowflake(4823948)
-        assert soundboard_sound.name == "bark"
-        assert soundboard_sound.volume == 0.341
-        assert soundboard_sound.emoji == emoji_models.CustomEmoji(
-            id=snowflakes.Snowflake(3993), name="doggo", is_animated=False
-        )
-        assert soundboard_sound.guild_id == snowflakes.Snowflake(123)
-        assert soundboard_sound.is_available is True
-        assert soundboard_sound.user == entity_factory_impl.deserialize_user(user_payload)
+        assert sound.id == 1106714396018884649
+        assert sound.name == "Yay"
+        assert sound.volume == 0.5
+        assert sound.emoji == emoji_models.CustomEmoji(id=989193655938064464, name=None, is_animated=False)
+        assert sound.guild_id == 613425648685547541
+        assert sound.is_available is True
+        assert sound.user == entity_factory_impl.deserialize_user(user_payload)
+        assert isinstance(sound, soundboard_models.SoundboardSound)
 
-        assert isinstance(soundboard_sound, soundboard_models.SoundboardSound)
+    def test_deserialize_soundboard_sound_with_unicode_emoji(self, entity_factory_impl, soundboard_sound_payload):
+        soundboard_sound_payload["emoji_id"] = None
+        soundboard_sound_payload["emoji_name"] = "🦆"
 
-    def test_deserialize_soundboard_sound_with_optional_fields(self, entity_factory_impl, soundboard_sound_payload):
-        del soundboard_sound_payload["guild_id"]
-        del soundboard_sound_payload["user"]
+        sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
 
-        soundboard_sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+        assert sound.emoji == emoji_models.UnicodeEmoji("🦆")
 
-        assert soundboard_sound.guild_id is undefined.UNDEFINED
-        assert soundboard_sound.user is undefined.UNDEFINED
-
-    def test_deserialize_soundboard_sound_with_null_fields(self, entity_factory_impl, soundboard_sound_payload):
+    def test_deserialize_soundboard_sound_without_emoji(self, entity_factory_impl, soundboard_sound_payload):
         soundboard_sound_payload["emoji_id"] = None
         soundboard_sound_payload["emoji_name"] = None
 
-        soundboard_sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+        assert entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload).emoji is None
 
-        assert soundboard_sound.emoji is None
+    def test_deserialize_default_soundboard_sound(self, entity_factory_impl):
+        sound = entity_factory_impl.deserialize_soundboard_sound(
+            {"name": "quack", "sound_id": "1", "volume": 1.0, "emoji_id": None, "emoji_name": "🦆", "available": True}
+        )
+
+        assert sound.id == 1
+        assert sound.guild_id is None
+        assert sound.user is None

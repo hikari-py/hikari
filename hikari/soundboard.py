@@ -28,33 +28,49 @@ import typing
 
 import attrs
 
-from hikari import emojis
+from hikari import files
 from hikari import snowflakes
-from hikari import undefined
-from hikari import users
+from hikari import urls
+from hikari.internal import attrs_extensions
+
+if typing.TYPE_CHECKING:
+    from hikari import emojis
+    from hikari import users
 
 
+@attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class SoundboardSound(snowflakes.Unique):
     """Represents a soundboard sound."""
 
-    id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """ID of the sound."""
 
-    name: str = attrs.field(hash=True, repr=True)
-    """The name of the sound."""
+    name: str = attrs.field(eq=False, hash=False, repr=True)
+    """Name of the sound."""
 
-    volume: float = attrs.field(hash=True, repr=True)
-    """The volume of the sound."""
+    volume: float = attrs.field(eq=False, hash=False, repr=False)
+    """Volume of the sound, from 0 to 1."""
 
-    emoji: emojis.UnicodeEmoji | emojis.CustomEmoji | None = attrs.field(hash=True, repr=True)
-    """The emoji of the sound."""
+    emoji: emojis.UnicodeEmoji | emojis.CustomEmoji | None = attrs.field(eq=False, hash=False, repr=False)
+    """Emoji of the sound, if set."""
 
-    guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(hash=True, repr=False)
-    """The guild ID this sound belongs to."""
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
+    """ID of the guild the sound belongs to.
 
-    is_available: bool = attrs.field(hash=True, repr=False)
-    """Whether this sound can be used, or lost due to insufficient boosting."""
+    This will be [`None`][] for Discord's default sounds.
+    """
 
-    user: undefined.UndefinedOr[users.PartialUser] = attrs.field(hash=True, repr=False)
-    """The user who created the sound."""
+    is_available: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether the sound can be used. This may be [`False`][] after the guild lost server boosts."""
+
+    user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
+    """User who created the sound.
+
+    Only included with the `CREATE_GUILD_EXPRESSIONS` or `MANAGE_GUILD_EXPRESSIONS` permission.
+    """
+
+    @property
+    def url(self) -> files.URL:
+        """URL of the sound file, served as MP3 or Ogg."""
+        return files.URL(f"{urls.CDN_URL}/soundboard-sounds/{self.id}")

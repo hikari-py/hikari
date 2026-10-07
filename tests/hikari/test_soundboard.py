@@ -21,47 +21,41 @@
 from __future__ import annotations
 
 import pytest
-import mock
 
-from hikari import soundboard
-from hikari import snowflakes
 from hikari import emojis
+from hikari import files
+from hikari import snowflakes
+from hikari import soundboard
+from hikari import urls
+
+
+def _make_sound(**kwargs):
+    fields = {
+        "id": snowflakes.Snowflake(1106714396018884649),
+        "name": "Yay",
+        "volume": 1.0,
+        "emoji": emojis.UnicodeEmoji("🦆"),
+        "guild_id": snowflakes.Snowflake(613425648685547541),
+        "is_available": True,
+        "user": None,
+    }
+    fields.update(kwargs)
+    return soundboard.SoundboardSound(**fields)
 
 
 class TestSoundboardSound:
-    @pytest.fixture
-    def mock_user(self):
-        return mock.Mock()
+    def test_url(self):
+        sound = _make_sound()
 
-    @pytest.fixture
-    def soundboard_sound(self, mock_user: mock.Mock):
-        return soundboard.SoundboardSound(
-            id=snowflakes.Snowflake(54),
-            name="goomse",
-            volume=0.1234,
-            emoji=emojis.UnicodeEmoji("🦫"),
-            guild_id=snowflakes.Snowflake(123),
-            is_available=False,
-            user=mock_user,
-        )
+        assert sound.url == files.URL(f"{urls.CDN_URL}/soundboard-sounds/1106714396018884649")
 
-    def test_id_property(self, soundboard_sound):
-        assert soundboard_sound.id == snowflakes.Snowflake(54)
+    def test_equality_only_considers_id(self):
+        assert _make_sound(name="a", volume=0.1) == _make_sound(name="b", volume=0.9)
+        assert hash(_make_sound(name="a")) == hash(_make_sound(name="b"))
 
-    def test_name_property(self, soundboard_sound):
-        assert soundboard_sound.name == "goomse"
+    def test_inequality_for_different_ids(self):
+        assert _make_sound(id=snowflakes.Snowflake(1)) != _make_sound(id=snowflakes.Snowflake(2))
 
-    def test_volume_property(self, soundboard_sound):
-        assert soundboard_sound.volume == 0.1234
-
-    def test_emoji_property(self, soundboard_sound):
-        assert soundboard_sound.emoji == emojis.UnicodeEmoji("🦫")
-
-    def test_guild_id_property(self, soundboard_sound):
-        assert soundboard_sound.guild_id == snowflakes.Snowflake(123)
-
-    def test_is_available_property(self, soundboard_sound):
-        assert soundboard_sound.is_available is False
-
-    def test_user_property(self, soundboard_sound, mock_user):
-        assert soundboard_sound.user == mock_user
+    @pytest.mark.parametrize("guild_id", [None, snowflakes.Snowflake(613425648685547541)])
+    def test_guild_id_may_be_none(self, guild_id):
+        assert _make_sound(guild_id=guild_id).guild_id == guild_id

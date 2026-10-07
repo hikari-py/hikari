@@ -4863,23 +4863,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @typing_extensions.override
     def deserialize_soundboard_sound(self, payload: data_binding.JSONObject) -> soundboard_models.SoundboardSound:
-        emoji: emoji_models.CustomEmoji | emoji_models.UnicodeEmoji | None = None
-        emoji_id = payload["emoji_id"]
-        if emoji_id:
-            emoji_id = snowflakes.Snowflake(emoji_id)
-
-        emoji_name = payload["emoji_name"]
-        if not emoji_id and emoji_name:
+        emoji: emoji_models.UnicodeEmoji | emoji_models.CustomEmoji | None = None
+        if (emoji_id := payload["emoji_id"]) is not None:
+            emoji = emoji_models.CustomEmoji(
+                id=snowflakes.Snowflake(emoji_id), name=payload["emoji_name"], is_animated=False
+            )
+        elif (emoji_name := payload["emoji_name"]) is not None:
             emoji = emoji_models.UnicodeEmoji(emoji_name)
-        elif emoji_id and emoji_name:
-            emoji = emoji_models.CustomEmoji(id=emoji_id, name=emoji_name, is_animated=False)
+
+        guild_id: snowflakes.Snowflake | None = None
+        if raw_guild_id := payload.get("guild_id"):
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
+        user: user_models.User | None = None
+        if user_payload := payload.get("user"):
+            user = self.deserialize_user(user_payload)
 
         return soundboard_models.SoundboardSound(
             id=snowflakes.Snowflake(payload["sound_id"]),
             name=payload["name"],
             volume=payload["volume"],
             emoji=emoji,
-            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else undefined.UNDEFINED,
+            guild_id=guild_id,
             is_available=payload["available"],
-            user=self.deserialize_user(payload["user"]) if "user" in payload else undefined.UNDEFINED,
+            user=user,
         )
