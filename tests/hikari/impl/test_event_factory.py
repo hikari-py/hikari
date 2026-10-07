@@ -134,47 +134,6 @@ class TestEventFactoryImpl:
         assert event.shard is mock_shard
         assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
 
-    @pytest.fixture
-    def guild_channel_effect_send_payload(self):
-        return {
-            "channel_id": "456",
-            "guild_id": "123",
-            "user_id": "789",
-            "emoji": {"name": "platypus", "id": "3248957"},
-            "animation_type": 0,
-            "animation_id": "99086",
-            "sound_id": "12987",
-            "sound_volume": 0.654,
-        }
-
-    def test_deserialize_guild_channel_effect_send_event(
-        self, event_factory, mock_app, mock_shard, guild_channel_effect_send_payload
-    ):
-        event = event_factory.deserialize_guild_channel_effect_send_event(mock_shard, guild_channel_effect_send_payload)
-        assert isinstance(event, channel_events.GuildChannelEffectSendEvent)
-
-        assert event.channel_id == snowflakes.Snowflake(456)
-        assert event.guild_id == snowflakes.Snowflake(123)
-        assert event.user_id == snowflakes.Snowflake(789)
-        assert event.emoji == mock_app.entity_factory.deserialize_emoji(guild_channel_effect_send_payload["emoji"])
-        assert event.animation_type == emoji_models.EmojiAnimationType.PREMIUM
-        assert event.animation_id == snowflakes.Snowflake(99086)
-        assert event.sound_id == snowflakes.Snowflake(12987)
-        assert event.sound_volume == 0.654
-
-    def test_deserialize_guild_channel_effect_send_event_when_partial(self, event_factory, mock_app, mock_shard):
-        payload = {"channel_id": "456", "guild_id": "123", "user_id": "789", "animation_id": None, "sound_id": None}
-
-        event = event_factory.deserialize_guild_channel_effect_send_event(mock_shard, payload)
-
-        assert isinstance(event, channel_events.GuildChannelEffectSendEvent)
-
-        assert event.emoji is undefined.UNDEFINED
-        assert event.animation_type is undefined.UNDEFINED
-        assert event.animation_id is undefined.UNDEFINED
-        assert event.sound_id is undefined.UNDEFINED
-        assert event.sound_volume is undefined.UNDEFINED
-
     def test_deserialize_channel_pins_update_event_for_guild(self, event_factory, mock_app, mock_shard):
         mock_payload = {"channel_id": "123435", "last_pin_timestamp": None, "guild_id": "43123123"}
 
@@ -1651,6 +1610,53 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
 
         assert event.voice_start_time is None
+
+    def test_deserialize_voice_channel_effect_send_event(self, event_factory, mock_app, mock_shard):
+        emoji_payload = {"id": None, "name": "🦆"}
+        payload = {
+            "guild_id": "1",
+            "channel_id": "2",
+            "user_id": "3",
+            "emoji": emoji_payload,
+            "animation_type": 1,
+            "animation_id": 7,
+            "sound_id": "4",
+            "sound_volume": 0.5,
+        }
+
+        event = event_factory.deserialize_voice_channel_effect_send_event(mock_shard, payload)
+
+        assert isinstance(event, voice_events.VoiceChannelEffectSendEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 1
+        assert event.channel_id == 2
+        assert event.user_id == 3
+        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(emoji_payload)
+        assert event.animation_type is voice_events.VoiceChannelEffectAnimationType.BASIC
+        assert event.animation_id == 7
+        assert event.sound_id == 4
+        assert event.sound_volume == 0.5
+
+    def test_deserialize_voice_channel_effect_send_event_with_only_emoji(self, event_factory, mock_app, mock_shard):
+        payload = {"guild_id": "1", "channel_id": "2", "user_id": "3", "emoji": {"id": None, "name": "🦆"}}
+
+        event = event_factory.deserialize_voice_channel_effect_send_event(mock_shard, payload)
+
+        assert event.animation_type is None
+        assert event.animation_id is None
+        assert event.sound_id is None
+        assert event.sound_volume is None
+
+    def test_deserialize_voice_channel_effect_send_event_with_null_emoji(self, event_factory, mock_app, mock_shard):
+        payload = {"guild_id": "1", "channel_id": "2", "user_id": "3", "emoji": None, "animation_type": None}
+
+        event = event_factory.deserialize_voice_channel_effect_send_event(mock_shard, payload)
+
+        assert event.emoji is None
+        assert event.animation_type is None
+        mock_app.entity_factory.deserialize_emoji.assert_not_called()
 
     ##################
     #  MONETIZATION  #

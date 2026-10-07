@@ -158,25 +158,6 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_channel_effect_send_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.GuildChannelEffectSendEvent:
-        """Parse a raw payload from Discord into a guild channel effect send event object.
-
-        Parameters
-        ----------
-        shard
-            The shard that emitted this event.
-        payload
-            The dict payload to parse.
-
-        Returns
-        -------
-        hikari.events.channel_events.GuildChannelEffectSendEvent
-            The parsed channel delete event object.
-        """
-
-    @abc.abstractmethod
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.PinsUpdateEvent:
@@ -1431,6 +1412,25 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.voice_events.VoiceChannelStartTimeUpdateEvent
             The parsed voice channel start time update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_voice_channel_effect_send_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelEffectSendEvent:
+        """Parse a raw payload from Discord into a voice channel effect send event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.VoiceChannelEffectSendEvent
+            The parsed voice channel effect send event object.
         """
 
     @abc.abstractmethod

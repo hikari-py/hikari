@@ -209,16 +209,14 @@ class TestEventManagerImpl:
             event_factory.deserialize_guild_channel_delete_event.return_value
         )
 
-    def test_on_voice_channel_effect_send(
-        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
-    ):
-        mock_payload = mock.Mock()
+    def test_on_voice_channel_effect_send(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
 
-        event_manager_impl.on_voice_channel_effect_send(shard, mock_payload)
+        stateless_event_manager_impl.on_voice_channel_effect_send(shard, payload)
 
-        event_factory.deserialize_guild_channel_effect_send_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_channel_effect_send_event.return_value
+        event_factory.deserialize_voice_channel_effect_send_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_voice_channel_effect_send_event.return_value
         )
 
     def test_on_channel_pins_update(self, stateless_event_manager_impl, shard, event_factory):

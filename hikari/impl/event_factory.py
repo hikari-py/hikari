@@ -144,41 +144,6 @@ class EventFactoryImpl(event_factory.EventFactory):
         return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
 
     @typing_extensions.override
-    def deserialize_guild_channel_effect_send_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> channel_events.GuildChannelEffectSendEvent:
-        emoji: undefined.UndefinedNoneOr[emojis_models.CustomEmoji | emojis_models.UnicodeEmoji] = undefined.UNDEFINED
-        if "emoji" in payload:
-            if (emoji_payload := payload.get("emoji")) is not None:
-                emoji = self._app.entity_factory.deserialize_emoji(emoji_payload)
-            else:
-                emoji = None
-
-        animation_type: undefined.UndefinedNoneOr[emojis_models.EmojiAnimationType] = undefined.UNDEFINED
-        if "animation_type" in payload:
-            if (emoji_payload := payload.get("animation_type")) is not None:
-                animation_type = emojis_models.EmojiAnimationType(emoji_payload)
-            else:
-                animation_type = None
-
-        return channel_events.GuildChannelEffectSendEvent(
-            app=self._app,
-            shard=shard,
-            channel_id=snowflakes.Snowflake(payload["channel_id"]),
-            guild_id=snowflakes.Snowflake(payload["guild_id"]),
-            user_id=snowflakes.Snowflake(payload["user_id"]),
-            emoji=emoji,
-            animation_type=animation_type,
-            animation_id=snowflakes.Snowflake(payload["animation_id"])
-            if payload["animation_id"] is not None
-            else undefined.UNDEFINED,
-            sound_id=snowflakes.Snowflake(payload["sound_id"])
-            if payload["sound_id"] is not None
-            else undefined.UNDEFINED,
-            sound_volume=payload.get("sound_volume", undefined.UNDEFINED),
-        )
-
-    @typing_extensions.override
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.PinsUpdateEvent:
@@ -1115,6 +1080,35 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             channel_id=snowflakes.Snowflake(payload["id"]),
             voice_start_time=voice_start_time,
+        )
+
+    @typing_extensions.override
+    def deserialize_voice_channel_effect_send_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelEffectSendEvent:
+        emoji: emojis_models.Emoji | None = None
+        if emoji_payload := payload.get("emoji"):
+            emoji = self._app.entity_factory.deserialize_emoji(emoji_payload)
+
+        animation_type: voice_events.VoiceChannelEffectAnimationType | int | None = None
+        if (raw_animation_type := payload.get("animation_type")) is not None:
+            animation_type = voice_events.VoiceChannelEffectAnimationType(raw_animation_type)
+
+        sound_id: snowflakes.Snowflake | None = None
+        if (raw_sound_id := payload.get("sound_id")) is not None:
+            sound_id = snowflakes.Snowflake(raw_sound_id)
+
+        return voice_events.VoiceChannelEffectSendEvent(
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            emoji=emoji,
+            animation_type=animation_type,
+            animation_id=payload.get("animation_id"),
+            sound_id=sound_id,
+            sound_volume=payload.get("sound_volume"),
         )
 
     ################
