@@ -956,16 +956,34 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
-    async def test_request_soundboard_sounds(self, bot: bot_impl.GatewayBot):
-        shard = mock.Mock()
-        shard.request_soundboard_sounds = mock.AsyncMock()
+    async def test_request_soundboard_sounds_groups_guilds_by_shard(self, bot):
+        shard_0 = mock.Mock(id=0, request_soundboard_sounds=mock.AsyncMock())
+        shard_1 = mock.Mock(id=1, request_soundboard_sounds=mock.AsyncMock())
+        shards = {1: shard_0, 2: shard_1, 3: shard_0}
 
-        with mock.patch.object(bot_impl.GatewayBot, "shards", [shard]):
+        with mock.patch.object(bot_impl.GatewayBot, "_get_shard", side_effect=lambda guild: shards[int(guild)]):
             with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
-                await bot.request_soundboard_sounds([123, 456, 789])
+                await bot.request_soundboard_sounds([1, 2, 3])
 
         check_if_alive.assert_called_once_with()
-        shard.request_soundboard_sounds.assert_awaited_once_with([123, 456, 789])
+        shard_0.request_soundboard_sounds.assert_awaited_once_with([1, 3])
+        shard_1.request_soundboard_sounds.assert_awaited_once_with([2])
+
+    @pytest.mark.asyncio
+    async def test_request_soundboard_sounds_when_guild_not_covered(self, bot):
+        shard = mock.Mock(id=0, request_soundboard_sounds=mock.AsyncMock())
+
+        def get_shard(guild):
+            if int(guild) == 2:
+                raise RuntimeError("not covered")
+            return shard
+
+        with mock.patch.object(bot_impl.GatewayBot, "_get_shard", side_effect=get_shard):
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive"):
+                with pytest.raises(RuntimeError, match="not covered"):
+                    await bot.request_soundboard_sounds([1, 2])
+
+        shard.request_soundboard_sounds.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_request_channel_info(self, bot):

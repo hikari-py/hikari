@@ -241,6 +241,16 @@ class TestEventManagerImpl:
             event_factory.deserialize_channel_info_event.return_value
         )
 
+    def test_on_soundboard_sounds(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_soundboard_sounds(shard, payload)
+
+        event_factory.deserialize_soundboard_sounds_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sounds_event.return_value
+        )
+
     def test_on_rate_limited(self, stateless_event_manager_impl, shard, event_factory):
         payload = {}
 

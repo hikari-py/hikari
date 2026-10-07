@@ -751,9 +751,7 @@ class GatewayShardImpl(shard.GatewayShard):
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
     @typing_extensions.override
-    async def request_soundboard_sounds(
-        self, guilds: typing.Sequence[snowflakes.SnowflakeishOr[guilds.PartialGuild]], /
-    ) -> None:
+    async def request_soundboard_sounds(self, guilds: snowflakes.SnowflakeishSequence[guilds.PartialGuild], /) -> None:
         self._check_if_connected()
 
         payload = data_binding.JSONObjectBuilder()

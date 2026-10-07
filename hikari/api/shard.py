@@ -267,10 +267,10 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def request_soundboard_sounds(
-        self, guilds: typing.Sequence[snowflakes.SnowflakeishOr[guilds.PartialGuild]], /
-    ) -> None:
+    async def request_soundboard_sounds(self, guilds: snowflakes.SnowflakeishSequence[guilds.PartialGuild], /) -> None:
         """Request for soundboard sounds.
+
+        The response arrives as one [`hikari.events.soundboard_events.SoundboardSoundsEvent`][] per guild.
 
         Parameters
         ----------
