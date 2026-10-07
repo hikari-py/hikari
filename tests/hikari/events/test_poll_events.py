@@ -18,27 +18,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events that can be fired by Hikari's gateway implementation."""
-
 from __future__ import annotations
 
-from hikari.events.application_events import *
-from hikari.events.auto_mod_events import *
-from hikari.events.base_events import Event
-from hikari.events.base_events import ExceptionEvent
-from hikari.events.channel_events import *
-from hikari.events.guild_events import *
-from hikari.events.interaction_events import *
-from hikari.events.lifetime_events import *
-from hikari.events.member_events import *
-from hikari.events.message_events import *
-from hikari.events.monetization_events import *
-from hikari.events.poll_events import *
-from hikari.events.reaction_events import *
-from hikari.events.role_events import *
-from hikari.events.scheduled_events import *
-from hikari.events.shard_events import *
-from hikari.events.stage_events import *
-from hikari.events.typing_events import *
-from hikari.events.user_events import *
-from hikari.events.voice_events import *
+from hikari import events
+from hikari.events import poll_events
+
+
+def test_poll_events_are_exported_from_events_package():
+    assert events.PollVoteCreateEvent is poll_events.PollVoteCreateEvent
+    assert events.PollVoteDeleteEvent is poll_events.PollVoteDeleteEvent
