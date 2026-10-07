@@ -10148,7 +10148,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][]
             in the server.
         hikari.errors.NotFoundError
-            If the guild or sound is not found.
+            If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
