@@ -548,6 +548,7 @@ class CacheImpl(cache.MutableCache):
 
             if not guild_record.soundboard_sounds:
                 guild_record.soundboard_sounds = None
+                self._remove_guild_record_if_empty(sound_data.guild_id, guild_record)
 
         return self._build_soundboard_sound(sound_data)
 

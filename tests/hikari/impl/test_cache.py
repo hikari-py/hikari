@@ -1132,6 +1132,28 @@ class TestCacheImpl:
         cache_impl._build_soundboard_sound.assert_called_once_with(mock_sound_data)
         cache_impl._garbage_collect_user.assert_not_called()
 
+    def test_delete_soundboard_sound_removes_empty_guild_record(self, cache_impl):
+        mock_sound_data = mock.Mock(
+            cache_utilities.SoundboardSoundData, user=None, guild_id=snowflakes.Snowflake(123333)
+        )
+        mock_sound = mock.Mock(soundboard.SoundboardSound)
+        sound_ids = collections.SnowflakeSet()
+        sound_ids.add(snowflakes.Snowflake(12354123))
+        guild_record = cache_utilities.GuildRecord(soundboard_sounds=sound_ids)
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354123): mock_sound_data}
+        )
+        cache_impl._guild_entries = collections.FreezableDict({snowflakes.Snowflake(123333): guild_record})
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._build_soundboard_sound = mock.Mock(return_value=mock_sound)
+
+        result = cache_impl.delete_soundboard_sound(StubModel(12354123))
+
+        assert result is mock_sound
+        assert cache_impl._soundboard_sound_entries == {}
+        assert guild_record.soundboard_sounds is None
+        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(123333), guild_record)
+
     def test_delete_soundboard_sound_for_unknown_soundboard_sound(self, cache_impl):
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_soundboard_sound = mock.Mock()
