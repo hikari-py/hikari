@@ -510,13 +510,13 @@ class TestCacheImpl:
             {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.KnownCustomEmojiData)}
         )
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
 
         cache_impl.set_emoji(emoji)
 
         assert 5123123 in cache_impl._emoji_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_ref_count.assert_not_called()
 
     def test_update_emoji(self, cache_impl):
         mock_cached_emoji_1 = mock.Mock(emojis.KnownCustomEmoji)
@@ -920,13 +920,13 @@ class TestCacheImpl:
             {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.GuildStickerData)}
         )
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
 
         cache_impl.set_sticker(sticker)
 
         assert 5123123 in cache_impl._sticker_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_ref_count.assert_not_called()
 
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -2303,7 +2303,7 @@ class TestCacheImpl:
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
         member_model = mock.MagicMock(guilds.Member, user=mock_user, guild_id=snowflakes.Snowflake(67345234))
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(67345234): cache_utilities.GuildRecord(
@@ -2317,7 +2317,7 @@ class TestCacheImpl:
         cache_impl.set_member(member_model)
 
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_ref_count.assert_not_called()
 
     def test_update_member(self, cache_impl):
         mock_old_cached_member = mock.Mock(guilds.Member)
