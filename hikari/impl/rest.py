@@ -4271,7 +4271,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("enabled", enabled)
-        body.put_snowflake("channel", channel)
+        body.put_snowflake("channel_id", channel)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

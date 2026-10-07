@@ -6306,7 +6306,7 @@ class TestRESTClientImplAsync:
     async def test_edit_widget_settings(self, rest_client):
         widget = StubModel(456)
         expected_route = routes.PATCH_GUILD_WIDGET_SETTINGS.compile(guild=123)
-        expected_json = {"enabled": True, "channel": "456"}
+        expected_json = {"enabled": True, "channel_id": "456"}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_guild_widget_settings = mock.Mock(return_value=widget)
 
@@ -6323,7 +6323,7 @@ class TestRESTClientImplAsync:
     async def test_edit_widget_settings_when_channel_is_None(self, rest_client):
         widget = StubModel(456)
         expected_route = routes.PATCH_GUILD_WIDGET_SETTINGS.compile(guild=123)
-        expected_json = {"enabled": True, "channel": None}
+        expected_json = {"enabled": True, "channel_id": None}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_guild_widget_settings = mock.Mock(return_value=widget)
 
