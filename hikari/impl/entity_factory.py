@@ -52,6 +52,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import soundboard as soundboard_models
 from hikari import stage_instances
 from hikari import stickers as sticker_models
 from hikari import templates as template_models
@@ -4854,4 +4855,31 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_enabled=payload["enabled"],
             exempt_channel_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_channels"]],
             exempt_role_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_roles"]],
+        )
+
+    #####################
+    # SOUNDBOARD MODELS #
+    #####################
+
+    @typing_extensions.override
+    def deserialize_soundboard_sound(self, payload: data_binding.JSONObject) -> soundboard_models.SoundboardSound:
+        emoji: emoji_models.CustomEmoji | emoji_models.UnicodeEmoji | None = None
+        emoji_id = payload["emoji_id"]
+        if emoji_id:
+            emoji_id = snowflakes.Snowflake(emoji_id)
+
+        emoji_name = payload["emoji_name"]
+        if not emoji_id and emoji_name:
+            emoji = emoji_models.UnicodeEmoji(emoji_name)
+        elif emoji_id and emoji_name:
+            emoji = emoji_models.CustomEmoji(id=emoji_id, name=emoji_name, is_animated=False)
+
+        return soundboard_models.SoundboardSound(
+            id=snowflakes.Snowflake(payload["sound_id"]),
+            name=payload["name"],
+            volume=payload["volume"],
+            emoji=emoji,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else undefined.UNDEFINED,
+            is_available=payload["available"],
+            user=self.deserialize_user(payload["user"]) if "user" in payload else undefined.UNDEFINED,
         )

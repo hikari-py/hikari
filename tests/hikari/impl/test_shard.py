@@ -823,6 +823,16 @@ class TestGatewayShardImplAsync:
         )
         check_if_alive.assert_called_once_with()
 
+    async def test_request_soundboard_sounds(self, client):
+        client._intents = intents.Intents.ALL
+
+        with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
+            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
+                await client.request_soundboard_sounds([123, 456, 789])
+
+        send_json.assert_awaited_once_with({"op": 31, "d": {"guild_ids": ["123", "456", "789"]}})
+        check_if_alive.assert_called_once_with()
+
     async def test_request_channel_info(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
             with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_connected:
