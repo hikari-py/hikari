@@ -9994,26 +9994,21 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_soundboard_sounds(self) -> typing.Sequence[soundboard.SoundboardSound]:
-        """Fetch soundboard sounds.
+    async def fetch_default_soundboard_sounds(self) -> typing.Sequence[soundboard.SoundboardSound]:
+        """Fetch the default soundboard sounds.
 
-        Fetch the default, or built in soundboard sounds.
+        These are the sounds built into Discord that are available to every
+        user, regardless of the guild.
 
         Returns
         -------
         typing.Sequence[hikari.soundboard.SoundboardSound]
-            The soundboard sounds.
+            The default soundboard sounds.
 
         Raises
         ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or rule was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -10025,30 +10020,33 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_guild_soundboard_sounds(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> typing.Sequence[soundboard.SoundboardSound]:
-        """Fetch guild soundboard sounds.
+        """Fetch the soundboard sounds of a guild.
 
-        Fetch a guilds custom soundboard sounds.
+        !!! note
+            The `user` of the returned sounds is only included if you have
+            [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][] or
+            [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to fetch soundboard sounds from.
+            The guild to fetch the soundboard sounds of. This can be a guild
+            object or the ID of an existing guild.
 
         Returns
         -------
         typing.Sequence[hikari.soundboard.SoundboardSound]
-            The guild soundboard sounds.
+            The soundboard sounds of the guild.
 
         Raises
         ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
+            If you are not part of the server.
+        hikari.errors.NotFoundError
+            If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or rule was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -10063,34 +10061,36 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
         /,
     ) -> soundboard.SoundboardSound:
-        """Fetch a guild soundboard sound.
+        """Fetch a soundboard sound of a guild.
 
-        Fetch a specific guild soundboard sound.
+        !!! note
+            The `user` of the returned sound is only included if you have
+            [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][] or
+            [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to fetch the sound for.
+            The guild the sound is in. This can be a guild object or the
+            ID of an existing guild.
         sound
-            Object or ID of the sound to fetch the sound for.
+            The sound to fetch. This can be a sound object or the ID of an
+            existing sound.
 
         Returns
         -------
-        None
-            The provided guild ID or sound ID was not found.
         hikari.soundboard.SoundboardSound
-            The found sound.
+            The requested sound.
 
         Raises
         ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
+            If you are not part of the server.
+        hikari.errors.NotFoundError
+            If the guild or sound is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or sound was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -10099,184 +10099,205 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def send_guild_soundboard_sound(
+    async def create_soundboard_sound(
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel | channels_.GuildVoiceChannel],
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        sound: files.Resourceish,
+        *,
+        volume: undefined.UndefinedOr[float] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> soundboard.SoundboardSound:
+        """Create a soundboard sound in a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild to create the sound in. This can be a guild object or the
+            ID of an existing guild.
+        name
+            The name for the sound. Must be between 2 and 32 characters long.
+        sound
+            The MP3 or Ogg sound file. Maximum upload size is 512kb and the
+            maximum duration is 5.2 seconds.
+
+            Raw bytes need a filename to detect the MIME type, e.g.
+            `hikari.Bytes(data, "sound.mp3")`.
+        volume
+            If provided, the volume of the sound, from 0 to 1.
+        emoji
+            If provided, the emoji of the sound. This can be a unicode emoji
+            string, a [`hikari.emojis.UnicodeEmoji`][], a custom emoji object or
+            the ID of an existing custom emoji.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.soundboard.SoundboardSound
+            The created sound.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value or
+            if there are no more spaces for the sound in the guild.
+        hikari.errors.ForbiddenError
+            If you are missing [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][]
+            in the server.
+        hikari.errors.NotFoundError
+            If the guild or sound is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_soundboard_sound(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
-        /,
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        volume: undefined.UndefinedNoneOr[float] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedNoneOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> soundboard.SoundboardSound:
+        """Edit a soundboard sound in a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild the sound is in. This can be a guild object or the
+            ID of an existing guild.
+        sound
+            The sound to edit. This can be a sound object or the ID of an
+            existing sound.
+        name
+            If provided, the new name for the sound. Must be between 2 and 32
+            characters long.
+        volume
+            If provided, the new volume of the sound, from 0 to 1.
+            If `None`, the volume is reset to the default.
+        emoji
+            If provided, the new emoji of the sound. This can be a unicode emoji
+            string, a [`hikari.emojis.UnicodeEmoji`][], a custom emoji object or
+            the ID of an existing custom emoji. If `None`, the emoji is removed.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.soundboard.SoundboardSound
+            The edited sound.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][]
+            or [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server and the sound is your own, or
+            [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            otherwise.
+        hikari.errors.NotFoundError
+            If the guild or sound is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_soundboard_sound(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Delete a soundboard sound in a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild the sound is in. This can be a guild object or the
+            ID of an existing guild.
+        sound
+            The sound to delete. This can be a sound object or the ID of an
+            existing sound.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing [`hikari.permissions.Permissions.CREATE_GUILD_EXPRESSIONS`][]
+            or [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server and the sound is your own, or
+            [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            otherwise.
+        hikari.errors.NotFoundError
+            If the guild or sound is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def send_soundboard_sound(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel | channels_.GuildStageChannel],
+        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
+        *,
         source_guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> None:
-        """Send a soundboard sound.
-
-        Play a soundboard sound in a specific channel.
+        """Play a soundboard sound in a voice or stage channel.
 
         !!! note
-            The bot must be connected to the channel to play the sound.
+            The bot must be connected to the channel and must not be muted,
+            deafened or suppressed.
 
         Parameters
         ----------
         channel
-            Object or ID of the channel to play the sound in.
+            The voice or stage channel to play the sound in. This can be a
+            channel object or the ID of an existing channel.
         sound
-            Object or ID of the sound to play.
+            The sound to play. This can be a sound object or the ID of an
+            existing sound.
         source_guild
-            Object or ID of the source guild in which the sound came from.
+            If provided, the guild the sound is from. This is required for
+            sounds of other guilds. This can be a guild object or the ID of an
+            existing guild.
 
         Raises
         ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
+            If you are missing [`hikari.permissions.Permissions.SPEAK`][],
+            [`hikari.permissions.Permissions.USE_SOUNDBOARD`][] or, for sounds
+            of other guilds, [`hikari.permissions.Permissions.USE_EXTERNAL_SOUNDS`][]
+            in the channel.
+        hikari.errors.NotFoundError
+            If the channel or sound is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or rule was not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    async def create_guild_soundboard_sound(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        /,
-        name: str,
-        sound: files.Resourceish,
-        volume: undefined.UndefinedOr[float] = undefined.UNDEFINED,
-        emoji: undefined.UndefinedOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> soundboard.SoundboardSound:
-        """Create a guild soundboard sound.
-
-        Create a soundboard sound for a guild.
-
-        Parameters
-        ----------
-        guild
-            Object or ID of the guild to create the sound for.
-        name
-            The name for the sound.
-        sound
-            The file for the sound object.
-        volume
-            The volume for the sound.
-        emoji
-            The emoji for the sound.
-        reason
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Returns
-        -------
-        hikari.soundboard.SoundboardSound
-            The sound that was created.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or rule was not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    async def edit_guild_soundboard_sound(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
-        /,
-        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        volume: undefined.UndefinedOr[float] = undefined.UNDEFINED,
-        emoji: undefined.UndefinedOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> soundboard.SoundboardSound:
-        """Edit a guild soundboard sound.
-
-        Edit a soundboard sound in a guild.
-
-        Parameters
-        ----------
-        guild
-            Object or ID of the guild the sound is in.
-        sound
-            Object or ID of the sound to edit.
-        name
-            The new name for the sound.
-        volume
-            The new volume for the sound.
-        emoji
-            The new emoji for the sound.
-        reason
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Returns
-        -------
-        hikari.soundboard.SoundboardSound
-            The sound that was edited.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or rule was not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    async def delete_guild_soundboard_sound(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
-        /,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Delete a guild soundboard sound.
-
-        Delete a soundboard sound from guild.
-
-        Parameters
-        ----------
-        guild
-            Object or ID of the guild the sound is in.
-        sound
-            Object or ID of the sound to delete.
-        reason
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value.
-        hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild or rule was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
