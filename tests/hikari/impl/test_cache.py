@@ -968,6 +968,22 @@ class TestCacheImpl:
                 snowflakes.Snowflake(6873451): mock_sound_data_3,
             }
         )
+        sound_ids = collections.SnowflakeSet()
+        sound_ids.add_all([snowflakes.Snowflake(43123123), snowflakes.Snowflake(87643523)])
+        other_sound_ids = collections.SnowflakeSet()
+        other_sound_ids.add(snowflakes.Snowflake(6873451))
+        emoji_ids = collections.SnowflakeSet()
+        emoji_ids.add(snowflakes.Snowflake(7))
+        record_with_only_sounds = cache_utilities.GuildRecord(soundboard_sounds=sound_ids)
+        record_with_sounds_and_emojis = cache_utilities.GuildRecord(emojis=emoji_ids, soundboard_sounds=other_sound_ids)
+        record_without_sounds = cache_utilities.GuildRecord(emojis=emoji_ids)
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(1): record_with_only_sounds,
+                snowflakes.Snowflake(2): record_with_sounds_and_emojis,
+                snowflakes.Snowflake(3): record_without_sounds,
+            }
+        )
         cache_impl._build_soundboard_sound = mock.Mock(side_effect=[mock_sound_1, mock_sound_2, mock_sound_3])
         cache_impl._garbage_collect_user = mock.Mock()
 
@@ -979,6 +995,12 @@ class TestCacheImpl:
             snowflakes.Snowflake(6873451): mock_sound_3,
         }
         assert cache_impl._soundboard_sound_entries == {}
+        assert snowflakes.Snowflake(1) not in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflakes.Snowflake(2)] is record_with_sounds_and_emojis
+        assert record_with_sounds_and_emojis.soundboard_sounds is None
+        assert record_with_sounds_and_emojis.emojis is emoji_ids
+        assert cache_impl._guild_entries[snowflakes.Snowflake(3)] is record_without_sounds
+        assert record_without_sounds.soundboard_sounds is None
         cache_impl._garbage_collect_user.assert_has_calls(
             [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
         )
@@ -1325,12 +1347,15 @@ class TestCacheImpl:
             emoji=None,
             guild_id=None,
             is_available=True,
-            user=None,
+            user=mock.Mock(users.User, id=snowflakes.Snowflake(654234)),
         )
+        cache_impl._set_user = mock.Mock()
 
         cache_impl.set_soundboard_sound(sound)
 
         assert cache_impl._soundboard_sound_entries == {}
+        assert cache_impl._guild_entries == {}
+        cache_impl._set_user.assert_not_called()
 
     def test_guild_record_with_only_soundboard_sounds_is_not_empty(self):
         sounds = collections.SnowflakeSet()

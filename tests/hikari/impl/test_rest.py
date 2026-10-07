@@ -8076,10 +8076,11 @@ class TestRESTClientImplAsync:
     async def test_edit_soundboard_sound_with_custom_emoji(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
 
-        await rest_client.edit_soundboard_sound(
+        result = await rest_client.edit_soundboard_sound(
             StubModel(123), StubModel(456), name="new", emoji=snowflakes.Snowflake(789)
         )
 
+        assert result is rest_client._entity_factory.deserialize_soundboard_sound.return_value
         rest_client._request.assert_awaited_once_with(
             routes.PATCH_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=456),
             json={"name": "new", "emoji_id": "789", "emoji_name": None},
@@ -8089,19 +8090,31 @@ class TestRESTClientImplAsync:
     async def test_edit_soundboard_sound_clearing_volume_and_emoji(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
 
-        await rest_client.edit_soundboard_sound(StubModel(123), StubModel(456), volume=None, emoji=None)
+        result = await rest_client.edit_soundboard_sound(StubModel(123), StubModel(456), volume=None, emoji=None)
 
+        assert result is rest_client._entity_factory.deserialize_soundboard_sound.return_value
         rest_client._request.assert_awaited_once_with(
             routes.PATCH_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=456),
             json={"volume": None, "emoji_id": None, "emoji_name": None},
             reason=undefined.UNDEFINED,
         )
 
+    async def test_edit_soundboard_sound_without_arguments(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+
+        result = await rest_client.edit_soundboard_sound(StubModel(123), StubModel(456))
+
+        assert result is rest_client._entity_factory.deserialize_soundboard_sound.return_value
+        rest_client._request.assert_awaited_once_with(
+            routes.PATCH_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=456), json={}, reason=undefined.UNDEFINED
+        )
+
     async def test_delete_soundboard_sound(self, rest_client):
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_soundboard_sound(StubModel(123), StubModel(456), reason="bye")
+        result = await rest_client.delete_soundboard_sound(StubModel(123), StubModel(456), reason="bye")
 
+        assert result is None
         rest_client._request.assert_awaited_once_with(
             routes.DELETE_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=456), reason="bye"
         )
@@ -8113,4 +8126,13 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(
             routes.POST_SEND_SOUNDBOARD_SOUND.compile(channel=111), json={"sound_id": "456", "source_guild_id": "123"}
+        )
+
+    async def test_send_soundboard_sound_without_source_guild(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.send_soundboard_sound(StubModel(111), StubModel(456))
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_SEND_SOUNDBOARD_SOUND.compile(channel=111), json={"sound_id": "456"}
         )
