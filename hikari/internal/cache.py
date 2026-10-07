@@ -37,6 +37,7 @@ __all__: typing.Sequence[str] = (
     "MessageData",
     "RefCell",
     "RichActivityData",
+    "SoundboardSoundData",
     "ValueT",
     "VoiceStateData",
     "copy_guild_channel",
@@ -56,6 +57,7 @@ from hikari import invites
 from hikari import messages
 from hikari import presences
 from hikari import snowflakes
+from hikari import soundboard as soundboard_
 from hikari import stickers as stickers_
 from hikari import undefined
 from hikari import voices
@@ -231,6 +233,12 @@ class GuildRecord:
     This will be [`None`][] if no stickers are cached for this guild.
     """
 
+    soundboard_sounds: typing.MutableSet[snowflakes.Snowflake] | None = attrs.field(default=None)
+    """A set of the IDs of the soundboard sounds cached for this guild.
+
+    This will be [`None`][] if no soundboard sounds are cached for this guild.
+    """
+
     invites: typing.MutableSequence[str] | None = attrs.field(default=None)
     """A set of the [`str`][] codes of the invites cached for this guild.
 
@@ -285,6 +293,7 @@ class GuildRecord:
                 self.members,
                 self.presences,
                 self.roles,
+                self.soundboard_sounds,
                 self.voice_states,
             )
         )
@@ -584,6 +593,51 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
             tag=self.tag,
             is_available=self.is_available,
             format_type=self.format_type,
+            user=self.user.copy() if self.user else None,
+        )
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
+class SoundboardSoundData(BaseData[soundboard_.SoundboardSound]):
+    """A data model for storing soundboard sound data in an in-memory cache."""
+
+    id: snowflakes.Snowflake = attrs.field()
+    name: str = attrs.field()
+    volume: float = attrs.field()
+    emoji: emojis.UnicodeEmoji | emojis.CustomEmoji | None = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
+    is_available: bool = attrs.field()
+    user: RefCell[users_.User] | None = attrs.field()
+
+    @classmethod
+    @typing_extensions.override
+    def build_from_entity(
+        cls, sound: soundboard_.SoundboardSound, /, *, user: RefCell[users_.User] | None = None
+    ) -> SoundboardSoundData:
+        if not user and sound.user:
+            user = RefCell(copy.copy(sound.user))
+
+        assert sound.guild_id is not None
+        return cls(
+            id=sound.id,
+            name=sound.name,
+            volume=sound.volume,
+            emoji=sound.emoji,
+            guild_id=sound.guild_id,
+            is_available=sound.is_available,
+            user=user,
+        )
+
+    @typing_extensions.override
+    def build_entity(self, app: traits.RESTAware, /) -> soundboard_.SoundboardSound:
+        return soundboard_.SoundboardSound(
+            id=self.id,
+            name=self.name,
+            volume=self.volume,
+            emoji=self.emoji,
+            guild_id=self.guild_id,
+            is_available=self.is_available,
             user=self.user.copy() if self.user else None,
         )
 

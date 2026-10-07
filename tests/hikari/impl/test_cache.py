@@ -33,6 +33,7 @@ from hikari import scheduled_events
 from hikari import messages
 from hikari import polls
 from hikari import snowflakes
+from hikari import soundboard
 from hikari import stickers
 from hikari import undefined
 from hikari import users
@@ -910,6 +911,410 @@ class TestCacheImpl:
         assert 5123123 in cache_impl._sticker_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
         cache_impl._increment_user_ref_count.assert_not_called()
+
+    def test__build_soundboard_sound(self, cache_impl):
+        mock_user = mock.MagicMock(users.User)
+        sound_data = cache_utilities.SoundboardSoundData(
+            id=snowflakes.Snowflake(1233534234),
+            name="OKOKOKOKOK",
+            volume=0.5,
+            emoji=emojis.UnicodeEmoji("🦆"),
+            guild_id=snowflakes.Snowflake(65234123),
+            user=cache_utilities.RefCell(mock_user),
+            is_available=True,
+        )
+
+        sound = cache_impl._build_soundboard_sound(sound_data)
+
+        assert sound.id == snowflakes.Snowflake(1233534234)
+        assert sound.name == "OKOKOKOKOK"
+        assert sound.volume == 0.5
+        assert sound.emoji == emojis.UnicodeEmoji("🦆")
+        assert sound.guild_id == snowflakes.Snowflake(65234123)
+        assert sound.user == mock_user
+        assert sound.user is not mock_user
+        assert sound.is_available is True
+
+    def test__build_soundboard_sound_with_no_user(self, cache_impl):
+        sound_data = cache_utilities.SoundboardSoundData(
+            id=snowflakes.Snowflake(1233534234),
+            name="OKOKOKOKOK",
+            volume=1.0,
+            emoji=None,
+            guild_id=snowflakes.Snowflake(65234123),
+            user=None,
+            is_available=True,
+        )
+        cache_impl._build_user = mock.Mock()
+
+        sound = cache_impl._build_soundboard_sound(sound_data)
+
+        cache_impl._build_user.assert_not_called()
+        assert sound.user is None
+
+    def test_clear_soundboard_sounds(self, cache_impl):
+        mock_user_1 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_user_2 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_sound_data_1 = mock.Mock(cache_utilities.SoundboardSoundData, user=mock_user_1)
+        mock_sound_data_2 = mock.Mock(cache_utilities.SoundboardSoundData, user=mock_user_2)
+        mock_sound_data_3 = mock.Mock(cache_utilities.SoundboardSoundData, user=None)
+        mock_sound_1 = mock.Mock(soundboard.SoundboardSound)
+        mock_sound_2 = mock.Mock(soundboard.SoundboardSound)
+        mock_sound_3 = mock.Mock(soundboard.SoundboardSound)
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(43123123): mock_sound_data_1,
+                snowflakes.Snowflake(87643523): mock_sound_data_2,
+                snowflakes.Snowflake(6873451): mock_sound_data_3,
+            }
+        )
+        cache_impl._build_soundboard_sound = mock.Mock(side_effect=[mock_sound_1, mock_sound_2, mock_sound_3])
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        view = cache_impl.clear_soundboard_sounds()
+
+        assert view == {
+            snowflakes.Snowflake(43123123): mock_sound_1,
+            snowflakes.Snowflake(87643523): mock_sound_2,
+            snowflakes.Snowflake(6873451): mock_sound_3,
+        }
+        assert cache_impl._soundboard_sound_entries == {}
+        cache_impl._garbage_collect_user.assert_has_calls(
+            [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
+        )
+        cache_impl._build_soundboard_sound.assert_has_calls(
+            [mock.call(mock_sound_data_1), mock.call(mock_sound_data_2), mock.call(mock_sound_data_3)]
+        )
+
+    def test_clear_soundboard_sounds_for_guild(self, cache_impl):
+        mock_user_1 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_user_2 = mock.Mock(cache_utilities.RefCell[users.User])
+        mock_sound_data_1 = mock.Mock(cache_utilities.SoundboardSoundData, user=mock_user_1)
+        mock_sound_data_2 = mock.Mock(cache_utilities.SoundboardSoundData, user=mock_user_2)
+        mock_sound_data_3 = mock.Mock(cache_utilities.SoundboardSoundData, user=None)
+        mock_other_sound_data = mock.Mock(cache_utilities.SoundboardSoundData)
+        sound_ids = collections.SnowflakeSet()
+        sound_ids.add_all(
+            [snowflakes.Snowflake(43123123), snowflakes.Snowflake(87643523), snowflakes.Snowflake(6873451)]
+        )
+        mock_sound_1 = mock.Mock(soundboard.SoundboardSound)
+        mock_sound_2 = mock.Mock(soundboard.SoundboardSound)
+        mock_sound_3 = mock.Mock(soundboard.SoundboardSound)
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(6873451): mock_sound_data_1,
+                snowflakes.Snowflake(43123123): mock_sound_data_2,
+                snowflakes.Snowflake(87643523): mock_sound_data_3,
+                snowflakes.Snowflake(111): mock_other_sound_data,
+            }
+        )
+        guild_record = cache_utilities.GuildRecord(soundboard_sounds=sound_ids)
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(432123123): guild_record,
+                snowflakes.Snowflake(1): mock.Mock(cache_utilities.GuildRecord),
+            }
+        )
+        cache_impl._build_soundboard_sound = mock.Mock(side_effect=[mock_sound_1, mock_sound_2, mock_sound_3])
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        sound_mapping = cache_impl.clear_soundboard_sounds_for_guild(StubModel(432123123))
+
+        cache_impl._garbage_collect_user.assert_has_calls(
+            [mock.call(mock_user_1, decrement=1), mock.call(mock_user_2, decrement=1)]
+        )
+        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(432123123), guild_record)
+        assert sound_mapping == {
+            snowflakes.Snowflake(6873451): mock_sound_1,
+            snowflakes.Snowflake(43123123): mock_sound_2,
+            snowflakes.Snowflake(87643523): mock_sound_3,
+        }
+        assert cache_impl._soundboard_sound_entries == collections.FreezableDict(
+            {snowflakes.Snowflake(111): mock_other_sound_data}
+        )
+        assert cache_impl._guild_entries[snowflakes.Snowflake(432123123)].soundboard_sounds is None
+        cache_impl._build_soundboard_sound.assert_has_calls(
+            [mock.call(mock_sound_data_1), mock.call(mock_sound_data_2), mock.call(mock_sound_data_3)]
+        )
+
+    def test_clear_soundboard_sounds_for_guild_for_unknown_soundboard_sound_cache(self, cache_impl):
+        cache_impl._soundboard_sound_entries = {
+            snowflakes.Snowflake(3123): mock.Mock(cache_utilities.SoundboardSoundData)
+        }
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(432123123): cache_utilities.GuildRecord(),
+                snowflakes.Snowflake(1): mock.Mock(cache_utilities.GuildRecord),
+            }
+        )
+        cache_impl._build_soundboard_sound = mock.Mock()
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        sound_mapping = cache_impl.clear_soundboard_sounds_for_guild(StubModel(432123123))
+
+        cache_impl._garbage_collect_user.assert_not_called()
+        cache_impl._remove_guild_record_if_empty.assert_not_called()
+        assert sound_mapping == {}
+        cache_impl._build_soundboard_sound.assert_not_called()
+
+    def test_clear_soundboard_sounds_for_guild_for_unknown_record(self, cache_impl):
+        cache_impl._soundboard_sound_entries = {
+            snowflakes.Snowflake(123124): mock.Mock(cache_utilities.SoundboardSoundData)
+        }
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(1): mock.Mock(cache_utilities.GuildRecord)}
+        )
+        cache_impl._build_soundboard_sound = mock.Mock()
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+        cache_impl._garbage_collect_user = mock.Mock()
+
+        sound_mapping = cache_impl.clear_soundboard_sounds_for_guild(StubModel(432123123))
+
+        cache_impl._garbage_collect_user.assert_not_called()
+        cache_impl._remove_guild_record_if_empty.assert_not_called()
+        assert sound_mapping == {}
+        cache_impl._build_soundboard_sound.assert_not_called()
+
+    def test_delete_soundboard_sound(self, cache_impl):
+        mock_user = object()
+        mock_sound_data = mock.Mock(
+            cache_utilities.SoundboardSoundData, user=mock_user, guild_id=snowflakes.Snowflake(123333)
+        )
+        mock_other_sound_data = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound = mock.Mock(soundboard.SoundboardSound)
+        sound_ids = collections.SnowflakeSet()
+        sound_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354123): mock_sound_data, snowflakes.Snowflake(999): mock_other_sound_data}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(123333): cache_utilities.GuildRecord(soundboard_sounds=sound_ids)}
+        )
+        cache_impl._garbage_collect_user = mock.Mock()
+        cache_impl._build_soundboard_sound = mock.Mock(return_value=mock_sound)
+
+        result = cache_impl.delete_soundboard_sound(StubModel(12354123))
+
+        assert result is mock_sound
+        assert cache_impl._soundboard_sound_entries == {snowflakes.Snowflake(999): mock_other_sound_data}
+        assert cache_impl._guild_entries[snowflakes.Snowflake(123333)].soundboard_sounds == {
+            snowflakes.Snowflake(432123)
+        }
+        cache_impl._build_soundboard_sound.assert_called_once_with(mock_sound_data)
+        cache_impl._garbage_collect_user.assert_called_once_with(mock_user, decrement=1)
+
+    def test_delete_soundboard_sound_without_user(self, cache_impl):
+        mock_sound_data = mock.Mock(
+            cache_utilities.SoundboardSoundData, user=None, guild_id=snowflakes.Snowflake(123333)
+        )
+        mock_other_sound_data = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound = mock.Mock(soundboard.SoundboardSound)
+        sound_ids = collections.SnowflakeSet()
+        sound_ids.add_all([snowflakes.Snowflake(12354123), snowflakes.Snowflake(432123)])
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354123): mock_sound_data, snowflakes.Snowflake(999): mock_other_sound_data}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(123333): cache_utilities.GuildRecord(soundboard_sounds=sound_ids)}
+        )
+        cache_impl._garbage_collect_user = mock.Mock()
+        cache_impl._build_soundboard_sound = mock.Mock(return_value=mock_sound)
+
+        result = cache_impl.delete_soundboard_sound(StubModel(12354123))
+
+        assert result is mock_sound
+        assert cache_impl._soundboard_sound_entries == {snowflakes.Snowflake(999): mock_other_sound_data}
+        assert cache_impl._guild_entries[snowflakes.Snowflake(123333)].soundboard_sounds == {
+            snowflakes.Snowflake(432123)
+        }
+        cache_impl._build_soundboard_sound.assert_called_once_with(mock_sound_data)
+        cache_impl._garbage_collect_user.assert_not_called()
+
+    def test_delete_soundboard_sound_for_unknown_soundboard_sound(self, cache_impl):
+        cache_impl._garbage_collect_user = mock.Mock()
+        cache_impl._build_soundboard_sound = mock.Mock()
+
+        result = cache_impl.delete_soundboard_sound(StubModel(12354123))
+
+        assert result is None
+        cache_impl._build_soundboard_sound.assert_not_called()
+        cache_impl._garbage_collect_user.assert_not_called()
+
+    def test_get_soundboard_sound(self, cache_impl):
+        mock_sound_data = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound = mock.Mock(soundboard.SoundboardSound)
+        cache_impl._build_soundboard_sound = mock.Mock(return_value=mock_sound)
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(3422123): mock_sound_data}
+        )
+
+        result = cache_impl.get_soundboard_sound(StubModel(3422123))
+
+        assert result is mock_sound
+        cache_impl._build_soundboard_sound.assert_called_once_with(mock_sound_data)
+
+    def test_get_soundboard_sound_with_unknown_soundboard_sound(self, cache_impl):
+        cache_impl._build_soundboard_sound = mock.Mock()
+
+        result = cache_impl.get_soundboard_sound(StubModel(3422123))
+
+        assert result is None
+        cache_impl._build_soundboard_sound.assert_not_called()
+
+    def test_get_soundboard_sounds_view(self, cache_impl):
+        mock_sound_data_1 = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound_data_2 = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound_1 = mock.Mock(soundboard.SoundboardSound)
+        mock_sound_2 = mock.Mock(soundboard.SoundboardSound)
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(123123123): mock_sound_data_1, snowflakes.Snowflake(43156234): mock_sound_data_2}
+        )
+        cache_impl._build_soundboard_sound = mock.Mock(side_effect=[mock_sound_1, mock_sound_2])
+
+        result = cache_impl.get_soundboard_sounds_view()
+
+        assert result == {snowflakes.Snowflake(123123123): mock_sound_1, snowflakes.Snowflake(43156234): mock_sound_2}
+        cache_impl._build_soundboard_sound.assert_has_calls(
+            [mock.call(mock_sound_data_1), mock.call(mock_sound_data_2)]
+        )
+
+    def test_get_soundboard_sounds_view_for_guild(self, cache_impl):
+        mock_sound_data_1 = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound_data_2 = mock.Mock(cache_utilities.SoundboardSoundData)
+        mock_sound_1 = mock.Mock(soundboard.SoundboardSound)
+        mock_sound_2 = mock.Mock(soundboard.SoundboardSound)
+        sound_ids = collections.SnowflakeSet()
+        sound_ids.add_all([snowflakes.Snowflake(65123), snowflakes.Snowflake(43156234)])
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(65123): mock_sound_data_1,
+                snowflakes.Snowflake(942123): mock.Mock(cache_utilities.SoundboardSoundData),
+                snowflakes.Snowflake(43156234): mock_sound_data_2,
+            }
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(99999): mock.Mock(cache_utilities.GuildRecord),
+                snowflakes.Snowflake(9342123): cache_utilities.GuildRecord(soundboard_sounds=sound_ids),
+            }
+        )
+        cache_impl._build_soundboard_sound = mock.Mock(side_effect=[mock_sound_1, mock_sound_2])
+
+        result = cache_impl.get_soundboard_sounds_view_for_guild(StubModel(9342123))
+
+        assert result == {snowflakes.Snowflake(65123): mock_sound_1, snowflakes.Snowflake(43156234): mock_sound_2}
+        cache_impl._build_soundboard_sound.assert_has_calls(
+            [mock.call(mock_sound_data_1), mock.call(mock_sound_data_2)]
+        )
+
+    def test_get_soundboard_sounds_view_for_guild_for_unknown_soundboard_sound_cache(self, cache_impl):
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(9999): mock.Mock(cache_utilities.SoundboardSoundData)}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {
+                snowflakes.Snowflake(99999): mock.Mock(cache_utilities.GuildRecord),
+                snowflakes.Snowflake(9342123): cache_utilities.GuildRecord(),
+            }
+        )
+        cache_impl._build_soundboard_sound = mock.Mock()
+
+        result = cache_impl.get_soundboard_sounds_view_for_guild(StubModel(9342123))
+
+        assert result == {}
+        cache_impl._build_soundboard_sound.assert_not_called()
+
+    def test_get_soundboard_sounds_view_for_guild_for_unknown_record(self, cache_impl):
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(12354345): mock.Mock(cache_utilities.SoundboardSoundData)}
+        )
+        cache_impl._guild_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(9342123): cache_utilities.GuildRecord()}
+        )
+        cache_impl._build_soundboard_sound = mock.Mock()
+
+        result = cache_impl.get_soundboard_sounds_view_for_guild(StubModel(9342123))
+
+        assert result == {}
+        cache_impl._build_soundboard_sound.assert_not_called()
+
+    def test_set_soundboard_sound(self, cache_impl):
+        mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(654234))
+        mock_reffed_user = cache_utilities.RefCell(mock_user)
+        sound = soundboard.SoundboardSound(
+            id=snowflakes.Snowflake(5123123),
+            name="A name",
+            volume=0.25,
+            emoji=emojis.UnicodeEmoji("🦆"),
+            guild_id=snowflakes.Snowflake(65234),
+            is_available=False,
+            user=mock_user,
+        )
+        cache_impl._set_user = mock.Mock(return_value=mock_reffed_user)
+        cache_impl._increment_ref_count = mock.Mock()
+
+        cache_impl.set_soundboard_sound(sound)
+
+        assert 65234 in cache_impl._guild_entries
+        assert cache_impl._guild_entries[snowflakes.Snowflake(65234)].soundboard_sounds
+        assert 5123123 in cache_impl._guild_entries[snowflakes.Snowflake(65234)].soundboard_sounds
+        assert 5123123 in cache_impl._soundboard_sound_entries
+        sound_data = cache_impl._soundboard_sound_entries[snowflakes.Snowflake(5123123)]
+        cache_impl._set_user.assert_called_once_with(mock_user)
+        cache_impl._increment_ref_count.assert_called_once_with(mock_reffed_user)
+        assert sound_data.id == snowflakes.Snowflake(5123123)
+        assert sound_data.name == "A name"
+        assert sound_data.volume == 0.25
+        assert sound_data.emoji == emojis.UnicodeEmoji("🦆")
+        assert sound_data.guild_id == snowflakes.Snowflake(65234)
+        assert sound_data.user is mock_reffed_user
+        assert sound_data.is_available is False
+
+    def test_set_soundboard_sound_with_pre_cached_soundboard_sound(self, cache_impl):
+        mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(654234))
+        sound = soundboard.SoundboardSound(
+            id=snowflakes.Snowflake(5123123),
+            name="A name",
+            volume=1.0,
+            emoji=None,
+            guild_id=snowflakes.Snowflake(65234),
+            is_available=False,
+            user=mock_user,
+        )
+        cache_impl._soundboard_sound_entries = collections.FreezableDict(
+            {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.SoundboardSoundData)}
+        )
+        cache_impl._set_user = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
+
+        cache_impl.set_soundboard_sound(sound)
+
+        assert 5123123 in cache_impl._soundboard_sound_entries
+        cache_impl._set_user.assert_called_once_with(mock_user)
+        cache_impl._increment_ref_count.assert_not_called()
+
+    def test_set_soundboard_sound_without_guild_is_ignored(self, cache_impl):
+        sound = soundboard.SoundboardSound(
+            id=snowflakes.Snowflake(1),
+            name="quack",
+            volume=1.0,
+            emoji=None,
+            guild_id=None,
+            is_available=True,
+            user=None,
+        )
+
+        cache_impl.set_soundboard_sound(sound)
+
+        assert cache_impl._soundboard_sound_entries == {}
+
+    def test_guild_record_with_only_soundboard_sounds_is_not_empty(self):
+        sounds = collections.SnowflakeSet()
+        sounds.add(snowflakes.Snowflake(1))
+
+        assert cache_utilities.GuildRecord(soundboard_sounds=sounds).empty() is False
 
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -3060,6 +3465,16 @@ class TestCacheImpl:
             ("clear_presences_for_guild", config_api.CacheComponents.PRESENCES, cache_utilities.EmptyCacheView()),
             ("clear_roles", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
             ("clear_roles_for_guild", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
+            (
+                "clear_soundboard_sounds",
+                config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS,
+                cache_utilities.EmptyCacheView(),
+            ),
+            (
+                "clear_soundboard_sounds_for_guild",
+                config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS,
+                cache_utilities.EmptyCacheView(),
+            ),
             ("clear_stickers", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
             ("clear_stickers_for_guild", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
             ("clear_threads", config_api.CacheComponents.GUILD_THREADS, cache_utilities.EmptyCacheView()),
@@ -3081,6 +3496,7 @@ class TestCacheImpl:
             ("delete_message", config_api.CacheComponents.MESSAGES, None),
             ("delete_presence", config_api.CacheComponents.PRESENCES, None),
             ("delete_role", config_api.CacheComponents.ROLES, None),
+            ("delete_soundboard_sound", config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS, None),
             ("delete_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("delete_thread", config_api.CacheComponents.GUILD_THREADS, None),
             ("delete_voice_state", config_api.CacheComponents.VOICE_STATES, None),
@@ -3114,6 +3530,17 @@ class TestCacheImpl:
             ("get_role", config_api.CacheComponents.ROLES, None),
             ("get_roles_view", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
             ("get_roles_view_for_guild", config_api.CacheComponents.ROLES, cache_utilities.EmptyCacheView()),
+            ("get_soundboard_sound", config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS, None),
+            (
+                "get_soundboard_sounds_view",
+                config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS,
+                cache_utilities.EmptyCacheView(),
+            ),
+            (
+                "get_soundboard_sounds_view_for_guild",
+                config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS,
+                cache_utilities.EmptyCacheView(),
+            ),
             ("get_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("get_stickers_view", config_api.CacheComponents.GUILD_STICKERS, cache_utilities.EmptyCacheView()),
             (
@@ -3153,6 +3580,7 @@ class TestCacheImpl:
             ("set_message", config_api.CacheComponents.MESSAGES, None),
             ("set_presence", config_api.CacheComponents.PRESENCES, None),
             ("set_role", config_api.CacheComponents.ROLES, None),
+            ("set_soundboard_sound", config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS, None),
             ("set_sticker", config_api.CacheComponents.GUILD_STICKERS, None),
             ("set_thread", config_api.CacheComponents.GUILD_THREADS, None),
             ("set_voice_state", config_api.CacheComponents.VOICE_STATES, None),

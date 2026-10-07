@@ -78,6 +78,9 @@ class CacheComponents(enums.Flag):
     GUILD_THREADS = 1 << 12
     """Enables the guild threads cache."""
 
+    GUILD_SOUNDBOARD_SOUNDS = 1 << 13
+    """Enables the guild soundboard sounds cache."""
+
     ALL = (
         GUILDS
         | GUILD_CHANNELS
@@ -92,6 +95,7 @@ class CacheComponents(enums.Flag):
         | DM_CHANNEL_IDS
         | GUILD_STICKERS
         | GUILD_THREADS
+        | GUILD_SOUNDBOARD_SOUNDS
     )
     """Fully enables the cache."""
 
