@@ -497,6 +497,14 @@ def _put_emoji(body: data_binding.JSONObjectBuilder, emoji: str | emojis.Emoji |
         body.put("emoji_name", str(emoji))
 
 
+def _guess_sound_mimetype(data: bytes, /) -> str | None:
+    if data.startswith(b"OggS"):
+        return "audio/ogg"
+    if data.startswith(b"ID3") or (len(data) >= 2 and data[0] == 0xFF and data[1] & 0xE0 == 0xE0):
+        return "audio/mpeg"
+    return None
+
+
 def _transform_emoji_to_url_format(
     emoji: str | emojis.Emoji, emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]], /
 ) -> str:
@@ -5511,7 +5519,8 @@ class RESTClientImpl(rest_api.RESTClient):
             _put_emoji(body, emoji)
 
         async with files.ensure_resource(sound).stream(executor=self._executor) as stream:
-            body.put("sound", await stream.data_uri())
+            data = await stream.read()
+            body.put("sound", files.to_data_uri(data, _guess_sound_mimetype(data) or stream.mimetype))
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import contextlib
 import copy
 import datetime
@@ -555,6 +556,26 @@ class TestTransformEmojiToUrlFormat:
     def test_when_id_passed_with_emoji_object(self, rest_client, emoji):
         with pytest.raises(ValueError, match="emoji_id shouldn't be passed when an Emoji object is passed for emoji"):
             rest._transform_emoji_to_url_format(emoji, 123)
+
+
+class TestGuessSoundMimetype:
+    def test_for_ogg(self):
+        assert rest._guess_sound_mimetype(b"OggS\x00\x02rest") == "audio/ogg"
+
+    def test_for_id3_tagged_mp3(self):
+        assert rest._guess_sound_mimetype(b"ID3\x04\x00rest") == "audio/mpeg"
+
+    @pytest.mark.parametrize("second_byte", [0xE0, 0xFB, 0xF3, 0xFF])
+    def test_for_mpeg_frame_sync(self, second_byte):
+        assert rest._guess_sound_mimetype(bytes([0xFF, second_byte, 0x90, 0x00])) == "audio/mpeg"
+
+    @pytest.mark.parametrize("data", [b"RIFF\x00\x00\x00\x00WAVE", b"\xff\x1f\x00", b"\x00\xfb\x90", b"junk"])
+    def test_for_unknown_data(self, data):
+        assert rest._guess_sound_mimetype(data) is None
+
+    @pytest.mark.parametrize("data", [b"", b"\xff", b"I", b"Og"])
+    def test_for_data_that_is_too_short(self, data):
+        assert rest._guess_sound_mimetype(data) is None
 
 
 class TestRESTClientImpl:
@@ -7937,18 +7958,119 @@ class TestRESTClientImplAsync:
         assert result is rest_client._entity_factory.deserialize_soundboard_sound.return_value
         rest_client._request.assert_awaited_once_with(routes.GET_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=456))
 
-    async def test_create_soundboard_sound(self, rest_client, file_resource_patch):
+    async def test_create_soundboard_sound(self, rest_client):
+        rest_client._executor = None
         rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        data = b"OggS\x00\x02some audio"
 
         result = await rest_client.create_soundboard_sound(
-            StubModel(123), "yay", "yay.mp3", volume=0.5, emoji="🦆", reason="because"
+            StubModel(123), "yay", files.Bytes(data, "yay.ogg"), volume=0.5, emoji="🦆", reason="because"
         )
 
         assert result is rest_client._entity_factory.deserialize_soundboard_sound.return_value
         rest_client._request.assert_awaited_once_with(
             routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
-            json={"name": "yay", "volume": 0.5, "emoji_id": None, "emoji_name": "🦆", "sound": "some data"},
+            json={
+                "name": "yay",
+                "volume": 0.5,
+                "emoji_id": None,
+                "emoji_name": "🦆",
+                "sound": f"data:audio/ogg;base64,{base64.b64encode(data).decode()}",
+            },
             reason="because",
+        )
+
+    async def test_create_soundboard_sound_without_emoji_and_volume(self, rest_client):
+        rest_client._executor = None
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        data = b"ID3\x04\x00some audio"
+
+        await rest_client.create_soundboard_sound(StubModel(123), "yay", files.Bytes(data, "yay.mp3"))
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
+            json={"name": "yay", "sound": f"data:audio/mpeg;base64,{base64.b64encode(data).decode()}"},
+            reason=undefined.UNDEFINED,
+        )
+
+    @pytest.mark.parametrize(
+        ("filename", "data", "mimetype"),
+        [
+            ("yay.mp3", b"ID3\x04\x00some audio", "audio/mpeg"),
+            ("yay.mp3", b"\xff\xfb\x90\x00some audio", "audio/mpeg"),
+            ("yay.ogg", b"OggS\x00\x02some audio", "audio/ogg"),
+        ],
+    )
+    async def test_create_soundboard_sound_with_path(self, rest_client, tmp_path, filename, data, mimetype):
+        rest_client._executor = None
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        path = tmp_path / filename
+        path.write_bytes(data)
+
+        await rest_client.create_soundboard_sound(StubModel(123), "yay", str(path))
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
+            json={"name": "yay", "sound": f"data:{mimetype};base64,{base64.b64encode(data).decode()}"},
+            reason=undefined.UNDEFINED,
+        )
+
+    async def test_create_soundboard_sound_with_file(self, rest_client, tmp_path):
+        rest_client._executor = None
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        data = b"OggS\x00\x02some audio"
+        path = tmp_path / "yay.ogg"
+        path.write_bytes(data)
+
+        await rest_client.create_soundboard_sound(StubModel(123), "yay", files.File(path))
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
+            json={"name": "yay", "sound": f"data:audio/ogg;base64,{base64.b64encode(data).decode()}"},
+            reason=undefined.UNDEFINED,
+        )
+
+    async def test_create_soundboard_sound_with_raw_bytes(self, rest_client):
+        rest_client._executor = None
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        data = b"\xff\xfb\x90\x00some audio"
+
+        await rest_client.create_soundboard_sound(StubModel(123), "yay", data)
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
+            json={"name": "yay", "sound": f"data:audio/mpeg;base64,{base64.b64encode(data).decode()}"},
+            reason=undefined.UNDEFINED,
+        )
+
+    async def test_create_soundboard_sound_prefers_detected_type_over_the_stream_mimetype(self, rest_client):
+        rest_client._executor = None
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        data = b"OggS\x00\x02some audio"
+
+        await rest_client.create_soundboard_sound(
+            StubModel(123), "yay", files.Bytes(data, "yay.txt", mimetype="text/plain")
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
+            json={"name": "yay", "sound": f"data:audio/ogg;base64,{base64.b64encode(data).decode()}"},
+            reason=undefined.UNDEFINED,
+        )
+
+    async def test_create_soundboard_sound_falls_back_to_the_stream_mimetype(self, rest_client):
+        rest_client._executor = None
+        rest_client._request = mock.AsyncMock(return_value={"sound_id": "456"})
+        data = b"not a known header"
+
+        await rest_client.create_soundboard_sound(
+            StubModel(123), "yay", files.Bytes(data, "yay.bin", mimetype="audio/mpeg")
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123),
+            json={"name": "yay", "sound": f"data:audio/mpeg;base64,{base64.b64encode(data).decode()}"},
+            reason=undefined.UNDEFINED,
         )
 
     async def test_edit_soundboard_sound_with_custom_emoji(self, rest_client):

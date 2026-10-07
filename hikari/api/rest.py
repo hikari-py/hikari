@@ -10121,9 +10121,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         sound
             The MP3 or Ogg sound file. Maximum upload size is 512kb and the
             maximum duration is 5.2 seconds.
-
-            Raw bytes need a filename to detect the MIME type, e.g.
-            `hikari.Bytes(data, "sound.mp3")`.
         volume
             If provided, the volume of the sound, from 0 to 1.
         emoji
