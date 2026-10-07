@@ -239,7 +239,19 @@ class TestEventManagerImpl:
             event_factory.deserialize_channel_info_event.return_value
         )
 
-    def test_on_soundboard_sounds(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_soundboard_sounds_stateful(self, event_manager_impl, shard, event_factory):
+        sound = mock.Mock()
+        event = event_factory.deserialize_soundboard_sounds_event.return_value
+        event.guild_id = 456
+        event.sounds = [sound]
+
+        event_manager_impl.on_soundboard_sounds(shard, {})
+
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_called_once_with(456)
+        event_manager_impl._cache.set_soundboard_sound.assert_called_once_with(sound)
+        event_manager_impl.dispatch.assert_called_once_with(event)
+
+    def test_on_soundboard_sounds_stateless(self, stateless_event_manager_impl, shard, event_factory):
         payload = {}
 
         stateless_event_manager_impl.on_soundboard_sounds(shard, payload)
@@ -456,6 +468,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_emoji.assert_not_called()
         event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
         event_manager_impl._cache.set_sticker.assert_not_called()
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_not_called()
+        event_manager_impl._cache.set_soundboard_sound.assert_not_called()
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_manager_impl._cache.clear_members_for_guild.assert_not_called()
@@ -499,6 +513,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_emoji.assert_not_called()
         event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
         event_manager_impl._cache.set_sticker.assert_not_called()
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_not_called()
+        event_manager_impl._cache.set_soundboard_sound.assert_not_called()
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_manager_impl._cache.clear_members_for_guild.assert_not_called()
@@ -542,6 +558,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_emoji.assert_not_called()
         event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
         event_manager_impl._cache.set_sticker.assert_not_called()
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_not_called()
+        event_manager_impl._cache.set_soundboard_sound.assert_not_called()
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_manager_impl._cache.clear_members_for_guild.assert_not_called()
@@ -575,6 +593,7 @@ class TestEventManagerImpl:
         gateway_guild.presences.return_value = {1: "presence1", 2: "presence2"}
         gateway_guild.members.return_value = {1: "member1", 2: "member2"}
         gateway_guild.stickers.return_value = {1: "sticker1", 2: "sticker2"}
+        gateway_guild.soundboard_sounds.return_value = {1: "sound1", 2: "sound2"}
         gateway_guild.threads.return_value = {1: "thread1", 2: "thread2"}
 
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
@@ -599,6 +618,8 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_emoji.assert_has_calls([mock.call("emoji1"), mock.call("emoji2")])
         event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_sticker.assert_has_calls([mock.call("sticker1"), mock.call("sticker2")])
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_called_once_with(gateway_guild.id)
+        event_manager_impl._cache.set_soundboard_sound.assert_has_calls([mock.call("sound1"), mock.call("sound2")])
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(gateway_guild.id)
         event_manager_impl._cache.set_role.assert_has_calls([mock.call("role1"), mock.call("role2")])
         event_manager_impl._cache.clear_members_for_guild.assert_called_once_with(gateway_guild.id)
@@ -615,6 +636,48 @@ class TestEventManagerImpl:
         request_guild_members.assert_not_called()
 
         event_manager_impl.dispatch.assert_not_called()
+
+    @pytest.mark.parametrize("include_unavailable", [True, False])
+    def test_on_guild_create_when_dispatching_and_caching(
+        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
+    ):
+        payload = {"unavailable": False} if include_unavailable else {}
+        event_manager_impl._intents = intents.Intents.NONE
+        event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
+        event = mock.MagicMock(soundboard_sounds={1: "sound1", 2: "sound2"})
+        event.guild.id = 123
+        if include_unavailable:
+            event_factory.deserialize_guild_available_event.return_value = event
+        else:
+            event_factory.deserialize_guild_join_event.return_value = event
+
+        event_manager_impl.on_guild_create(shard, payload)
+
+        entity_factory.deserialize_gateway_guild.assert_not_called()
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_called_once_with(123)
+        event_manager_impl._cache.set_soundboard_sound.assert_has_calls([mock.call("sound1"), mock.call("sound2")])
+        event_manager_impl.dispatch.assert_called_once_with(event)
+
+    @pytest.mark.parametrize("dispatching", [True, False])
+    def test_on_guild_create_when_soundboard_sounds_cache_disabled(
+        self, event_manager_impl, shard, event_factory, entity_factory, dispatching
+    ):
+        event_manager_impl._intents = intents.Intents.NONE
+        event_manager_impl._cache_enabled_for = lambda components: (
+            components != config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+        )
+        event_manager_impl._enabled_for_event = mock.Mock(return_value=dispatching)
+        event = mock.MagicMock(soundboard_sounds={1: "sound1"})
+        event_factory.deserialize_guild_join_event.return_value = event
+        gateway_guild = mock.MagicMock()
+        gateway_guild.soundboard_sounds.return_value = {1: "sound1"}
+        entity_factory.deserialize_gateway_guild.return_value = gateway_guild
+
+        event_manager_impl.on_guild_create(shard, {})
+
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_not_called()
+        event_manager_impl._cache.set_soundboard_sound.assert_not_called()
 
     @pytest.mark.parametrize("include_unavailable", [True, False])
     def test_on_guild_create_when_stateless(
@@ -872,6 +935,7 @@ class TestEventManagerImpl:
         event_manager_impl._cache.clear_threads_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(123)
+        event_manager_impl._cache.clear_soundboard_sounds_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(123)
         event_factory.deserialize_guild_leave_event.assert_called_once_with(
             shard, payload, old_guild=event_manager_impl._cache.delete_guild.return_value
@@ -1785,62 +1849,104 @@ class TestEventManagerImpl:
             event_factory.deserialize_auto_mod_action_execution_event.return_value
         )
 
-    def test_on_guild_soundboard_sound_create(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: event_factory_.EventFactory,
-    ):
-        mock_payload = mock.Mock()
+    def test_on_guild_soundboard_sound_create_stateful(self, event_manager_impl, shard, event_factory):
+        payload = {}
 
-        event_manager_impl.on_guild_soundboard_sound_create(shard, mock_payload)
+        event_manager_impl.on_guild_soundboard_sound_create(shard, payload)
 
-        event_factory.deserialize_soundboard_sound_create_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
+        event = event_factory.deserialize_soundboard_sound_create_event.return_value
+        event_factory.deserialize_soundboard_sound_create_event.assert_called_once_with(shard, payload)
+        event_manager_impl._cache.set_soundboard_sound.assert_called_once_with(event.sound)
+        event_manager_impl.dispatch.assert_called_once_with(event)
+
+    def test_on_guild_soundboard_sound_create_stateless(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_guild_soundboard_sound_create(shard, payload)
+
+        event_factory.deserialize_soundboard_sound_create_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
             event_factory.deserialize_soundboard_sound_create_event.return_value
         )
 
-    def test_on_guild_soundboard_sound_update(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: event_factory_.EventFactory,
-    ):
-        mock_payload = mock.Mock()
+    def test_on_guild_soundboard_sound_update_stateful(self, event_manager_impl, shard, event_factory):
+        payload = {"sound_id": "123"}
 
-        event_manager_impl.on_guild_soundboard_sound_update(shard, mock_payload)
+        event_manager_impl.on_guild_soundboard_sound_update(shard, payload)
 
-        event_factory.deserialize_soundboard_sound_update_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
+        old = event_manager_impl._cache.get_soundboard_sound.return_value
+        event = event_factory.deserialize_soundboard_sound_update_event.return_value
+        event_manager_impl._cache.get_soundboard_sound.assert_called_once_with(123)
+        event_factory.deserialize_soundboard_sound_update_event.assert_called_once_with(shard, payload, old_sound=old)
+        event_manager_impl._cache.set_soundboard_sound.assert_called_once_with(event.sound)
+        event_manager_impl.dispatch.assert_called_once_with(event)
+
+    def test_on_guild_soundboard_sound_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {"sound_id": "123"}
+
+        stateless_event_manager_impl.on_guild_soundboard_sound_update(shard, payload)
+
+        event_factory.deserialize_soundboard_sound_update_event.assert_called_once_with(shard, payload, old_sound=None)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
             event_factory.deserialize_soundboard_sound_update_event.return_value
         )
 
-    def test_on_guild_soundboard_sound_delete(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: event_factory_.EventFactory,
-    ):
-        mock_payload = mock.Mock()
+    def test_on_guild_soundboard_sound_delete_stateful(self, event_manager_impl, shard, event_factory):
+        payload = {"sound_id": "123", "guild_id": "456"}
 
-        event_manager_impl.on_guild_soundboard_sound_delete(shard, mock_payload)
+        event_manager_impl.on_guild_soundboard_sound_delete(shard, payload)
 
-        event_factory.deserialize_soundboard_sound_delete_event.assert_called_once_with(shard, mock_payload)
+        old = event_manager_impl._cache.delete_soundboard_sound.return_value
+        event_manager_impl._cache.delete_soundboard_sound.assert_called_once_with(123)
+        event_factory.deserialize_soundboard_sound_delete_event.assert_called_once_with(shard, payload, old_sound=old)
         event_manager_impl.dispatch.assert_called_once_with(
             event_factory.deserialize_soundboard_sound_delete_event.return_value
         )
 
-    def test_on_guild_soundboard_sounds_update(
-        self,
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: event_factory_.EventFactory,
-    ):
-        mock_payload = mock.Mock()
+    def test_on_guild_soundboard_sound_delete_for_uncached_sound(self, event_manager_impl, shard, event_factory):
+        event_manager_impl._cache.delete_soundboard_sound.return_value = None
+        payload = {"sound_id": "123", "guild_id": "456"}
 
-        event_manager_impl.on_guild_soundboard_sounds_update(shard, mock_payload)
+        event_manager_impl.on_guild_soundboard_sound_delete(shard, payload)
 
-        event_factory.deserialize_soundboard_sounds_update_event.assert_called_once_with(shard, mock_payload)
+        event_factory.deserialize_soundboard_sound_delete_event.assert_called_once_with(shard, payload, old_sound=None)
+        event_manager_impl.dispatch.assert_called_once()
+
+    def test_on_guild_soundboard_sound_delete_stateless(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {"sound_id": "123", "guild_id": "456"}
+
+        stateless_event_manager_impl.on_guild_soundboard_sound_delete(shard, payload)
+
+        event_factory.deserialize_soundboard_sound_delete_event.assert_called_once_with(shard, payload, old_sound=None)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sound_delete_event.return_value
+        )
+
+    def test_on_guild_soundboard_sounds_update_stateful(self, event_manager_impl, shard, event_factory):
+        cached = mock.Mock()
+        event_manager_impl._cache.get_soundboard_sound.side_effect = lambda sound_id: cached if sound_id == 1 else None
+        payload = {"guild_id": "456", "soundboard_sounds": [{"sound_id": "1"}, {"sound_id": "2"}]}
+        new_sound = mock.Mock()
+        event_factory.deserialize_soundboard_sounds_update_event.return_value.sounds = [new_sound]
+
+        event_manager_impl.on_guild_soundboard_sounds_update(shard, payload)
+
+        event_factory.deserialize_soundboard_sounds_update_event.assert_called_once_with(
+            shard, payload, old_sounds=[cached]
+        )
+        event_manager_impl._cache.set_soundboard_sound.assert_called_once_with(new_sound)
         event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sounds_update_event.return_value
+        )
+
+    def test_on_guild_soundboard_sounds_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {"guild_id": "456", "soundboard_sounds": []}
+
+        stateless_event_manager_impl.on_guild_soundboard_sounds_update(shard, payload)
+
+        event_factory.deserialize_soundboard_sounds_update_event.assert_called_once_with(
+            shard, payload, old_sounds=None
+        )
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
             event_factory.deserialize_soundboard_sounds_update_event.return_value
         )
