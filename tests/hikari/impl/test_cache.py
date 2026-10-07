@@ -748,6 +748,23 @@ class TestCacheImpl:
         cache_impl._build_sticker.assert_called_once_with(mock_sticker_data)
         cache_impl._garbage_collect_user.assert_not_called()
 
+    def test_delete_sticker_removes_empty_guild_record(self, cache_impl):
+        mock_sticker_data = mock.Mock(
+            cache_utilities.GuildStickerData, user=None, guild_id=snowflakes.Snowflake(123333)
+        )
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add(snowflakes.Snowflake(12354123))
+        guild_record = cache_utilities.GuildRecord(stickers=sticker_ids)
+        cache_impl._sticker_entries = collections.FreezableDict({snowflakes.Snowflake(12354123): mock_sticker_data})
+        cache_impl._guild_entries = collections.FreezableDict({snowflakes.Snowflake(123333): guild_record})
+        cache_impl._build_sticker = mock.Mock()
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+
+        cache_impl.delete_sticker(StubModel(12354123))
+
+        assert guild_record.stickers is None
+        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(123333), guild_record)
+
     def test_delete_sticker_for_unknown_sticker(self, cache_impl):
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_sticker = mock.Mock()

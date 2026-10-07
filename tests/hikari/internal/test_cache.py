@@ -27,6 +27,15 @@ import mock
 from hikari import snowflakes
 from hikari import stickers
 from hikari.internal import cache
+from hikari.internal import collections
+
+
+class TestGuildRecord:
+    def test_empty_when_only_stickers_cached(self):
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add(snowflakes.Snowflake(1))
+
+        assert cache.GuildRecord(stickers=sticker_ids).empty() is False
 
 
 class TestStickerData:
