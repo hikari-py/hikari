@@ -275,6 +275,9 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     _stickers: UndefinedSnowflakeMapping[sticker_models.GuildSticker] = attrs.field(
         init=False, default=undefined.UNDEFINED
     )
+    _soundboard_sounds: UndefinedSnowflakeMapping[soundboard_models.SoundboardSound] = attrs.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _members: UndefinedSnowflakeMapping[guild_models.Member] = attrs.field(init=False, default=undefined.UNDEFINED)
     _presences: UndefinedSnowflakeMapping[presence_models.MemberPresence] = attrs.field(
         init=False, default=undefined.UNDEFINED
@@ -327,6 +330,16 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._stickers
+
+    @typing_extensions.override
+    def soundboard_sounds(self) -> typing.Mapping[snowflakes.Snowflake, soundboard_models.SoundboardSound]:
+        if self._soundboard_sounds is undefined.UNDEFINED:
+            self._soundboard_sounds = {
+                snowflakes.Snowflake(s["sound_id"]): self._entity_factory.deserialize_soundboard_sound(s)
+                for s in self._payload.get("soundboard_sounds", ())
+            }
+
+        return self._soundboard_sounds
 
     @typing_extensions.override
     def guild(self) -> guild_models.GatewayGuild:

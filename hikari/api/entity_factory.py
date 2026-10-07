@@ -89,6 +89,10 @@ class GatewayGuildDefinition(abc.ABC):
         """Get a mapping of sticker IDs to the stickers that belong to the guild."""
 
     @abc.abstractmethod
+    def soundboard_sounds(self) -> typing.Mapping[snowflakes.Snowflake, soundboard_models.SoundboardSound]:
+        """Get a mapping of sound IDs to the soundboard sounds in the guild."""
+
+    @abc.abstractmethod
     def guild(self) -> guild_models.GatewayGuild:
         """Get the object of the guild this definition is for."""
 

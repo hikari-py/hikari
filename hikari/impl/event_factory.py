@@ -343,6 +343,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             members=guild_information.members(),
             presences=guild_information.presences(),
             stickers=guild_information.stickers(),
+            soundboard_sounds=guild_information.soundboard_sounds(),
             threads=guild_information.threads(),
             voice_states=guild_information.voice_states(),
         )
@@ -361,6 +362,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             members=guild_information.members(),
             presences=guild_information.presences(),
             stickers=guild_information.stickers(),
+            soundboard_sounds=guild_information.soundboard_sounds(),
             threads=guild_information.threads(),
             voice_states=guild_information.voice_states(),
         )

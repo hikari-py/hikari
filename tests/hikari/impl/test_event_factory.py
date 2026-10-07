@@ -467,6 +467,7 @@ class TestEventFactoryImpl:
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
         assert event.stickers is guild_definition.stickers.return_value
+        assert event.soundboard_sounds is guild_definition.soundboard_sounds.return_value
         assert event.roles is guild_definition.roles.return_value
         assert event.channels is guild_definition.channels.return_value
         assert event.members is guild_definition.members.return_value
@@ -475,6 +476,7 @@ class TestEventFactoryImpl:
         guild_definition.guild.assert_called_once_with()
         guild_definition.emojis.assert_called_once_with()
         guild_definition.stickers.assert_called_once_with()
+        guild_definition.soundboard_sounds.assert_called_once_with()
         guild_definition.roles.assert_called_once_with()
         guild_definition.channels.assert_called_once_with()
         guild_definition.members.assert_called_once_with()
@@ -495,6 +497,7 @@ class TestEventFactoryImpl:
         guild_definition = mock_app.entity_factory.deserialize_gateway_guild.return_value
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
+        assert event.soundboard_sounds is guild_definition.soundboard_sounds.return_value
         assert event.roles is guild_definition.roles.return_value
         assert event.channels is guild_definition.channels.return_value
         assert event.members is guild_definition.members.return_value

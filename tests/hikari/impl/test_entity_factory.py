@@ -784,6 +784,31 @@ class TestGatewayGuildDefinition:
 
         entity_factory_impl.deserialize_role.assert_not_called()
 
+    def test_soundboard_sounds(self, entity_factory_impl, soundboard_sound_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "soundboard_sounds": [soundboard_sound_payload]}, user_id=123321
+        )
+
+        assert guild_definition.soundboard_sounds() == {
+            1106714396018884649: entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+        }
+
+    def test_soundboard_sounds_when_missing(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"}, user_id=1)
+
+        assert guild_definition.soundboard_sounds() == {}
+
+    def test_soundboard_sounds_returns_cached_values(self, entity_factory_impl):
+        with mock.patch.object(
+            entity_factory.EntityFactoryImpl, "deserialize_soundboard_sound"
+        ) as mock_deserialize_soundboard_sound:
+            guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"}, user_id=1)
+            mock_sound = object()
+            guild_definition._soundboard_sounds = {"54545454": mock_sound}
+
+            assert guild_definition.soundboard_sounds() == {"54545454": mock_sound}
+            mock_deserialize_soundboard_sound.assert_not_called()
+
     def test_threads(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
