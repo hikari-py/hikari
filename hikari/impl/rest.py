@@ -1141,7 +1141,8 @@ class RESTClientImpl(rest_api.RESTClient):
             icon_resource = files.ensure_resource(icon)
             async with icon_resource.stream(executor=self._executor) as stream:
                 body.put("icon", await stream.data_uri())
-        body.put("flags", flags)
+
+body.put("flags", flags)
         body.put("position", position)
         body.put("topic", topic)
         body.put("nsfw", nsfw)
