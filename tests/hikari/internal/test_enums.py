@@ -278,6 +278,31 @@ class TestEnum:
         with pytest.raises(TypeError, match="Enum values must be of type str, not NoneType"):
             Enum(None)
 
+    def test_call_when_value_is_float_of_known_member(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        with pytest.raises(TypeError, match="Enum values must be of type int, not float"):
+            Enum(9.0)
+
+    def test_call_when_value_is_float_of_cached_unknown_member(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        Enum(69)
+
+        with pytest.raises(TypeError, match="Enum values must be of type int, not float"):
+            Enum(69.0)
+
+    def test_call_with_bool_stores_value_as_int(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        returned = Enum(True)
+
+        assert type(returned.value) is int
+        assert Enum(1) is returned
+
     def test_is_unknown(self):
         class Enum(int, enums.Enum):
             foo = 9
@@ -617,6 +642,23 @@ class TestIntFlag:
 
         assert Flag(9) is Flag.foo
         assert Flag(Flag.foo) is Flag.foo
+
+    @pytest.mark.parametrize(("value", "type_name"), [("1", "str"), (1.0, "float"), (None, "NoneType")])
+    def test_call_when_value_of_wrong_type(self, value, type_name):
+        class Flag(enums.Flag):
+            foo = 1
+
+        with pytest.raises(TypeError, match=f"Flag values must be of type int, not {type_name}"):
+            Flag(value)
+
+    def test_call_with_bool_stores_value_as_int(self):
+        class Flag(enums.Flag):
+            foo = 2
+
+        returned = Flag(True)
+
+        assert type(returned.value) is int
+        assert Flag(1) is returned
 
     def test_call_on_composite_value(self):
         class Flag(enums.Flag):

@@ -154,6 +154,15 @@ _Enum = NotImplemented
 class _EnumMeta(type):
     def __call__(cls, value: object) -> Enum:
         """Cast a value to the enum, returning an unknown member if the value is not a known one."""
+        objtype = cls.__objtype__
+        if type(value) is not objtype:
+            if not isinstance(value, objtype):
+                msg = f"{cls.__name__} values must be of type {objtype.__name__}, not {type(value).__name__}"
+                raise TypeError(msg)
+
+            # Subclasses such as bool must not end up as the raw value of a cached unknown member.
+            value = objtype(value)
+
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
@@ -164,12 +173,6 @@ class _EnumMeta(type):
                 # Try to get a cached value.
                 return cls._temp_members_[value]
             except KeyError:
-                if not isinstance(value, cls.__objtype__):
-                    msg = (
-                        f"{cls.__name__} values must be of type {cls.__objtype__.__name__}, not {type(value).__name__}"
-                    )
-                    raise TypeError(msg) from None
-
                 member = cls.__new__(cls, value)
                 member._name_ = None
                 member._value_ = value
@@ -425,9 +428,13 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
 class _FlagMeta(type):
     def __call__(cls, value: int = 0) -> Flag:
         """Cast a value to the flag enum, generating a pseudo-member for unknown or composite values."""
-        # We want to handle value invariantly to avoid issues brought in by different behaviours from sub-classed ints
-        # and floats. This also ensures that .__int__ only returns an invariant int.
-        value = int(value)
+        if type(value) is not int:
+            if not isinstance(value, int):
+                msg = f"{cls.__name__} values must be of type int, not {type(value).__name__}"
+                raise TypeError(msg)
+
+            # Sub-classed ints must be handled invariantly, which also ensures .__int__ only returns an invariant int.
+            value = int(value)
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
