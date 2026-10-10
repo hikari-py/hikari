@@ -424,6 +424,7 @@ class CacheImpl(cache.MutableCache):
 
             if not guild_record.stickers:
                 guild_record.stickers = None
+                self._remove_guild_record_if_empty(sticker_data.guild_id, guild_record)
 
         return self._build_sticker(sticker_data)
 

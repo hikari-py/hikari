@@ -49,8 +49,7 @@ from hikari.internal import fast_protocol
 if typing.TYPE_CHECKING:
     import datetime
     from concurrent import futures
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import channels
     from hikari import guilds

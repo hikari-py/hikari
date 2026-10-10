@@ -26,6 +26,7 @@ __all__: typing.Sequence[str] = (
     "VoiceChannelEffectAnimationType",
     "VoiceChannelEffectSendEvent",
     "VoiceChannelStartTimeUpdateEvent",
+    "VoiceChannelStatusUpdateEvent",
     "VoiceEvent",
     "VoiceServerUpdateEvent",
     "VoiceStateUpdateEvent",
@@ -149,6 +150,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
         return f"wss://{self.raw_endpoint}"
 
 
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class VoiceChannelStartTimeUpdateEvent(VoiceEvent):
@@ -173,6 +175,31 @@ class VoiceChannelStartTimeUpdateEvent(VoiceEvent):
     """When the ongoing voice session started.
 
     This will be [`None`][] if there is no ongoing voice session.
+    """
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class VoiceChannelStatusUpdateEvent(VoiceEvent):
+    """Event fired when the status of a voice channel changes."""
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    # <<inherited docstring from VoiceEvent>>
+
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the voice channel this event is for."""
+
+    status: str | None = attrs.field(repr=True)
+    """The new voice channel status.
+
+    This will be [`None`][] if the status was removed.
     """
 
 

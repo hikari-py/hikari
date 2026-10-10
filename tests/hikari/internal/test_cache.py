@@ -30,6 +30,21 @@ from hikari import soundboard
 from hikari import stickers
 from hikari import users
 from hikari.internal import cache
+from hikari.internal import collections
+
+
+class TestGuildRecord:
+    def test_empty_when_only_stickers_cached(self):
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add(snowflakes.Snowflake(1))
+
+        assert cache.GuildRecord(stickers=sticker_ids).empty() is False
+
+    def test_empty_when_only_threads_cached(self):
+        thread_ids = collections.SnowflakeSet()
+        thread_ids.add(snowflakes.Snowflake(1))
+
+        assert cache.GuildRecord(threads=thread_ids).empty() is False
 
 
 class TestStickerData:

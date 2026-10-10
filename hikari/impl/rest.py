@@ -87,8 +87,7 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import audit_logs
     from hikari import auto_mod
@@ -541,6 +540,22 @@ def _to_searchable_snowflake_str(
     return str(int(value))
 
 
+def _serialize_recurrence_rule(rule: scheduled_events.ScheduledEventRecurrenceRule, /) -> data_binding.JSONObject:
+    # count, end and by_year_day are deliberately not serialized as the API
+    # doesn't allow them to be set externally.
+    payload = data_binding.JSONObjectBuilder()
+    payload.put("start", rule.start, conversion=datetime.datetime.isoformat)
+    payload.put("frequency", int(rule.frequency))
+    payload.put("interval", rule.interval)
+    payload.put_array("by_weekday", rule.by_weekday, conversion=int)
+    payload.put_array(
+        "by_n_weekday", rule.by_n_weekday, conversion=lambda n_weekday: {"n": n_weekday.n, "day": int(n_weekday.day)}
+    )
+    payload.put_array("by_month", rule.by_month, conversion=int)
+    payload.put_array("by_month_day", rule.by_month_day)
+    return payload
+
+
 def _build_prompts(
     prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
 ) -> list[typing.MutableMapping[str, typing.Any]]:
@@ -877,7 +892,8 @@ class RESTClientImpl(rest_api.RESTClient):
                             params=query,
                             data=data,
                             allow_redirects=self._http_settings.max_redirects is not None,
-                            max_redirects=self._http_settings.max_redirects,
+                            # Ignored by aiohttp when redirects are disabled, but it must be an int
+                            max_redirects=self._http_settings.max_redirects or 0,
                             proxy=self._proxy_settings.url,
                             proxy_headers=self._proxy_settings.all_headers,
                         )
@@ -1110,10 +1126,11 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def edit_channel(  # noqa: PLR0913
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1154,6 +1171,14 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PATCH_CHANNEL.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
+
         body.put("flags", flags)
         body.put("position", position)
         body.put("topic", topic)
@@ -1228,6 +1253,19 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
+
+    @typing_extensions.override
+    async def set_voice_channel_status(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
+        status: str | None,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("status", status)
+        await self._request(route, json=body, reason=reason)
 
     @typing_extensions.override
     async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
@@ -2483,6 +2521,51 @@ class RESTClientImpl(rest_api.RESTClient):
             self._cache.set_dm_channel_id(user, channel.id)
 
         return channel
+
+    @typing_extensions.override
+    async def create_group_dm_channel(
+        self,
+        access_tokens: typing.Sequence[str],
+        /,
+        *,
+        nicknames: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.SnowflakeishOr[users_.PartialUser], str]
+        ] = undefined.UNDEFINED,
+    ) -> channels_.GroupDMChannel:
+        route = routes.POST_MY_CHANNELS.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put_array("access_tokens", access_tokens)
+
+        if nicknames is not undefined.UNDEFINED:
+            body.put("nicks", {str(int(user)): nickname for user, nickname in nicknames.items()})
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_group_dm(response)
+
+    @typing_extensions.override
+    async def add_recipient_to_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+        *,
+        access_token: str,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=channel, user=user)
+        body = data_binding.JSONObjectBuilder()
+        body.put("access_token", access_token)
+        body.put("nick", nickname)
+        await self._request(route, json=body)
+
+    @typing_extensions.override
+    async def remove_recipient_from_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+    ) -> None:
+        route = routes.DELETE_CHANNEL_RECIPIENT.compile(channel=channel, user=user)
+        await self._request(route)
 
     @typing_extensions.override
     async def fetch_application(self) -> applications.Application:
@@ -5001,6 +5084,7 @@ class RESTClientImpl(rest_api.RESTClient):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[int | scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         body = data_binding.JSONObjectBuilder()
@@ -5012,6 +5096,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("description", description)
         body.put("entity_type", entity_type)
         body.put("status", status)
+        body.put("recurrence_rule", recurrence_rule, conversion=_serialize_recurrence_rule)
 
         if image is not undefined.UNDEFINED:
             image_resource = files.ensure_resource(image)
@@ -5038,6 +5123,7 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5051,6 +5137,7 @@ class RESTClientImpl(rest_api.RESTClient):
             end_time=end_time,
             image=image,
             privacy_level=privacy_level,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_external_event(response)
@@ -5068,6 +5155,7 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5081,6 +5169,7 @@ class RESTClientImpl(rest_api.RESTClient):
             end_time=end_time,
             image=image,
             privacy_level=privacy_level,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_stage_event(response)
@@ -5098,6 +5187,7 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5111,6 +5201,7 @@ class RESTClientImpl(rest_api.RESTClient):
             end_time=end_time,
             image=image,
             privacy_level=privacy_level,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_voice_event(response)
@@ -5132,6 +5223,7 @@ class RESTClientImpl(rest_api.RESTClient):
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         route = routes.PATCH_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
@@ -5155,6 +5247,7 @@ class RESTClientImpl(rest_api.RESTClient):
             location=location,
             privacy_level=privacy_level,
             status=status,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_event(response)
