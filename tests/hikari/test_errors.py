@@ -224,6 +224,13 @@ class TestBulkDeleteError:
         assert str(error) == "Error encountered when bulk deleting messages (10 messages deleted)"
 
 
+class TestSearchNotIndexedError:
+    def test_str(self):
+        error = errors.SearchNotIndexedError(documents_indexed=100, retry_after=2.0)
+
+        assert str(error) == "The search index is not yet available, retry after 2.0s [documents_indexed=100]"
+
+
 class TestMissingIntentError:
     @pytest.fixture
     def error(self):
