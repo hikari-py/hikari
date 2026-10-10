@@ -128,13 +128,13 @@ class Color(int):
     Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of((255, 5, 26))
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of([0xFF, 0x5, 0x1a])
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of("#1a2b3c")
     Color(r=0x1a, g=0x2b, b=0x3c)
@@ -156,7 +156,7 @@ class Color(int):
     Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.from_rgb(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.from_hex_code("#1a2b3c")
     Color(r=0x1a, g=0x2b, b=0x3c)
@@ -467,10 +467,10 @@ class Color(int):
         Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of((255, 5, 26))
-        Color(r=0xff, g=0x5, b=1xa)
+        Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of([0xFF, 0x5, 0x1a])
-        Color(r=0xff, g=0x5, b=1xa)
+        Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of("#1a2b3c")
         Color(r=0x1a, g=0x2b, b=0x3c)
@@ -533,7 +533,11 @@ class Color(int):
 
     @typing_extensions.override
     def to_bytes(
-        self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = False
+        self,
+        length: typing.SupportsIndex = 3,
+        byteorder: typing.Literal["little", "big"] = "big",
+        *,
+        signed: bool = False,
     ) -> bytes:
         """Convert the color code to bytes.
 
@@ -541,9 +545,10 @@ class Color(int):
         ----------
         length
             The number of bytes to produce. Should be around `3`, but not less.
+            Defaults to `3`.
         byteorder
             The endianness of the value represented by the bytes.
-            Can be `"big"` endian or `"little"` endian.
+            Can be `"big"` endian or `"little"` endian. Defaults to `"big"`.
         signed
             Whether the value is signed or unsigned.
 
