@@ -23,7 +23,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import gc
-import sys
 import typing
 import warnings
 import weakref
@@ -402,7 +401,7 @@ class TestEventManagerBase:
         assert manager._consumers == {
             "foo": event_manager_base._Consumer(manager.on_foo, 9, True),
             "bar": event_manager_base._Consumer(manager.on_bar, 105, False),
-            "bat": event_manager_base._Consumer(manager.on_bat, 65545, False),
+            "bat": event_manager_base._Consumer(manager.on_bat, 1048585, False),
             "not_decorated": event_manager_base._Consumer(manager.on_not_decorated, -1, True),
         }
 
@@ -430,7 +429,7 @@ class TestEventManagerBase:
         assert manager._consumers == {
             "foo": event_manager_base._Consumer(manager.on_foo, 9, False),
             "bar": event_manager_base._Consumer(manager.on_bar, 105, False),
-            "bat": event_manager_base._Consumer(manager.on_bat, 65545, False),
+            "bat": event_manager_base._Consumer(manager.on_bat, 1048585, False),
             "not_decorated": event_manager_base._Consumer(manager.on_not_decorated, -1, False),
         }
 
@@ -826,7 +825,6 @@ class TestEventManagerBase:
             ]
         )
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="Bitwise union only available on 3.10+")
     def test_listen_when_multiple_params_provided_as_bitwise_union_in_typehint(self, event_manager):
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 

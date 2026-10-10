@@ -187,10 +187,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_channel(  # noqa: PLR0913 - Too many arguments
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -232,6 +233,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         name
             If provided, the new name for the channel.
+        icon
+            If provided, the new icon for the channel. This is only applicable
+            to group DM channels. If [`None`][], the icon will be removed.
         flags
             If provided, the new channel flags to use for the channel. This can
             only be used on a forum or media channel to apply [`hikari.channels.ChannelFlag.REQUIRE_TAG`][], or
@@ -404,6 +408,47 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def set_voice_channel_status(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
+        status: str | None,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Set the status of a voice channel.
+
+        Parameters
+        ----------
+        channel
+            The voice channel to set the status of. This may be the object
+            or the ID of an existing channel.
+        status
+            The new voice channel status (up to 500 characters) or
+            [`None`][] to remove it.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the provided status is longer than 500 characters.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.SET_VOICE_CHANNEL_STATUS`][]
+            permission, or the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission
+            when not connected to the voice channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -729,6 +774,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
@@ -762,6 +808,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 This is required if `target_type` is [`hikari.invites.TargetType.EMBEDDED_APPLICATION`][] and
                 the targeted application must have the [`hikari.applications.ApplicationFlags.EMBEDDED`][] flag.
+        role_ids
+            If provided, the roles which will be given to the users that
+            accept this invite. These may be the objects or the IDs of
+            existing roles.
+
+            !!! note
+                This requires the [`hikari.permissions.Permissions.MANAGE_ROLES`][]
+                permission and roles with higher permissions than the inviter
+                cannot be assigned.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -2775,7 +2830,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: invites.InviteCode | str, *, with_counts: bool = True) -> invites.Invite:
+    async def fetch_invite(
+        self,
+        invite: invites.InviteCode | str,
+        *,
+        with_counts: bool = True,
+        scheduled_event: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
@@ -2785,6 +2848,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the code of an existing invite.
         with_counts
             Whether the invite should contain the approximate member counts.
+        scheduled_event
+            The scheduled event to include with the invite, if any.
 
         Returns
         -------
@@ -3103,6 +3168,119 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
+    async def create_group_dm_channel(
+        self,
+        access_tokens: typing.Sequence[str],
+        /,
+        *,
+        nicknames: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.SnowflakeishOr[users_.PartialUser], str]
+        ] = undefined.UNDEFINED,
+    ) -> channels_.GroupDMChannel:
+        """Create a new group DM channel with multiple users.
+
+        !!! note
+            This endpoint is limited to 10 active group DMs and was intended
+            to be used with the now-deprecated GameBridge SDK.
+
+        Parameters
+        ----------
+        access_tokens
+            The access tokens of the users to add to the group DM. These
+            must have granted your application the `gdm.join` OAuth2 scope.
+        nicknames
+            If provided, a mapping of the users to their respective nicknames
+            within the group DM.
+
+        Returns
+        -------
+        hikari.channels.GroupDMChannel
+            The created group DM channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the access tokens are invalid.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def add_recipient_to_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+        *,
+        access_token: str,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Add a recipient to a group DM using their access token.
+
+        Parameters
+        ----------
+        channel
+            The group DM channel to add the recipient to. This may be the
+            object or the ID of an existing channel.
+        user
+            The user to add to the group DM. This may be the object or the
+            ID of an existing user.
+        access_token
+            The access token of the user to add. This must have granted your
+            application the `gdm.join` OAuth2 scope.
+        nickname
+            If provided, the nickname of the user being added.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the access token is invalid.
+        hikari.errors.NotFoundError
+            If the channel or user is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def remove_recipient_from_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+    ) -> None:
+        """Remove a recipient from a group DM.
+
+        Parameters
+        ----------
+        channel
+            The group DM channel to remove the recipient from. This may be
+            the object or the ID of an existing channel.
+        user
+            The user to remove from the group DM. This may be the object or
+            the ID of an existing user.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the channel or user is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
     # THIS IS AN OAUTH2 FLOW BUT CAN ALSO BE USED BY BOTS
     @abc.abstractmethod
     async def fetch_application(self) -> applications.Application:
@@ -3307,6 +3485,37 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the application is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_activity_instance(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], instance_id: str
+    ) -> applications.ActivityInstance:
+        """Fetch a live activity instance for a given application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the activity instance for.
+        instance_id
+            The ID of the activity instance to fetch.
+
+        Returns
+        -------
+        hikari.applications.ActivityInstance
+            The requested activity instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application or activity instance was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -3600,6 +3809,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
@@ -3622,6 +3832,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a datetime object, it will be transformed into a snowflake. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
+
+            The entries will be returned in descending order (newest first).
+        after
+            If provided, filter to only actions after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+
+            The entries will be returned in ascending order (oldest first).
         user
             If provided, the user to filter for.
         event_type
@@ -3634,6 +3853,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        ValueError
+            If both `before` and `after` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
@@ -4624,6 +4845,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[channels_.GuildChannel]:
         """Fetch the channels in a guild.
+
+        !!! warning
+            Starting November 16, 2026, Discord will omit any channel the
+            application doesn't have permission to view from the response.
+            Permission to view a channel is defined by having
+            [`hikari.permissions.Permissions.VIEW_CHANNEL`][] on it or by
+            being connected to it if it is a voice channel. Channel
+            categories are viewable if any of their child channels are
+            viewable.
 
         Parameters
         ----------
@@ -5957,7 +6187,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def fetch_members(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        *,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.Member]:
         """Fetch the members from a guild.
 
@@ -5980,6 +6214,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to fetch the members of. This may be the
             object or the ID of an existing guild.
+        start_at
+            If provided, will start after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may also be a user object. In this case, the date the object was
+            first created will be used.
 
         Returns
         -------
@@ -8811,6 +9050,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         """Create a scheduled stage event.
@@ -8835,6 +9075,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -8879,6 +9121,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         """Create a scheduled voice event.
@@ -8903,6 +9146,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -8947,6 +9192,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         """Create a scheduled external event.
@@ -8971,6 +9217,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9014,6 +9262,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         """Edit a scheduled event.
@@ -9054,6 +9303,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             `SCHEDULED` events can be set to `ACTIVE` and `CANCELED`.
             `ACTIVE` events can only be set to `COMPLETED`.
+        recurrence_rule
+            If provided, the new rule for how often this event should recur.
+            If [`None`][], the recurrence rule will be removed.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

@@ -1,3 +1,53 @@
+## 2.6.0 (2026-08-19)
+
+### Breaking Changes
+
+- `Invite.channel_id` is now typed as nullable, fixing the deserialization of friend invites raising `KeyError` ([#2768](https://github.com/hikari-py/hikari/issues/2768))
+- The `guild` parameter of `RESTClient.fetch_members` is now positional-only ([#2775](https://github.com/hikari-py/hikari/issues/2775))
+
+### Features
+
+- Add fetch role member count endpoint ([#2585](https://github.com/hikari-py/hikari/issues/2585))
+- Automatically add components V2 flag for interaction server responses ([#2641](https://github.com/hikari-py/hikari/issues/2641))
+- Add support for the `RATE_LIMITED` gateway event: the shard now logs a warning when an operation gets rate limited and the new `ShardRateLimitedEvent` and `RequestGuildMembersRateLimitedEvent` events are dispatched so applications can react to it ([#2644](https://github.com/hikari-py/hikari/issues/2644))
+- Add `BYPASS_SLOWMODE` Permission Flag ([#2666](https://github.com/hikari-py/hikari/issues/2666))
+- Add `attachment_size_limit` parameter to `PartialInteraction` object ([#2729](https://github.com/hikari-py/hikari/issues/2729))
+- Re-add `nonce` argument to `create_message` calls, which allows to deduplicate messages in the past few minutes ([#2734](https://github.com/hikari-py/hikari/issues/2734))
+- Add super (burst) reaction support to the `Reaction` object, the reaction add/delete events and `fetch_reactions_for_emoji` ([#2737](https://github.com/hikari-py/hikari/issues/2737))
+- Add `RESTClient.edit_application` to edit the current application, along with new `ApplicationEventWebhookStatus` and `ApplicationEventWebhookType` enums and `event_webhooks_url`, `event_webhooks_status` and `event_webhooks_types` fields on `Application` ([#2738](https://github.com/hikari-py/hikari/issues/2738))
+- Add the missing `discovery_splash`, `system_channel_flags`, `safety_alerts_channel`, `description` and `premium_progress_bar_enabled` parameters to `RESTClient.edit_guild` ([#2739](https://github.com/hikari-py/hikari/issues/2739))
+- Add `RESTClient.bulk_ban_users` to ban up to 200 users from a guild at once, along with a new `BulkBanResponse` object ([#2740](https://github.com/hikari-py/hikari/issues/2740))
+- Add `RESTClient.fetch_sticker_pack` for fetching a single sticker pack ([#2747](https://github.com/hikari-py/hikari/issues/2747))
+- Add `VoiceChannelStartTimeUpdateEvent`, fired when a voice session starts or ends in a voice channel ([#2748](https://github.com/hikari-py/hikari/issues/2748))
+- Add support for role colors: the `ColorGradient` model, the `Role.colors` field, support for passing a `ColorGradient` as the `color` in `RESTClient.create_role` and `RESTClient.edit_role`, and the `ENHANCED_ROLE_COLORS` guild feature ([#2749](https://github.com/hikari-py/hikari/issues/2749))
+- Add `RESTClient.fetch_entitlement` and `RESTClient.consume_entitlement`, the `Entitlement.is_consumed` field, the missing `skus` and `exclude_deleted` parameters to `RESTClient.fetch_entitlements`, and the missing one-time purchase `EntitlementType` and `SKUType` values ([#2750](https://github.com/hikari-py/hikari/issues/2750))
+- Add support for requesting ephemeral channel info over the gateway: `GatewayShard.request_channel_info` (also available on `GatewayBot`) and the `ChannelInfoEvent` dispatched in response ([#2752](https://github.com/hikari-py/hikari/issues/2752))
+- Add `RESTClient.fetch_activity_instance` for fetching a live application activity instance, along with the new `ActivityInstance`, `ActivityLocation` and `ActivityLocationKind` models ([#2766](https://github.com/hikari-py/hikari/issues/2766))
+- True-up the invites module:
+  - Add `Invite.type`, along with the new `InviteType` enum
+  - Add `Invite.flags`, along with the new `InviteFlags` enum
+  - Add `Invite.roles`, along with the new `InviteRole` model, and `Invite.role_ids`
+  - Add `Invite.guild_scheduled_event`
+  - Add the missing `scheduled_event` parameter to `RESTClient.fetch_invite` ([#2768](https://github.com/hikari-py/hikari/issues/2768))
+- Add the `application_id` field to guild channels, which Discord now documents on the channel object for future guild channel use cases ([#2771](https://github.com/hikari-py/hikari/issues/2771))
+- Add the `start_at` parameter to `RESTClient.fetch_members`, allowing the member iteration to start at a given user, snowflake or point in time ([#2775](https://github.com/hikari-py/hikari/issues/2775))
+- Add support for gateway capabilities and Discord's upcoming private channel obfuscation:
+  - New `GatewayCapabilities` bitfield, declarable through the `capabilities` argument of `GatewayBot` and `GatewayShardImpl`, including the temporary `GatewayCapabilities.CHANNEL_OBFUSCATION` testing opt-in
+  - New `ChannelFlag.CHANNEL_OBFUSCATED` flag for detecting obfuscated channels
+  - `PermissibleGuildChannel.flags` is now available on every guild channel type instead of only forum and media channels ([#2785](https://github.com/hikari-py/hikari/issues/2785))
+
+### Bugfixes
+
+- Properly close http connections when making a request to REST ([#2392](https://github.com/hikari-py/hikari/issues/2392))
+- Use correct route when using `fetch_poll_voters` ([#2594](https://github.com/hikari-py/hikari/issues/2594))
+- Do not fetch WebResource attachments if they're part of components/embeds ([#2687](https://github.com/hikari-py/hikari/issues/2687))
+- Default to unsigned in `Color.to_bytes`, fixing an `OverflowError` when converting colors with a red channel of `0x80` or higher to their natural three bytes ([#2764](https://github.com/hikari-py/hikari/issues/2764))
+
+### Documentation Improvements
+
+- Fix typos in component builder docstrings ([#2618](https://github.com/hikari-py/hikari/issues/2618))
+
+---
 ## 2.5.0 (2025-10-31)
 
 ### Breaking Changes

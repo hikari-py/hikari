@@ -23,6 +23,9 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "ActivityInstance",
+    "ActivityLocation",
+    "ActivityLocationKind",
     "Application",
     "ApplicationContextType",
     "ApplicationEventWebhookStatus",
@@ -692,6 +695,56 @@ class InviteApplication(guilds.PartialApplication):
             file_format=file_format,
             lossless=lossless,
         )
+
+
+@typing.final
+class ActivityLocationKind(str, enums.Enum):
+    """The kind of location an activity instance is running in."""
+
+    GUILD_CHANNEL = "gc"
+    """The activity is running in a guild channel."""
+
+    PRIVATE_CHANNEL = "pc"
+    """The activity is running in a private channel, such as a DM or group DM."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ActivityLocation:
+    """The location an activity instance is running in."""
+
+    id: str = attrs.field(hash=True, repr=True)
+    """The unique identifier for the location."""
+
+    kind: ActivityLocationKind | str = attrs.field(eq=False, hash=False, repr=True)
+    """The kind of location the activity instance is running in."""
+
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the channel the activity instance is running in."""
+
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the guild the activity instance is running in, if any."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ActivityInstance:
+    """Represents a live application activity instance."""
+
+    application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the application this activity instance belongs to."""
+
+    instance_id: str = attrs.field(hash=True, repr=True)
+    """The unique identifier for the activity instance."""
+
+    launch_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """The unique identifier for the launch."""
+
+    location: ActivityLocation = attrs.field(eq=False, hash=False, repr=True)
+    """The location this activity instance is running in."""
+
+    users: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The IDs of the users currently connected to this activity instance."""
 
 
 @attrs_extensions.with_copy

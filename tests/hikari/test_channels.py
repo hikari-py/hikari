@@ -152,6 +152,7 @@ class TestGroupDMChannel:
             last_message_id=snowflakes.Snowflake(3232),
             owner_id=snowflakes.Snowflake(1066),
             icon_hash="1a2b3c",
+            is_managed=False,
             nicknames={snowflakes.Snowflake(1): "person 1", snowflakes.Snowflake(2): "person 2"},
             recipients={
                 snowflakes.Snowflake(1): mock.Mock(spec_set=users.User, __str__=mock.Mock(return_value="snoop#0420")),
@@ -328,6 +329,7 @@ class TestGuildChannel:
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
             guild_id=snowflakes.Snowflake(123456789),
+            application_id=None,
             parent_id=None,
         )
 
@@ -408,10 +410,12 @@ class TestPermissibleGuildChannel:
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
             guild_id=snowflakes.Snowflake(123456789),
+            application_id=None,
             is_nsfw=True,
             parent_id=None,
             position=54,
             permission_overwrites=[],
+            flags=channels.ChannelFlag.NONE,
         )
 
     @pytest.mark.asyncio

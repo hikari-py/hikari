@@ -32,9 +32,8 @@ __all__ = ["Enum", "Flag"]
 import enum as __enum
 from collections.abc import Iterator as __Iterator
 from collections.abc import Sequence as __Sequence
+from typing import Self as __Self
 from typing import TypeVar as __TypeVar
-
-from typing_extensions import Self as __Self
 
 from hikari.internal import typing_extensions as __typing_backport
 
@@ -60,7 +59,9 @@ class Flag(__enum.IntFlag):
     def split(self) -> __Sequence[__Self]: ...
     def symmetric_difference(self, other: int | __Self) -> __Self: ...
     def union(self, other: int | __Self) -> __Self: ...
+    @__typing_backport.override
     def __iter__(self) -> __Iterator[__Self]: ...
+    @__typing_backport.override
     def __len__(self) -> int: ...
     # Aliases
     def isdisjoint(self, other: int | __Self) -> bool: ...  # is_disjoint

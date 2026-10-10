@@ -26,10 +26,12 @@ __all__: typing.Sequence[str] = (
     "ChannelInfo",
     "ChannelInfoEvent",
     "MemberChunkEvent",
+    "RequestGuildMembersRateLimitedEvent",
     "ShardConnectedEvent",
     "ShardDisconnectedEvent",
     "ShardEvent",
     "ShardPayloadEvent",
+    "ShardRateLimitedEvent",
     "ShardReadyEvent",
     "ShardResumedEvent",
     "ShardStateEvent",
@@ -174,6 +176,39 @@ class ShardResumedEvent(ShardStateEvent):
 
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<docstring inherited from ShardEvent>>.
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ShardRateLimitedEvent(ShardEvent):
+    """Event fired when a gateway operation is rate limited on a shard."""
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    opcode: int = attrs.field(repr=True)
+    """Opcode of the gateway operation that was rate limited."""
+
+    retry_after: float = attrs.field(repr=True)
+    """How many seconds to wait before the operation can be retried."""
+
+    meta: typing.Mapping[str, typing.Any] = attrs.field(repr=True)
+    """The raw metadata for the operation that was rate limited."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class RequestGuildMembersRateLimitedEvent(ShardRateLimitedEvent):
+    """Event fired when requesting guild members is rate limited on a shard."""
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the guild members were requested for."""
+
+    nonce: str | None = attrs.field(repr=True)
+    """The nonce sent in the request that was rate limited, if any."""
 
 
 @attrs_extensions.with_copy

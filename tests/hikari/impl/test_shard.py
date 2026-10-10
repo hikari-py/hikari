@@ -535,6 +535,11 @@ class TestGatewayShardImpl:
         client._shard_id = 101
         assert client.id == 101
 
+    def test_capabilities_property(self, client):
+        mock_capabilities = object()
+        client._capabilities = mock_capabilities
+        assert client.capabilities is mock_capabilities
+
     def test_intents_property(self, client):
         mock_intents = object()
         client._intents = mock_intents
@@ -958,6 +963,7 @@ class TestGatewayShardImplAsync:
         client._seq = None
         client._large_threshold = "your mom"
         client._intents = 9
+        client._capabilities = 32768
 
         heartbeat_task = object()
         poll_events_task = object()
@@ -1027,6 +1033,7 @@ class TestGatewayShardImplAsync:
                     },
                     "shard": [20, 100],
                     "intents": 9,
+                    "capabilities": 32768,
                     "presence": serialize_and_store_presence_payload.return_value,
                 },
             }
@@ -1203,6 +1210,22 @@ class TestGatewayShardImplAsync:
         assert client._seq == 101
         client._event_manager.consume_raw_event.assert_called_once_with("RESUMED", client, {"some": "test"})
         client._handshake_event.set.assert_called_once_with()
+
+    async def test__poll_events_on_dispatch_when_RATE_LIMITED(self, client):
+        data = {"opcode": 8, "retry_after": 12.5, "meta": {"guild_id": "123123", "nonce": "anonce"}}
+        payload = {"op": 0, "t": "RATE_LIMITED", "d": data, "s": 102}
+
+        client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
+        client._seq = 1000
+        client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
+        client._handshake_event = mock.Mock()
+
+        with pytest.raises(RuntimeError):
+            await client._poll_events()
+
+        assert client._ws.receive_json.await_count == 2
+        assert client._seq == 102
+        client._event_manager.consume_raw_event.assert_called_once_with("RATE_LIMITED", client, data)
 
     async def test__poll_events_on_heartbeat_ack(self, client):
         payload = {"op": 11}

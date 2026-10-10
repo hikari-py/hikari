@@ -192,6 +192,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_activity_instance(self, payload: data_binding.JSONObject) -> application_models.ActivityInstance:
+        """Parse a raw payload from Discord into an activity instance object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.ActivityInstance
+            The deserialized activity instance object.
+        """
+
+    @abc.abstractmethod
     def deserialize_authorization_information(
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:

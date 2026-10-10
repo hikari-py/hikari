@@ -367,7 +367,11 @@ GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages
 PUT_CHANNEL_PINS: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/pins/{message}")
 DELETE_CHANNEL_PIN: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/pins/{message}")
 
+PUT_CHANNEL_RECIPIENT: typing.Final[Route] = Route(PUT, "/channels/{channel}/recipients/{user}")
+DELETE_CHANNEL_RECIPIENT: typing.Final[Route] = Route(DELETE, "/channels/{channel}/recipients/{user}")
+
 POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typing")
+PUT_CHANNEL_VOICE_STATUS: typing.Final[Route] = Route(PUT, "/channels/{channel}/voice-status")
 
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
@@ -602,6 +606,10 @@ GET_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
 )
 PUT_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
+)
+
+GET_APPLICATION_ACTIVITY_INSTANCE: typing.Final[Route] = Route(
+    GET, "/applications/{application}/activity-instances/{instance}"
 )
 
 GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(

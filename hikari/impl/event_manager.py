@@ -191,6 +191,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://docs.discord.com/developers/events/gateway-events#channel-info."""
         self.dispatch(self._event_factory.deserialize_channel_info_event(shard, payload))
 
+    @event_manager_base.filtered((shard_events.ShardRateLimitedEvent, shard_events.RequestGuildMembersRateLimitedEvent))
+    def on_rate_limited(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#rate-limited."""
+        self.dispatch(self._event_factory.deserialize_rate_limited_event(shard, payload))
+
     @event_manager_base.filtered(
         (channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent),
         config.CacheComponents.GUILD_THREADS,
@@ -545,7 +550,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
         self.dispatch(event)
 
-    @event_manager_base.filtered(guild_events.StickersUpdateEvent, config.CacheComponents.EMOJIS)
+    @event_manager_base.filtered(guild_events.StickersUpdateEvent, config.CacheComponents.GUILD_STICKERS)
     def on_guild_stickers_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-stickers-update for more info."""
         guild_id = snowflakes.Snowflake(payload["guild_id"])
@@ -839,6 +844,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://docs.discord.com/developers/events/gateway-events#voice-channel-start-time-update."""
         self.dispatch(self._event_factory.deserialize_voice_channel_start_time_update_event(shard, payload))
+
+    @event_manager_base.filtered(voice_events.VoiceChannelStatusUpdateEvent)
+    def on_voice_channel_status_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#voice-channel-status-update."""
+        self.dispatch(self._event_factory.deserialize_voice_channel_status_update_event(shard, payload))
 
     @event_manager_base.filtered(channel_events.WebhookUpdateEvent)
     def on_webhooks_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:

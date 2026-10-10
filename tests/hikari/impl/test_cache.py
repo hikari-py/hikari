@@ -29,6 +29,7 @@ from hikari import embeds
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
+from hikari import scheduled_events
 from hikari import messages
 from hikari import polls
 from hikari import snowflakes
@@ -509,13 +510,13 @@ class TestCacheImpl:
             {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.KnownCustomEmojiData)}
         )
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
 
         cache_impl.set_emoji(emoji)
 
         assert 5123123 in cache_impl._emoji_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_ref_count.assert_not_called()
 
     def test_update_emoji(self, cache_impl):
         mock_cached_emoji_1 = mock.Mock(emojis.KnownCustomEmoji)
@@ -747,6 +748,23 @@ class TestCacheImpl:
         cache_impl._build_sticker.assert_called_once_with(mock_sticker_data)
         cache_impl._garbage_collect_user.assert_not_called()
 
+    def test_delete_sticker_removes_empty_guild_record(self, cache_impl):
+        mock_sticker_data = mock.Mock(
+            cache_utilities.GuildStickerData, user=None, guild_id=snowflakes.Snowflake(123333)
+        )
+        sticker_ids = collections.SnowflakeSet()
+        sticker_ids.add(snowflakes.Snowflake(12354123))
+        guild_record = cache_utilities.GuildRecord(stickers=sticker_ids)
+        cache_impl._sticker_entries = collections.FreezableDict({snowflakes.Snowflake(12354123): mock_sticker_data})
+        cache_impl._guild_entries = collections.FreezableDict({snowflakes.Snowflake(123333): guild_record})
+        cache_impl._build_sticker = mock.Mock()
+        cache_impl._remove_guild_record_if_empty = mock.Mock()
+
+        cache_impl.delete_sticker(StubModel(12354123))
+
+        assert guild_record.stickers is None
+        cache_impl._remove_guild_record_if_empty.assert_called_once_with(snowflakes.Snowflake(123333), guild_record)
+
     def test_delete_sticker_for_unknown_sticker(self, cache_impl):
         cache_impl._garbage_collect_user = mock.Mock()
         cache_impl._build_sticker = mock.Mock()
@@ -902,13 +920,13 @@ class TestCacheImpl:
             {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.GuildStickerData)}
         )
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
 
         cache_impl.set_sticker(sticker)
 
         assert 5123123 in cache_impl._sticker_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_ref_count.assert_not_called()
 
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -1274,14 +1292,21 @@ class TestCacheImpl:
         mock_inviter = mock.MagicMock(users.User)
         mock_target_user = mock.MagicMock(users.User)
         mock_application = object()
+        mock_scheduled_event = mock.MagicMock(scheduled_events.ScheduledEvent)
+        mock_role = mock.MagicMock(invites.InviteRole)
         invite_data = cache_utilities.InviteData(
             code="okokok",
+            type=invites.InviteType.GUILD,
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
             inviter=cache_utilities.RefCell(mock_inviter),
             target_type=invites.TargetType.STREAM,
             target_user=cache_utilities.RefCell(mock_target_user),
             target_application=mock_application,
+            guild_scheduled_event=mock_scheduled_event,
+            flags=invites.InviteFlags.NONE,
+            roles=(mock_role,),
+            role_ids=(snowflakes.Snowflake(123321123),),
             uses=42,
             max_uses=999,
             max_age=datetime.timedelta(days=7),
@@ -1301,6 +1326,11 @@ class TestCacheImpl:
         assert invite.target_user == mock_target_user
         assert invite.inviter is not mock_inviter
         assert invite.target_user is not mock_target_user
+        assert invite.guild_scheduled_event == mock_scheduled_event
+        assert invite.guild_scheduled_event is not mock_scheduled_event
+        assert invite.roles == (mock_role,)
+        assert invite.roles[0] is not mock_role
+        assert invite.role_ids == (123321123,)
         assert invite.target_type is invites.TargetType.STREAM
         assert invite.target_application is mock_application
         assert invite.approximate_active_member_count is None
@@ -1314,12 +1344,17 @@ class TestCacheImpl:
     def test__build_invite_without_users(self, cache_impl):
         invite_data = cache_utilities.InviteData(
             code="okokok",
+            type=invites.InviteType.GUILD,
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
             inviter=None,
             target_type=invites.TargetType.STREAM,
             target_user=None,
             target_application=None,
+            guild_scheduled_event=None,
+            flags=invites.InviteFlags.NONE,
+            roles=(),
+            role_ids=(),
             uses=42,
             max_uses=999,
             max_age=datetime.timedelta(days=7),
@@ -2268,7 +2303,7 @@ class TestCacheImpl:
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
         member_model = mock.MagicMock(guilds.Member, user=mock_user, guild_id=snowflakes.Snowflake(67345234))
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_ref_count = mock.Mock()
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(67345234): cache_utilities.GuildRecord(
@@ -2282,7 +2317,7 @@ class TestCacheImpl:
         cache_impl.set_member(member_model)
 
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_ref_count.assert_not_called()
 
     def test_update_member(self, cache_impl):
         mock_old_cached_member = mock.Mock(guilds.Member)

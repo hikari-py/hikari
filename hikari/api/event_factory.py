@@ -1297,6 +1297,25 @@ class EventFactory(abc.ABC):
             The parsed channel info event object.
         """
 
+    @abc.abstractmethod
+    def deserialize_rate_limited_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> shard_events.ShardRateLimitedEvent:
+        """Parse a raw payload from Discord into a shard rate limited event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.shard_events.ShardRateLimitedEvent
+            The parsed shard rate limited event object.
+        """
+
     ###############
     # USER EVENTS #
     ###############
@@ -1391,6 +1410,25 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.voice_events.VoiceChannelStartTimeUpdateEvent
             The parsed voice channel start time update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_voice_channel_status_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelStatusUpdateEvent:
+        """Parse a raw payload from Discord into a voice channel status update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.VoiceChannelStatusUpdateEvent
+            The parsed voice channel status update event object.
         """
 
     @abc.abstractmethod

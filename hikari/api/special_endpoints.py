@@ -77,8 +77,7 @@ from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import applications
     from hikari import auto_mod
@@ -98,7 +97,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
 
-_ParentT = typing.TypeVar("_ParentT")
+_ParentT_co = typing.TypeVar("_ParentT_co", covariant=True)
 
 
 class TypingIndicator(abc.ABC):
@@ -1840,14 +1839,14 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
 
-class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]):
+class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
     """Builder class for a text select menu."""
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
-    def parent(self) -> _ParentT:
+    def parent(self) -> _ParentT_co:
         """Parent object which initialised this builder."""
 
     @property
