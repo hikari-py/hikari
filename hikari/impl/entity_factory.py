@@ -52,6 +52,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import soundboard as soundboard_models
 from hikari import stage_instances
 from hikari import stickers as sticker_models
 from hikari import templates as template_models
@@ -274,6 +275,9 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     _stickers: UndefinedSnowflakeMapping[sticker_models.GuildSticker] = attrs.field(
         init=False, default=undefined.UNDEFINED
     )
+    _soundboard_sounds: UndefinedSnowflakeMapping[soundboard_models.SoundboardSound] = attrs.field(
+        init=False, default=undefined.UNDEFINED
+    )
     _members: UndefinedSnowflakeMapping[guild_models.Member] = attrs.field(init=False, default=undefined.UNDEFINED)
     _presences: UndefinedSnowflakeMapping[presence_models.MemberPresence] = attrs.field(
         init=False, default=undefined.UNDEFINED
@@ -326,6 +330,16 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
             }
 
         return self._stickers
+
+    @typing_extensions.override
+    def soundboard_sounds(self) -> typing.Mapping[snowflakes.Snowflake, soundboard_models.SoundboardSound]:
+        if self._soundboard_sounds is undefined.UNDEFINED:
+            self._soundboard_sounds = {
+                snowflakes.Snowflake(s["sound_id"]): self._entity_factory.deserialize_soundboard_sound(s)
+                for s in self._payload.get("soundboard_sounds", ())
+            }
+
+        return self._soundboard_sounds
 
     @typing_extensions.override
     def guild(self) -> guild_models.GatewayGuild:
@@ -4927,4 +4941,36 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_enabled=payload["enabled"],
             exempt_channel_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_channels"]],
             exempt_role_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_roles"]],
+        )
+
+    #####################
+    # SOUNDBOARD MODELS #
+    #####################
+
+    @typing_extensions.override
+    def deserialize_soundboard_sound(self, payload: data_binding.JSONObject) -> soundboard_models.SoundboardSound:
+        emoji: emoji_models.UnicodeEmoji | emoji_models.CustomEmoji | None = None
+        if (emoji_id := payload["emoji_id"]) is not None:
+            emoji = emoji_models.CustomEmoji(
+                id=snowflakes.Snowflake(emoji_id), name=payload["emoji_name"], is_animated=False
+            )
+        elif (emoji_name := payload["emoji_name"]) is not None:
+            emoji = emoji_models.UnicodeEmoji(emoji_name)
+
+        guild_id: snowflakes.Snowflake | None = None
+        if raw_guild_id := payload.get("guild_id"):
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
+        user: user_models.User | None = None
+        if user_payload := payload.get("user"):
+            user = self.deserialize_user(user_payload)
+
+        return soundboard_models.SoundboardSound(
+            id=snowflakes.Snowflake(payload["sound_id"]),
+            name=payload["name"],
+            volume=payload["volume"],
+            emoji=emoji,
+            guild_id=guild_id,
+            is_available=payload["available"],
+            user=user,
         )

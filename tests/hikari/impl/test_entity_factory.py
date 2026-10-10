@@ -48,6 +48,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import soundboard as soundboard_models
 from hikari import stage_instances as stage_instance_models
 from hikari import stickers as sticker_models
 from hikari import traits
@@ -235,6 +236,20 @@ def user_payload(primary_guild_payload: dict[str, typing.Any]):
         "system": True,
         "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER),
         "primary_guild": primary_guild_payload,
+    }
+
+
+@pytest.fixture
+def soundboard_sound_payload(user_payload):
+    return {
+        "name": "Yay",
+        "sound_id": "1106714396018884649",
+        "volume": 0.5,
+        "emoji_id": "989193655938064464",
+        "emoji_name": None,
+        "guild_id": "613425648685547541",
+        "available": True,
+        "user": user_payload,
     }
 
 
@@ -768,6 +783,31 @@ class TestGatewayGuildDefinition:
         assert guild_definition.roles() == {"32132123123": mock_role}
 
         entity_factory_impl.deserialize_role.assert_not_called()
+
+    def test_soundboard_sounds(self, entity_factory_impl, soundboard_sound_payload):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild(
+            {"id": "265828729970753537", "soundboard_sounds": [soundboard_sound_payload]}, user_id=123321
+        )
+
+        assert guild_definition.soundboard_sounds() == {
+            1106714396018884649: entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+        }
+
+    def test_soundboard_sounds_when_missing(self, entity_factory_impl):
+        guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"}, user_id=1)
+
+        assert guild_definition.soundboard_sounds() == {}
+
+    def test_soundboard_sounds_returns_cached_values(self, entity_factory_impl):
+        with mock.patch.object(
+            entity_factory.EntityFactoryImpl, "deserialize_soundboard_sound"
+        ) as mock_deserialize_soundboard_sound:
+            guild_definition = entity_factory_impl.deserialize_gateway_guild({"id": "265828729970753537"}, user_id=1)
+            mock_sound = object()
+            guild_definition._soundboard_sounds = {"54545454": mock_sound}
+
+            assert guild_definition.soundboard_sounds() == {"54545454": mock_sound}
+            mock_deserialize_soundboard_sound.assert_not_called()
 
     def test_threads(
         self,
@@ -8928,3 +8968,38 @@ class TestEntityFactoryImpl:
         assert result.trigger.keyword_filter == ["ok", "no", "bye"]
         assert result.trigger.regex_patterns == ["some", "regex", "patterns"]
         assert result.trigger.allow_list == ["allowed", "stuff"]
+
+    def test_deserialize_soundboard_sound(self, entity_factory_impl, soundboard_sound_payload, user_payload):
+        sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+
+        assert sound.id == 1106714396018884649
+        assert sound.name == "Yay"
+        assert sound.volume == 0.5
+        assert sound.emoji == emoji_models.CustomEmoji(id=989193655938064464, name=None, is_animated=False)
+        assert sound.guild_id == 613425648685547541
+        assert sound.is_available is True
+        assert sound.user == entity_factory_impl.deserialize_user(user_payload)
+        assert isinstance(sound, soundboard_models.SoundboardSound)
+
+    def test_deserialize_soundboard_sound_with_unicode_emoji(self, entity_factory_impl, soundboard_sound_payload):
+        soundboard_sound_payload["emoji_id"] = None
+        soundboard_sound_payload["emoji_name"] = "🦆"
+
+        sound = entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload)
+
+        assert sound.emoji == emoji_models.UnicodeEmoji("🦆")
+
+    def test_deserialize_soundboard_sound_without_emoji(self, entity_factory_impl, soundboard_sound_payload):
+        soundboard_sound_payload["emoji_id"] = None
+        soundboard_sound_payload["emoji_name"] = None
+
+        assert entity_factory_impl.deserialize_soundboard_sound(soundboard_sound_payload).emoji is None
+
+    def test_deserialize_default_soundboard_sound(self, entity_factory_impl):
+        sound = entity_factory_impl.deserialize_soundboard_sound(
+            {"name": "quack", "sound_id": "1", "volume": 1.0, "emoji_id": None, "emoji_name": "🦆", "available": True}
+        )
+
+        assert sound.id == 1
+        assert sound.guild_id is None
+        assert sound.user is None

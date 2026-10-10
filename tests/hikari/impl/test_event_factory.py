@@ -48,6 +48,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import soundboard_events
 from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -464,6 +465,7 @@ class TestEventFactoryImpl:
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
         assert event.stickers is guild_definition.stickers.return_value
+        assert event.soundboard_sounds is guild_definition.soundboard_sounds.return_value
         assert event.roles is guild_definition.roles.return_value
         assert event.channels is guild_definition.channels.return_value
         assert event.members is guild_definition.members.return_value
@@ -472,6 +474,7 @@ class TestEventFactoryImpl:
         guild_definition.guild.assert_called_once_with()
         guild_definition.emojis.assert_called_once_with()
         guild_definition.stickers.assert_called_once_with()
+        guild_definition.soundboard_sounds.assert_called_once_with()
         guild_definition.roles.assert_called_once_with()
         guild_definition.channels.assert_called_once_with()
         guild_definition.members.assert_called_once_with()
@@ -492,6 +495,7 @@ class TestEventFactoryImpl:
         guild_definition = mock_app.entity_factory.deserialize_gateway_guild.return_value
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
+        assert event.soundboard_sounds is guild_definition.soundboard_sounds.return_value
         assert event.roles is guild_definition.roles.return_value
         assert event.channels is guild_definition.channels.return_value
         assert event.members is guild_definition.members.return_value
@@ -1627,6 +1631,53 @@ class TestEventFactoryImpl:
 
         assert event.status is None
 
+    def test_deserialize_voice_channel_effect_send_event(self, event_factory, mock_app, mock_shard):
+        emoji_payload = {"id": None, "name": "🦆"}
+        payload = {
+            "guild_id": "1",
+            "channel_id": "2",
+            "user_id": "3",
+            "emoji": emoji_payload,
+            "animation_type": 1,
+            "animation_id": 7,
+            "sound_id": "4",
+            "sound_volume": 0.5,
+        }
+
+        event = event_factory.deserialize_voice_channel_effect_send_event(mock_shard, payload)
+
+        assert isinstance(event, voice_events.VoiceChannelEffectSendEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 1
+        assert event.channel_id == 2
+        assert event.user_id == 3
+        assert event.emoji is mock_app.entity_factory.deserialize_emoji.return_value
+        mock_app.entity_factory.deserialize_emoji.assert_called_once_with(emoji_payload)
+        assert event.animation_type is voice_events.VoiceChannelEffectAnimationType.BASIC
+        assert event.animation_id == 7
+        assert event.sound_id == 4
+        assert event.sound_volume == 0.5
+
+    def test_deserialize_voice_channel_effect_send_event_with_only_emoji(self, event_factory, mock_app, mock_shard):
+        payload = {"guild_id": "1", "channel_id": "2", "user_id": "3", "emoji": {"id": None, "name": "🦆"}}
+
+        event = event_factory.deserialize_voice_channel_effect_send_event(mock_shard, payload)
+
+        assert event.animation_type is None
+        assert event.animation_id is None
+        assert event.sound_id is None
+        assert event.sound_volume is None
+
+    def test_deserialize_voice_channel_effect_send_event_with_null_emoji(self, event_factory, mock_app, mock_shard):
+        payload = {"guild_id": "1", "channel_id": "2", "user_id": "3", "emoji": None, "animation_type": None}
+
+        event = event_factory.deserialize_voice_channel_effect_send_event(mock_shard, payload)
+
+        assert event.emoji is None
+        assert event.animation_type is None
+        mock_app.entity_factory.deserialize_emoji.assert_not_called()
+
     ##################
     #  MONETIZATION  #
     ##################
@@ -1863,3 +1914,60 @@ class TestEventFactoryImpl:
         assert event.matched_keyword is None
         assert event.matched_content is None
         mock_app.entity_factory.deserialize_auto_mod_action.assert_called_once_with(mock_action_payload)
+
+    def test_deserialize_soundboard_sound_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {"sound_id": "1", "guild_id": "2"}
+
+        event = event_factory.deserialize_soundboard_sound_create_event(mock_shard, payload)
+
+        mock_app.entity_factory.deserialize_soundboard_sound.assert_called_once_with(payload)
+        assert isinstance(event, soundboard_events.SoundboardSoundCreateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.sound is mock_app.entity_factory.deserialize_soundboard_sound.return_value
+
+    def test_deserialize_soundboard_sound_update_event(self, event_factory, mock_app, mock_shard):
+        old_sound = object()
+
+        event = event_factory.deserialize_soundboard_sound_update_event(mock_shard, {}, old_sound=old_sound)
+
+        assert isinstance(event, soundboard_events.SoundboardSoundUpdateEvent)
+        assert event.sound is mock_app.entity_factory.deserialize_soundboard_sound.return_value
+        assert event.old_sound is old_sound
+
+    def test_deserialize_soundboard_sound_delete_event(self, event_factory, mock_app, mock_shard):
+        old_sound = object()
+
+        event = event_factory.deserialize_soundboard_sound_delete_event(
+            mock_shard, {"sound_id": "1", "guild_id": "2"}, old_sound=old_sound
+        )
+
+        assert isinstance(event, soundboard_events.SoundboardSoundDeleteEvent)
+        assert event.sound_id == 1
+        assert event.guild_id == 2
+        assert event.old_sound is old_sound
+
+    def test_deserialize_soundboard_sounds_update_event(self, event_factory, mock_app, mock_shard):
+        old_sounds = object()
+        sound_payload = object()
+
+        event = event_factory.deserialize_soundboard_sounds_update_event(
+            mock_shard, {"guild_id": "2", "soundboard_sounds": [sound_payload]}, old_sounds=old_sounds
+        )
+
+        mock_app.entity_factory.deserialize_soundboard_sound.assert_called_once_with(sound_payload)
+        assert isinstance(event, soundboard_events.SoundboardSoundsUpdateEvent)
+        assert event.guild_id == 2
+        assert event.sounds == [mock_app.entity_factory.deserialize_soundboard_sound.return_value]
+        assert event.old_sounds is old_sounds
+
+    def test_deserialize_soundboard_sounds_event(self, event_factory, mock_app, mock_shard):
+        sound_payload = object()
+
+        event = event_factory.deserialize_soundboard_sounds_event(
+            mock_shard, {"guild_id": "2", "soundboard_sounds": [sound_payload]}
+        )
+
+        assert isinstance(event, soundboard_events.SoundboardSoundsEvent)
+        assert event.guild_id == 2
+        assert event.sounds == [mock_app.entity_factory.deserialize_soundboard_sound.return_value]

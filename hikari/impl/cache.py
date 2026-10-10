@@ -43,6 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
     from hikari import presences
+    from hikari import soundboard
     from hikari import stickers
     from hikari import traits
     from hikari import users
@@ -78,6 +79,7 @@ class CacheImpl(cache.MutableCache):
         "_referenced_messages",
         "_role_entries",
         "_settings",
+        "_soundboard_sound_entries",
         "_sticker_entries",
         "_unknown_custom_emoji_entries",
         "_user_entries",
@@ -92,6 +94,9 @@ class CacheImpl(cache.MutableCache):
     _guild_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildRecord]
     _invite_entries: collections.ExtendedMutableMapping[str, cache_utility.InviteData]
     _role_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, guilds.Role]
+    _soundboard_sound_entries: collections.ExtendedMutableMapping[
+        snowflakes.Snowflake, cache_utility.SoundboardSoundData
+    ]
     _sticker_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.GuildStickerData]
     _unknown_custom_emoji_entries: collections.ExtendedMutableMapping[
         snowflakes.Snowflake, cache_utility.RefCell[emojis.CustomEmoji]
@@ -123,6 +128,7 @@ class CacheImpl(cache.MutableCache):
         self._guild_entries = collections.FreezableDict()
         self._invite_entries = collections.FreezableDict()
         self._role_entries = collections.FreezableDict()
+        self._soundboard_sound_entries = collections.FreezableDict()
         self._sticker_entries = collections.FreezableDict()
         # This is a purely internal cache used for handling the caching and de-duplicating of the unknown custom emojis
         # found attached to cached presence activities.
@@ -441,6 +447,131 @@ class CacheImpl(cache.MutableCache):
             guild_record.stickers = collections.SnowflakeSet()
 
         guild_record.stickers.add(sticker.id)
+
+    def _build_soundboard_sound(self, sound_data: cache_utility.SoundboardSoundData) -> soundboard.SoundboardSound:
+        return sound_data.build_entity(self._app)
+
+    @typing_extensions.override
+    def clear_soundboard_sounds(self) -> cache.CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            return cache_utility.EmptyCacheView()
+
+        cached_sounds = self._soundboard_sound_entries
+        self._soundboard_sound_entries = collections.FreezableDict()
+
+        for sound_data in cached_sounds.values():
+            if sound_data.user:
+                self._garbage_collect_user(sound_data.user, decrement=1)
+
+        for guild_id, guild_record in self._guild_entries.freeze().items():
+            guild_record.soundboard_sounds = None
+            self._remove_guild_record_if_empty(guild_id, guild_record)
+
+        return cache_utility.CacheMappingView(cached_sounds, builder=self._build_soundboard_sound)
+
+    @typing_extensions.override
+    def clear_soundboard_sounds_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> cache.CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            return cache_utility.EmptyCacheView()
+
+        guild_id = snowflakes.Snowflake(guild)
+        guild_record = self._guild_entries.get(guild_id)
+        if not guild_record or not guild_record.soundboard_sounds:
+            return cache_utility.EmptyCacheView()
+
+        cached_sounds = {
+            sound_id: self._soundboard_sound_entries.pop(sound_id) for sound_id in guild_record.soundboard_sounds
+        }
+        guild_record.soundboard_sounds = None
+        self._remove_guild_record_if_empty(guild_id, guild_record)
+
+        for sound_data in cached_sounds.values():
+            if sound_data.user:
+                self._garbage_collect_user(sound_data.user, decrement=1)
+
+        return cache_utility.CacheMappingView(cached_sounds, builder=self._build_soundboard_sound)
+
+    @typing_extensions.override
+    def get_soundboard_sound(
+        self, sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound], /
+    ) -> soundboard.SoundboardSound | None:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            return None
+
+        sound_data = self._soundboard_sound_entries.get(snowflakes.Snowflake(sound))
+        return self._build_soundboard_sound(sound_data) if sound_data else None
+
+    @typing_extensions.override
+    def get_soundboard_sounds_view(self) -> cache.CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            return cache_utility.EmptyCacheView()
+
+        return cache_utility.CacheMappingView(
+            self._soundboard_sound_entries.freeze(), builder=self._build_soundboard_sound
+        )
+
+    @typing_extensions.override
+    def get_soundboard_sounds_view_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> cache.CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            return cache_utility.EmptyCacheView()
+
+        guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
+        if not guild_record or not guild_record.soundboard_sounds:
+            return cache_utility.EmptyCacheView()
+
+        cached_sounds = {
+            sound_id: self._soundboard_sound_entries[sound_id] for sound_id in guild_record.soundboard_sounds
+        }
+        return cache_utility.CacheMappingView(cached_sounds, builder=self._build_soundboard_sound)
+
+    @typing_extensions.override
+    def delete_soundboard_sound(
+        self, sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound], /
+    ) -> soundboard.SoundboardSound | None:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            return None
+
+        sound_id = snowflakes.Snowflake(sound)
+        sound_data = self._soundboard_sound_entries.pop(sound_id, None)
+        if not sound_data:
+            return None
+
+        if sound_data.user:
+            self._garbage_collect_user(sound_data.user, decrement=1)
+
+        guild_record = self._guild_entries.get(sound_data.guild_id)
+        if guild_record and guild_record.soundboard_sounds:
+            guild_record.soundboard_sounds.remove(sound_id)
+
+            if not guild_record.soundboard_sounds:
+                guild_record.soundboard_sounds = None
+                self._remove_guild_record_if_empty(sound_data.guild_id, guild_record)
+
+        return self._build_soundboard_sound(sound_data)
+
+    @typing_extensions.override
+    def set_soundboard_sound(self, sound: soundboard.SoundboardSound, /) -> None:
+        if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_SOUNDBOARD_SOUNDS) or sound.guild_id is None:
+            return
+
+        user: cache_utility.RefCell[users.User] | None = None
+        if sound.user:
+            user = self._set_user(sound.user)
+            if sound.id not in self._soundboard_sound_entries:
+                self._increment_ref_count(user)
+
+        sound_data = cache_utility.SoundboardSoundData.build_from_entity(sound, user=user)
+        self._soundboard_sound_entries[sound.id] = sound_data
+        guild_record = self._get_or_create_guild_record(sound.guild_id)
+
+        if guild_record.soundboard_sounds is None:
+            guild_record.soundboard_sounds = collections.SnowflakeSet()
+
+        guild_record.soundboard_sounds.add(sound.id)
 
     def _remove_guild_record_if_empty(
         self, guild_id: snowflakes.Snowflake, record: cache_utility.GuildRecord, /

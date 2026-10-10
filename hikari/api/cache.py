@@ -35,6 +35,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages
     from hikari import presences
     from hikari import snowflakes
+    from hikari import soundboard
     from hikari import stickers
     from hikari import users
     from hikari import voices
@@ -197,6 +198,54 @@ class Cache(abc.ABC):
         CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
             A view of sticker IDs to objects of stickers found in the cache for the
             specified guild.
+        """
+
+    @abc.abstractmethod
+    def get_soundboard_sound(
+        self, sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound], /
+    ) -> soundboard.SoundboardSound | None:
+        """Get a soundboard sound from the cache.
+
+        Parameters
+        ----------
+        sound
+            Object or ID of the soundboard sound to get from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.soundboard.SoundboardSound]
+            The object of the soundboard sound that was found in the cache or
+            [`None`][].
+        """
+
+    @abc.abstractmethod
+    def get_soundboard_sounds_view(self) -> CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        """Get a view of the soundboard sound objects in the cache.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.soundboard.SoundboardSound]
+            A view of soundboard sound IDs to objects of the soundboard sounds
+            found in the cache.
+        """
+
+    @abc.abstractmethod
+    def get_soundboard_sounds_view_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        """Get a view of the soundboard sounds cached for a specific guild.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to get the cached soundboard sound objects
+            for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.soundboard.SoundboardSound]
+            A view of soundboard sound IDs to objects of soundboard sounds found
+            in the cache for the specified guild.
         """
 
     @abc.abstractmethod
@@ -975,6 +1024,79 @@ class MutableCache(Cache, abc.ABC):
         ----------
         sticker
             The object of the sticker to add to the cache.
+        """
+
+    @abc.abstractmethod
+    def clear_soundboard_sounds(self) -> CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        """Remove all the soundboard sound objects from the cache.
+
+        !!! note
+            This will skip soundboard sounds that are being kept alive by a
+            reference.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.soundboard.SoundboardSound]
+            A cache view of soundboard sound IDs to objects of the soundboard
+            sounds that were removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def clear_soundboard_sounds_for_guild(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> CacheView[snowflakes.Snowflake, soundboard.SoundboardSound]:
+        """Remove the soundboard sound objects cached for a specific guild.
+
+        !!! note
+            This will skip soundboard sounds that are being kept alive by a
+            reference.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to remove the cached soundboard sound
+            objects for.
+
+        Returns
+        -------
+        CacheView[hikari.snowflakes.Snowflake, hikari.soundboard.SoundboardSound]
+            A view of soundboard sound IDs to objects of the soundboard sounds
+            that were removed from the cache.
+        """
+
+    @abc.abstractmethod
+    def delete_soundboard_sound(
+        self, sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound], /
+    ) -> soundboard.SoundboardSound | None:
+        """Remove a soundboard sound from the cache.
+
+        !!! note
+            This will not delete soundboard sounds that are being kept alive by
+            a reference.
+
+        Parameters
+        ----------
+        sound
+            Object or ID of the soundboard sound to remove from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.soundboard.SoundboardSound]
+            The object of the soundboard sound that was removed from the cache
+            or [`None`][].
+        """
+
+    @abc.abstractmethod
+    def set_soundboard_sound(self, sound: soundboard.SoundboardSound, /) -> None:
+        """Add a soundboard sound to the cache.
+
+        Sounds without a guild ID, such as Discord's default sounds, are not
+        cached.
+
+        Parameters
+        ----------
+        sound
+            The object of the soundboard sound to add to the cache.
         """
 
     @abc.abstractmethod

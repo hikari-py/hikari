@@ -23,7 +23,9 @@ from __future__ import annotations
 import mock
 import pytest
 
+from hikari import intents
 from hikari import voices
+from hikari.events import base_events
 from hikari.events import voice_events
 
 
@@ -59,3 +61,9 @@ class TestVoiceServerUpdateEvent:
     def test_endpoint_property_when_raw_endpoint_is_None(self, event):
         event.raw_endpoint = None
         assert event.endpoint is None
+
+
+def test_voice_channel_effect_send_event_requires_guild_voice_states():
+    assert base_events.get_required_intents_for(voice_events.VoiceChannelEffectSendEvent) == [
+        intents.Intents.GUILD_VOICE_STATES
+    ]

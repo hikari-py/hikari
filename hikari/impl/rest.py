@@ -62,6 +62,7 @@ from hikari import monetization
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import soundboard
 from hikari import stage_instances
 from hikari import traits
 from hikari import undefined
@@ -481,6 +482,26 @@ def _serialize_color_gradient(gradient: colors.ColorGradient, /) -> data_binding
         "secondary_color": int(gradient.secondary_color) if gradient.secondary_color is not None else None,
         "tertiary_color": int(gradient.tertiary_color) if gradient.tertiary_color is not None else None,
     }
+
+
+def _put_emoji(body: data_binding.JSONObjectBuilder, emoji: str | emojis.Emoji | snowflakes.Snowflake | None) -> None:
+    if emoji is None:
+        body.put("emoji_id", None)
+        body.put("emoji_name", None)
+    elif isinstance(emoji, (int, emojis.CustomEmoji)):
+        body.put_snowflake("emoji_id", emoji)
+        body.put("emoji_name", None)
+    else:
+        body.put("emoji_id", None)
+        body.put("emoji_name", str(emoji))
+
+
+def _guess_sound_mimetype(data: bytes, /) -> str | None:
+    if data.startswith(b"OggS"):
+        return "audio/ogg"
+    if data.startswith(b"ID3") or (len(data) >= 2 and data[0] == 0xFF and data[1] & 0xE0 == 0xE0):
+        return "audio/mpeg"
+    return None
 
 
 def _transform_emoji_to_url_format(
@@ -5546,3 +5567,99 @@ class RESTClientImpl(rest_api.RESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         await self._request(routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule), reason=reason)
+
+    @typing_extensions.override
+    async def fetch_default_soundboard_sounds(self) -> typing.Sequence[soundboard.SoundboardSound]:
+        response = await self._request(routes.GET_DEFAULT_SOUNDBOARD_SOUNDS.compile())
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_soundboard_sound(sound) for sound in response]
+
+    @typing_extensions.override
+    async def fetch_guild_soundboard_sounds(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[soundboard.SoundboardSound]:
+        response = await self._request(routes.GET_GUILD_SOUNDBOARD_SOUNDS.compile(guild=guild))
+        assert isinstance(response, dict)
+        return [self._entity_factory.deserialize_soundboard_sound(sound) for sound in response["items"]]
+
+    @typing_extensions.override
+    async def fetch_guild_soundboard_sound(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
+        /,
+    ) -> soundboard.SoundboardSound:
+        response = await self._request(routes.GET_GUILD_SOUNDBOARD_SOUND.compile(guild=guild, sound=sound))
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_soundboard_sound(response)
+
+    @typing_extensions.override
+    async def create_soundboard_sound(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        sound: files.Resourceish,
+        *,
+        volume: undefined.UndefinedOr[float] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> soundboard.SoundboardSound:
+        route = routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("volume", volume)
+        if emoji is not undefined.UNDEFINED:
+            _put_emoji(body, emoji)
+
+        async with files.ensure_resource(sound).stream(executor=self._executor) as stream:
+            data = await stream.read()
+            body.put("sound", files.to_data_uri(data, _guess_sound_mimetype(data) or stream.mimetype))
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_soundboard_sound(response)
+
+    @typing_extensions.override
+    async def edit_soundboard_sound(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        volume: undefined.UndefinedNoneOr[float] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedNoneOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> soundboard.SoundboardSound:
+        route = routes.PATCH_GUILD_SOUNDBOARD_SOUND.compile(guild=guild, sound=sound)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        body.put("volume", volume)
+        if emoji is not undefined.UNDEFINED:
+            _put_emoji(body, emoji)
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_soundboard_sound(response)
+
+    @typing_extensions.override
+    async def delete_soundboard_sound(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        await self._request(routes.DELETE_GUILD_SOUNDBOARD_SOUND.compile(guild=guild, sound=sound), reason=reason)
+
+    @typing_extensions.override
+    async def send_soundboard_sound(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel | channels_.GuildStageChannel],
+        sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
+        *,
+        source_guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+    ) -> None:
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("sound_id", sound)
+        body.put_snowflake("source_guild_id", source_guild)
+        await self._request(routes.POST_SEND_SOUNDBOARD_SOUND.compile(channel=channel), json=body)

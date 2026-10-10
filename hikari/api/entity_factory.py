@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
+    from hikari import soundboard as soundboard_models
     from hikari import stage_instances
     from hikari import stickers as sticker_models
     from hikari import templates as template_models
@@ -86,6 +87,10 @@ class GatewayGuildDefinition(abc.ABC):
     @abc.abstractmethod
     def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
         """Get a mapping of sticker IDs to the stickers that belong to the guild."""
+
+    @abc.abstractmethod
+    def soundboard_sounds(self) -> typing.Mapping[snowflakes.Snowflake, soundboard_models.SoundboardSound]:
+        """Get a mapping of sound IDs to the soundboard sounds in the guild."""
 
     @abc.abstractmethod
     def guild(self) -> guild_models.GatewayGuild:
@@ -2177,4 +2182,23 @@ class EntityFactory(abc.ABC):
         -------
         hikari.auto_mod.AutoModRule
             The deserialized auto-moderation rule object.
+        """
+
+    #####################
+    # SOUNDBOARD MODELS #
+    #####################
+
+    @abc.abstractmethod
+    def deserialize_soundboard_sound(self, payload: data_binding.JSONObject) -> soundboard_models.SoundboardSound:
+        """Parse a raw payload from Discord into a soundboard sound object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.soundboard.SoundboardSound
+            The deserialized soundboard sound object.
         """
