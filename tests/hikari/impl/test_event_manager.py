@@ -956,6 +956,14 @@ class TestEventManagerImpl:
         )
         event_manager_impl.dispatch.assert_called_once_with(event)
 
+    def test_on_guild_stickers_update_is_enabled_for_the_sticker_cache(self, entity_factory, event_factory):
+        settings = config.CacheSettings(components=config.CacheComponents.GUILD_STICKERS)
+        manager = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
+            entity_factory, event_factory, intents.Intents.ALL, cache=mock.Mock(settings=settings)
+        )
+
+        assert manager._consumers["guild_stickers_update"].is_enabled
+
     def test_on_guild_stickers_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
         payload = {"guild_id": 123}
 

@@ -285,6 +285,8 @@ class GuildRecord:
                 self.members,
                 self.presences,
                 self.roles,
+                self.stickers,
+                self.threads,
                 self.voice_states,
             )
         )
