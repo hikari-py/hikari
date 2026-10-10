@@ -40,7 +40,7 @@ COVERAGE_HTML_PATH = pathlib.Path(ARTIFACT_DIRECTORY, "coverage", "html")
 # version-dependant dependencies (ie. `backports.zstd`) can only be installed
 # under it.
 # NOTE: This should be kept up to date with ci.yml's linting job
-LOWEST_SUPPORTED_PYTHON = "3.10"
+LOWEST_SUPPORTED_PYTHON = "3.11"
 
 
 if "READTHEDOCS_OUTPUT" in os.environ:
