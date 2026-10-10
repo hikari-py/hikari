@@ -856,7 +856,8 @@ class RESTClientImpl(rest_api.RESTClient):
                             params=query,
                             data=data,
                             allow_redirects=self._http_settings.max_redirects is not None,
-                            max_redirects=self._http_settings.max_redirects,
+                            # Ignored by aiohttp when redirects are disabled, but it must be an int
+                            max_redirects=self._http_settings.max_redirects or 0,
                             proxy=self._proxy_settings.url,
                             proxy_headers=self._proxy_settings.all_headers,
                         )
