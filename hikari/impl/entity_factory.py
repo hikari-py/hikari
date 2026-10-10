@@ -1194,6 +1194,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             icon_hash=payload["icon"],
             nicknames=nicknames,
             application_id=application_id,
+            is_managed=payload.get("managed", False),
             recipients=recipients,
         )
 
