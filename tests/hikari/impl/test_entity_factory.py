@@ -5890,6 +5890,7 @@ class TestEntityFactoryImpl:
         invite = entity_factory_impl.deserialize_invite(
             {
                 "code": "aCode",
+                "type": None,
                 "channel_id": "43123123",
                 "approximate_member_count": 231,
                 "approximate_presence_count": 9,
@@ -5902,6 +5903,7 @@ class TestEntityFactoryImpl:
                 },
             }
         )
+        assert invite.type is invite_models.InviteType.GUILD
         assert invite.expires_at is None
         assert invite.target_application.description is None
 

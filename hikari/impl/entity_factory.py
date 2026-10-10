@@ -2553,7 +2553,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return _InviteFields(
             code=payload["code"],
-            type=invite_models.InviteType(payload.get("type", invite_models.InviteType.GUILD)),
+            type=invite_models.InviteType(payload.get("type") or invite_models.InviteType.GUILD),
             guild=guild,
             guild_id=guild_id,
             channel=channel,
