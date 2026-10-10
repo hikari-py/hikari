@@ -341,7 +341,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     """A data model for storing invite data in an in-memory cache."""
 
     code: str = attrs.field()
-    type: invites.InviteType | int = attrs.field()
+    type: invites.InviteType = attrs.field()
     guild_id: snowflakes.Snowflake | None = attrs.field()
     channel_id: snowflakes.Snowflake | None = attrs.field()
     inviter: RefCell[users_.User] | None = attrs.field()

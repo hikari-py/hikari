@@ -716,7 +716,7 @@ class ActivityLocation:
     id: str = attrs.field(hash=True, repr=True)
     """The unique identifier for the location."""
 
-    kind: ActivityLocationKind | str = attrs.field(eq=False, hash=False, repr=True)
+    kind: ActivityLocationKind = attrs.field(eq=False, hash=False, repr=True)
     """The kind of location the activity instance is running in."""
 
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)

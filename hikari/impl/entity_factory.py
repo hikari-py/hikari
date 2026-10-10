@@ -223,7 +223,7 @@ class _GuildFields:
 @attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _InviteFields:
     code: str = attrs.field()
-    type: invite_models.InviteType | int = attrs.field()
+    type: invite_models.InviteType = attrs.field()
     guild: invite_models.InviteGuild | None = attrs.field()
     guild_id: snowflakes.Snowflake | None = attrs.field()
     channel: channel_models.PartialChannel | None = attrs.field()
@@ -4291,7 +4291,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_end := payload.get("end"):
             end = time.iso8601_datetime_string_to_datetime(raw_end)
 
-        by_weekday: list[scheduled_events_models.ScheduledEventRecurrenceWeekday | int] | None = None
+        by_weekday: list[scheduled_events_models.ScheduledEventRecurrenceWeekday] | None = None
         if (raw_by_weekday := payload.get("by_weekday")) is not None:
             by_weekday = [scheduled_events_models.ScheduledEventRecurrenceWeekday(day) for day in raw_by_weekday]
 
@@ -4304,7 +4304,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 for n_weekday in raw_by_n_weekday
             ]
 
-        by_month: list[scheduled_events_models.ScheduledEventRecurrenceMonth | int] | None = None
+        by_month: list[scheduled_events_models.ScheduledEventRecurrenceMonth] | None = None
         if (raw_by_month := payload.get("by_month")) is not None:
             by_month = [scheduled_events_models.ScheduledEventRecurrenceMonth(month) for month in raw_by_month]
 

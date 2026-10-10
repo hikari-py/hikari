@@ -361,7 +361,7 @@ class Invite(InviteCode):
     code: str = attrs.field(hash=True, repr=True)
     """The code for this invite."""
 
-    type: InviteType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: InviteType = attrs.field(eq=False, hash=False, repr=True)
     """The type of this invite.
 
     !!! note
