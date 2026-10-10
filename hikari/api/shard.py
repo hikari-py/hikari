@@ -220,6 +220,8 @@ class GatewayShard(abc.ABC):
         ------
         hikari.errors.ComponentStateConflictError
             When the shard is not connected so it cannot be interacted with.
+        hikari.errors.SessionInvalidatedError
+            If a new session was started while waiting to send the payload.
         """
 
     @abc.abstractmethod
@@ -264,6 +266,8 @@ class GatewayShard(abc.ABC):
             request the full list of members without [`hikari.intents.Intents.GUILD_PRESENCES`][].
         hikari.errors.ComponentStateConflictError
             When the shard is not connected so it cannot be interacted with.
+        hikari.errors.SessionInvalidatedError
+            If a new session was started while waiting to send the payload.
         """
 
     @abc.abstractmethod
@@ -286,4 +290,6 @@ class GatewayShard(abc.ABC):
         ------
         hikari.errors.ComponentStateConflictError
             When the shard is not connected so it cannot be interacted with.
+        hikari.errors.SessionInvalidatedError
+            If a new session was started while waiting to send the payload.
         """

@@ -45,6 +45,18 @@ class TestComponentStateConflictError:
         assert str(error) == "some reason"
 
 
+class TestSessionInvalidatedError:
+    @pytest.fixture
+    def error(self):
+        return errors.SessionInvalidatedError("some reason")
+
+    def test_str(self, error):
+        assert str(error) == "some reason"
+
+    def test_is_component_state_conflict_error(self, error):
+        assert isinstance(error, errors.ComponentStateConflictError)
+
+
 class TestUnrecognisedEntityError:
     @pytest.fixture
     def error(self):

@@ -235,6 +235,23 @@ class TestVoiceComponentImpl:
             await voice_client.connect_to(123, 4532, mock_connection_type)
 
     @pytest.mark.asyncio
+    async def test_connect_to_fails_when_update_voice_state_timeout(self, voice_client, mock_app):
+        mock_shard = mock.Mock(is_alive=True, update_voice_state=mock.Mock())
+        mock_app.event_manager.wait_for = mock.AsyncMock()
+        mock_app.shard_count = 42
+        mock_app.shards = {0: mock_shard}
+        mock_connection_type = mock.AsyncMock()
+
+        with mock.patch.object(
+            asyncio, "wait_for", new=mock.AsyncMock(side_effect=asyncio.TimeoutError)
+        ) as asyncio_wait_for:
+            with pytest.raises(errors.VoiceError, match="Could not connect to voice channel 4532 in guild 123."):
+                await voice_client.connect_to(123, 4532, mock_connection_type, timeout=3)
+
+        asyncio_wait_for.assert_awaited_once_with(mock_shard.update_voice_state.return_value, timeout=3)
+        mock_app.event_manager.wait_for.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_connect_to_falls_back_to_rest_to_get_own_user(self, voice_client, mock_app):
         voice_client._init_state_update_predicate = mock.Mock()
         voice_client._init_server_update_predicate = mock.Mock()
@@ -293,7 +310,7 @@ class TestVoiceComponentImpl:
         voice_client._init_state_update_predicate = mock.Mock()
         voice_client._init_server_update_predicate = mock.Mock()
         mock_shard = mock.Mock(is_alive=True)
-        update_voice_state_call_1 = mock.AsyncMock()
+        update_voice_state_call_1 = mock.Mock()
         update_voice_state_call_2 = mock.Mock()
         mock_shard.update_voice_state = mock.Mock(
             side_effect=[update_voice_state_call_1(), update_voice_state_call_2()]
@@ -308,7 +325,7 @@ class TestVoiceComponentImpl:
         mock_connection_type.initialize.side_effect = StubError
 
         with mock.patch.object(
-            asyncio, "wait_for", new=mock.AsyncMock(side_effect=asyncio.TimeoutError)
+            asyncio, "wait_for", new=mock.AsyncMock(side_effect=[None, asyncio.TimeoutError])
         ) as asyncio_wait_for:
             with pytest.raises(StubError):
                 await voice_client.connect_to(123, 4532, mock_connection_type, deaf=False, mute=True, timeout=None)
@@ -333,8 +350,12 @@ class TestVoiceComponentImpl:
         mock_shard.update_voice_state.assert_has_calls(
             [mock.call(123, 4532, self_deaf=False, self_mute=True), mock.call(123, None)]
         )
-        update_voice_state_call_1.assert_awaited_once()
-        asyncio_wait_for.assert_awaited_once_with(update_voice_state_call_2.return_value, timeout=5.0)
+        asyncio_wait_for.assert_has_awaits(
+            [
+                mock.call(update_voice_state_call_1.return_value, timeout=None),
+                mock.call(update_voice_state_call_2.return_value, timeout=5.0),
+            ]
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("more_connections", [True, False])
