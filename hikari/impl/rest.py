@@ -86,8 +86,7 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import audit_logs
     from hikari import auto_mod

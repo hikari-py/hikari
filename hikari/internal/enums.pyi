@@ -32,9 +32,8 @@ __all__ = ["Enum", "Flag"]
 import enum as __enum
 from collections.abc import Iterator as __Iterator
 from collections.abc import Sequence as __Sequence
+from typing import Self as __Self
 from typing import TypeVar as __TypeVar
-
-from typing_extensions import Self as __Self
 
 from hikari.internal import typing_extensions as __typing_backport
 
