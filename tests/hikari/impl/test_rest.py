@@ -63,6 +63,7 @@ from hikari.impl import rate_limits
 from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -6475,14 +6476,25 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_widget.assert_called_once_with({"id": "789"})
 
-    async def test_edit_widget(self, rest_client):
-        widget = StubModel(456)
-        expected_route = routes.PATCH_GUILD_WIDGET.compile(guild=123)
-        expected_json = {"enabled": True, "channel": "456"}
-        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_guild_widget = mock.Mock(return_value=widget)
+    async def test_fetch_widget_settings(self, rest_client):
+        widget = StubModel(789)
+        expected_route = routes.GET_GUILD_WIDGET_SETTINGS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+        rest_client._entity_factory.deserialize_guild_widget_settings = mock.Mock(return_value=widget)
 
-        returned = await rest_client.edit_widget(
+        assert await rest_client.fetch_widget_settings(StubModel(123)) == widget
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_guild_widget_settings.assert_called_once_with({"id": "789"})
+
+    async def test_edit_widget_settings(self, rest_client):
+        widget = StubModel(456)
+        expected_route = routes.PATCH_GUILD_WIDGET_SETTINGS.compile(guild=123)
+        expected_json = {"enabled": True, "channel_id": "456"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_guild_widget_settings = mock.Mock(return_value=widget)
+
+        returned = await rest_client.edit_widget_settings(
             StubModel(123), channel=StubModel(456), enabled=True, reason="this should have been enabled"
         )
         assert returned is widget
@@ -6490,16 +6502,16 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route, json=expected_json, reason="this should have been enabled"
         )
-        rest_client._entity_factory.deserialize_guild_widget.assert_called_once_with({"id": "456"})
+        rest_client._entity_factory.deserialize_guild_widget_settings.assert_called_once_with({"id": "456"})
 
-    async def test_edit_widget_when_channel_is_None(self, rest_client):
+    async def test_edit_widget_settings_when_channel_is_None(self, rest_client):
         widget = StubModel(456)
-        expected_route = routes.PATCH_GUILD_WIDGET.compile(guild=123)
-        expected_json = {"enabled": True, "channel": None}
+        expected_route = routes.PATCH_GUILD_WIDGET_SETTINGS.compile(guild=123)
+        expected_json = {"enabled": True, "channel_id": None}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_guild_widget = mock.Mock(return_value=widget)
+        rest_client._entity_factory.deserialize_guild_widget_settings = mock.Mock(return_value=widget)
 
-        returned = await rest_client.edit_widget(
+        returned = await rest_client.edit_widget_settings(
             StubModel(123), channel=None, enabled=True, reason="this should have been enabled"
         )
         assert returned is widget
@@ -6507,18 +6519,34 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route, json=expected_json, reason="this should have been enabled"
         )
-        rest_client._entity_factory.deserialize_guild_widget.assert_called_once_with({"id": "456"})
+        rest_client._entity_factory.deserialize_guild_widget_settings.assert_called_once_with({"id": "456"})
 
-    async def test_edit_widget_without_optionals(self, rest_client):
+    async def test_edit_widget(self, rest_client):
+        guild = StubModel(123)
+        channel = StubModel(456)
+        rest_client.edit_widget_settings = mock.AsyncMock()
+
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            returned = await rest_client.edit_widget(guild, channel=channel, enabled=True, reason="because")
+
+        warn_deprecated.assert_called_once_with(
+            "edit_widget", removal_version="2.8.0", additional_info="Use 'edit_widget_settings' instead."
+        )
+        assert returned is rest_client.edit_widget_settings.return_value
+        rest_client.edit_widget_settings.assert_awaited_once_with(
+            guild, channel=channel, enabled=True, reason="because"
+        )
+
+    async def test_edit_widget_settings_without_optionals(self, rest_client):
         widget = StubModel(456)
-        expected_route = routes.PATCH_GUILD_WIDGET.compile(guild=123)
+        expected_route = routes.PATCH_GUILD_WIDGET_SETTINGS.compile(guild=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
-        rest_client._entity_factory.deserialize_guild_widget = mock.Mock(return_value=widget)
+        rest_client._entity_factory.deserialize_guild_widget_settings = mock.Mock(return_value=widget)
 
-        assert await rest_client.edit_widget(StubModel(123)) == widget
+        assert await rest_client.edit_widget_settings(StubModel(123)) == widget
 
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
-        rest_client._entity_factory.deserialize_guild_widget.assert_called_once_with({"id": "456"})
+        rest_client._entity_factory.deserialize_guild_widget_settings.assert_called_once_with({"id": "456"})
 
     async def test_fetch_welcome_screen(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})

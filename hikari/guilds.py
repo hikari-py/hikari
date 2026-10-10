@@ -39,6 +39,10 @@ __all__: typing.Sequence[str] = (
     "GuildSystemChannelFlag",
     "GuildVerificationLevel",
     "GuildWidget",
+    "GuildWidgetChannel",
+    "GuildWidgetMember",
+    "GuildWidgetSettings",
+    "GuildWidgetStyle",
     "Integration",
     "IntegrationAccount",
     "IntegrationApplication",
@@ -56,10 +60,12 @@ __all__: typing.Sequence[str] = (
 )
 
 import typing
+import urllib.parse
 
 import attrs
 
 from hikari import channels as channels_
+from hikari import files
 from hikari import snowflakes
 from hikari import stickers
 from hikari import traits
@@ -78,7 +84,6 @@ if typing.TYPE_CHECKING:
     from hikari import colors as colors_
     from hikari import colours as colours_
     from hikari import emojis as emojis_
-    from hikari import files
     from hikari import locales
     from hikari import permissions as permissions_
     from hikari import presences as presences_
@@ -313,10 +318,89 @@ class GuildNSFWLevel(int, enums.Enum):
     """Guild may contain NSFW content."""
 
 
+@typing.final
+class GuildWidgetStyle(str, enums.Enum):
+    """The style of a guild widget image."""
+
+    SHIELD = "shield"
+    """Shield style widget with the Discord icon and the guild's online member count."""
+
+    BANNER_1 = "banner1"
+    """Large image with the guild icon, name and online count, with "POWERED BY DISCORD" as the footer."""
+
+    BANNER_2 = "banner2"
+    """Smaller widget with the guild icon, name and online count, split on the right with the Discord logo."""
+
+    BANNER_3 = "banner3"
+    """Large image with the guild icon, name and online count, with the Discord logo and "Chat Now" as the footer."""
+
+    BANNER_4 = "banner4"
+    """Large Discord logo on top, the guild icon, name and online count below and a "JOIN MY SERVER" button."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildWidgetChannel(snowflakes.Unique):
+    """Represents a channel shown on a guild widget."""
+
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """The ID of the channel."""
+
+    name: str = attrs.field(eq=False, hash=False, repr=True)
+    """The name of the channel."""
+
+    position: int = attrs.field(eq=False, hash=False, repr=False)
+    """The sorting position of the channel."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildWidgetMember:
+    """Represents an online member shown on a guild widget.
+
+    !!! note
+        Discord anonymizes the ID, discriminator and avatar hash of widget members,
+        so they are not exposed here.
+    """
+
+    username: str = attrs.field(repr=True)
+    """The username of the member."""
+
+    status: presences_.Status | str = attrs.field(repr=True)
+    """The current status of the member."""
+
+    avatar_url: files.URL = attrs.field(repr=False)
+    """The URL of the member's avatar, served through Discord's widget avatar proxy."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class GuildWidget:
-    """Represents a guild widget."""
+    """Represents the public widget of a guild."""
+
+    id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The ID of the guild."""
+
+    name: str = attrs.field(repr=True)
+    """The name of the guild."""
+
+    instant_invite: str | None = attrs.field(repr=False)
+    """The invite URL for the widget's invite channel, if one is set."""
+
+    channels: typing.Sequence[GuildWidgetChannel] = attrs.field(repr=False)
+    """The voice and stage channels accessible by the `@everyone` role."""
+
+    members: typing.Sequence[GuildWidgetMember] = attrs.field(repr=False)
+    """The online members of the guild, limited to 100."""
+
+    presence_count: int = attrs.field(repr=True)
+    """The number of online members in the guild."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildWidgetSettings:
+    """Represents a guild widget settings object."""
 
     app: traits.RESTAware = attrs.field(
         repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
@@ -1744,6 +1828,24 @@ class PartialGuild(snowflakes.Unique):
         return routes.CDN_GUILD_ICON.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
+
+    def make_widget_image_url(self, *, style: GuildWidgetStyle | str = GuildWidgetStyle.SHIELD) -> files.URL:
+        """Generate the URL of this guild's widget image.
+
+        The image is only available if the guild has its widget enabled.
+
+        Parameters
+        ----------
+        style
+            The style of the widget image.
+
+        Returns
+        -------
+        hikari.files.URL
+            The URL of the widget image.
+        """
+        url = routes.GET_GUILD_WIDGET_IMAGE.compile(guild=self.id).create_url(urls.REST_API_URL)
+        return files.URL(f"{url}?{urllib.parse.urlencode({'style': style})}")
 
     async def ban(
         self,

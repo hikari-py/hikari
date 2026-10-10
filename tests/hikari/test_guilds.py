@@ -27,6 +27,7 @@ import pytest
 
 from hikari import channels as channels_
 from hikari import colors
+from hikari import files
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
@@ -196,10 +197,10 @@ class TestRole:
         )
 
 
-class TestGuildWidget:
+class TestGuildWidgetSettings:
     @pytest.fixture
     def model(self, mock_app):
-        return guilds.GuildWidget(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
+        return guilds.GuildWidgetSettings(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
 
     def test_app_property(self, model, mock_app):
         assert model.app is mock_app
@@ -224,6 +225,37 @@ class TestGuildWidget:
         model.channel_id = None
 
         assert await model.fetch_channel() is None
+
+
+class TestGuildWidget:
+    @pytest.fixture
+    def model(self, mock_app):
+        return guilds.GuildWidget(
+            id=snowflakes.Snowflake(123),
+            name="Hikari",
+            instant_invite="hikari",
+            channels=[],
+            members=[],
+            presence_count=1,
+        )
+
+    def test_id(self, model):
+        assert model.id == snowflakes.Snowflake(123)
+
+    def test_name(self, model):
+        assert model.name == "Hikari"
+
+    def test_instant_invite(self, model):
+        assert model.instant_invite == "hikari"
+
+    def test_channels(self, model):
+        assert model.channels == []
+
+    def test_members(self, model):
+        assert model.members == []
+
+    def test_presence_count(self, model):
+        assert model.presence_count == 1
 
 
 class TestMember:
@@ -664,6 +696,14 @@ class TestPartialGuild:
 
     def test_str_operator(self, model):
         assert str(model) == "hikari"
+
+    def test_make_widget_image_url(self, model):
+        assert model.make_widget_image_url() == files.URL(f"{urls.REST_API_URL}/guilds/90210/widget.png?style=shield")
+
+    def test_make_widget_image_url_with_style(self, model):
+        url = model.make_widget_image_url(style=guilds.GuildWidgetStyle.BANNER_2)
+
+        assert url == files.URL(f"{urls.REST_API_URL}/guilds/90210/widget.png?style=banner2")
 
     def test_shard_id_property(self, model):
         model.app.shard_count = 4

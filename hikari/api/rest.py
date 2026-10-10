@@ -32,6 +32,7 @@ from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
+from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -7341,7 +7342,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
-        """Fetch a guilds's widget.
+        """Fetch a guild's public widget.
+
+        !!! note
+            This requires no permissions, but the guild must have its widget enabled.
 
         Parameters
         ----------
@@ -7353,6 +7357,38 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.guilds.GuildWidget
             The requested guild widget.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If the guild has its widget disabled.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_widget_settings(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildWidgetSettings:
+        """Fetch a guild's widget settings.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the widget settings from. This can be the object
+            or the ID of an existing guild.
+
+        Returns
+        -------
+        hikari.guilds.GuildWidgetSettings
+            The requested guild widget settings.
 
         Raises
         ------
@@ -7370,6 +7406,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    @deprecation.deprecated("Use 'edit_widget_settings' instead.")
     async def edit_widget(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -7377,13 +7414,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.GuildChannel]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> guilds.GuildWidget:
-        """Fetch a guilds's widget.
+    ) -> guilds.GuildWidgetSettings:
+        """Edit a guild's widget settings.
+
+        !!! deprecated 2.7.0
+            Use [`hikari.api.rest.RESTClient.edit_widget_settings`][] instead.
 
         Parameters
         ----------
         guild
-            The guild to edit the widget in. This can be the object
+            The guild to edit the widget settings in. This can be the object
             or the ID of an existing guild.
         channel
             If provided, the channel to set the widget to. If [`None`][],
@@ -7396,8 +7436,39 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.guilds.GuildWidget
-            The edited guild widget.
+        hikari.guilds.GuildWidgetSettings
+            The edited guild widget settings.
+        """
+
+    @abc.abstractmethod
+    async def edit_widget_settings(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.GuildChannel]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.GuildWidgetSettings:
+        """Edit a guild's widget settings.
+
+        Parameters
+        ----------
+        guild
+            The guild to edit the widget settings in. This can be the object
+            or the ID of an existing guild.
+        channel
+            If provided, the channel to set the widget to. If [`None`][],
+            will not set to any.
+        enabled
+            If provided, whether to enable the widget.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.GuildWidgetSettings
+            The edited guild widget settings.
 
         Raises
         ------
