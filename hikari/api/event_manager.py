@@ -34,8 +34,7 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import asyncio
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding

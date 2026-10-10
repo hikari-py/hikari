@@ -416,6 +416,47 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def set_voice_channel_status(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
+        status: str | None,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Set the status of a voice channel.
+
+        Parameters
+        ----------
+        channel
+            The voice channel to set the status of. This may be the object
+            or the ID of an existing channel.
+        status
+            The new voice channel status (up to 500 characters) or
+            [`None`][] to remove it.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the provided status is longer than 500 characters.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.SET_VOICE_CHANNEL_STATUS`][]
+            permission, or the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission
+            when not connected to the voice channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
         """Fetch the current user's voice state.
 
@@ -9011,6 +9052,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         """Create a scheduled stage event.
@@ -9035,6 +9077,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9079,6 +9123,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         """Create a scheduled voice event.
@@ -9103,6 +9148,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9147,6 +9194,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         """Create a scheduled external event.
@@ -9171,6 +9219,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9214,6 +9264,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         """Edit a scheduled event.
@@ -9254,6 +9305,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             `SCHEDULED` events can be set to `ACTIVE` and `CANCELED`.
             `ACTIVE` events can only be set to `COMPLETED`.
+        recurrence_rule
+            If provided, the new rule for how often this event should recur.
+            If [`None`][], the recurrence rule will be removed.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

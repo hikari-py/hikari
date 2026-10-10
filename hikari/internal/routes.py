@@ -371,6 +371,7 @@ PUT_CHANNEL_RECIPIENT: typing.Final[Route] = Route(PUT, "/channels/{channel}/rec
 DELETE_CHANNEL_RECIPIENT: typing.Final[Route] = Route(DELETE, "/channels/{channel}/recipients/{user}")
 
 POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typing")
+PUT_CHANNEL_VOICE_STATUS: typing.Final[Route] = Route(PUT, "/channels/{channel}/voice-status")
 
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
