@@ -6343,6 +6343,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         sort_by: undefined.UndefinedOr[messages_.MessageSearchSortMode] = undefined.UNDEFINED,
         sort_order: undefined.UndefinedOr[messages_.MessageSearchSortOrder] = undefined.UNDEFINED,
         include_nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        wait_for_index: bool = True,
     ) -> messages_.MessageSearchResult:
         """Search the messages in a guild.
 
@@ -6352,10 +6353,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             intent is enabled for your application.
 
         !!! note
-            If the guild is not yet indexed, this will raise a
-            [`hikari.errors.SearchNotIndexedError`][] and the request should be
-            retried after the time specified by
-            [`hikari.errors.SearchNotIndexedError.retry_after`][].
+            If the guild is not yet indexed, Discord asks to retry the search
+            later. By default this waits and retries until the index is ready,
+            see `wait_for_index`.
 
         Parameters
         ----------
@@ -6433,6 +6433,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.messages.MessageSearchSortMode.RELEVANCE`][].
         include_nsfw
             If provided, whether to include results from age-restricted channels.
+        wait_for_index
+            Whether to wait and retry if the guild's messages have not yet been
+            indexed. Defaults to [`True`][].
+
+            The total time spent waiting is limited by `max_rate_limit`. If
+            [`False`][], a [`hikari.errors.SearchNotIndexedError`][] is raised
+            immediately instead.
 
         Returns
         -------
@@ -6442,7 +6449,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.SearchNotIndexedError
-            If the guild's messages have not yet been indexed.
+            If the guild's messages have not yet been indexed and either
+            `wait_for_index` is [`False`][] or waiting for the index would take
+            longer than `max_rate_limit`.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError

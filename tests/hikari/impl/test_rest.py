@@ -6017,23 +6017,62 @@ class TestRESTClientImplAsync:
         _, kwargs = rest_client._request.call_args
         assert dict(kwargs["query"]) == {}
 
-    async def test_search_messages_when_not_indexed(self, rest_client):
-        rest_client._request = mock.AsyncMock(
-            return_value={
-                "message": "Index not yet available. Try again later",
-                "code": 110000,
-                "documents_indexed": 100,
-                "retry_after": 2,
-            }
-        )
+    @staticmethod
+    def _not_indexed_payload(retry_after):
+        return {
+            "message": "Index not yet available. Try again later",
+            "code": 110000,
+            "documents_indexed": 100,
+            "retry_after": retry_after,
+        }
+
+    async def test_search_messages_when_not_indexed_waits_and_retries(self, rest_client):
+        rest_client._request = mock.AsyncMock(side_effect=[self._not_indexed_payload(2), {"total_results": 0}])
         rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
 
-        with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            result = await rest_client.search_messages(StubModel(645234123))
+
+        assert result is rest_client._entity_factory.deserialize_message_search_result.return_value
+        sleep.assert_awaited_once_with(2.0)
+        assert rest_client._request.await_count == 2
+        rest_client._entity_factory.deserialize_message_search_result.assert_called_once_with({"total_results": 0})
+
+    async def test_search_messages_when_not_indexed_and_retry_after_is_zero(self, rest_client):
+        rest_client._request = mock.AsyncMock(side_effect=[self._not_indexed_payload(0), {"total_results": 0}])
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
             await rest_client.search_messages(StubModel(645234123))
+
+        sleep.assert_awaited_once_with(1.0)
+
+    async def test_search_messages_when_not_indexed_and_wait_would_exceed_max_rate_limit(self, rest_client):
+        rest_client._max_rate_limit = 3
+        rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+                await rest_client.search_messages(StubModel(645234123))
 
         assert exc_info.value.documents_indexed == 100
         assert exc_info.value.retry_after == 2.0
+        sleep.assert_awaited_once_with(2.0)
         rest_client._entity_factory.deserialize_message_search_result.assert_not_called()
+
+    async def test_search_messages_when_not_indexed_and_not_waiting_for_index(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+                await rest_client.search_messages(StubModel(645234123), wait_for_index=False)
+
+        assert exc_info.value.documents_indexed == 100
+        assert exc_info.value.retry_after == 2.0
+        sleep.assert_not_called()
+        rest_client._request.assert_awaited_once()
 
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
