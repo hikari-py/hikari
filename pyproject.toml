@@ -30,7 +30,7 @@ pattern = '__version__: typing\.Final\[str\] = \"(?P<version>[^\"]+)\"'
 dynamic = ["version"]
 name = "hikari"
 description = "A sane Discord API for Python 3 built on asyncio and good intentions"
-requires-python = ">=3.10.0,<3.15"
+requires-python = ">=3.11.0,<3.16"
 dependencies = [
     "aiohttp~=3.14",
     "attrs~=26.1",
@@ -51,11 +51,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Communications :: Chat",
     "Topic :: Internet :: WWW/HTTP",
@@ -112,7 +112,6 @@ pytest = [
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "pytest-randomly==5.0.0",
-    "async-timeout==5.0.1",
     { include-group = "coverage" },
 ]
 release = ["twine==7.0.0"]
@@ -122,10 +121,7 @@ towncrier = ["towncrier==26.9.0"]
 types = [
     # examples/voice_message/*
     "pydub-stubs==0.25.1.6",
-    # No numpy version supports all of our python versions, so the requirement
-    # needs to be split up
-    "numpy==2.2.6; python_version < '3.11'",
-    "numpy==2.4.2; python_version >= '3.11'",
+    "numpy==2.4.2",
 ]
 
 [tool.uv]
@@ -169,7 +165,7 @@ exclude = [
     "hikari/internal/enums.py",
     "hikari/internal/fast_protocol.py",
 ]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 typeCheckingMode = "strict"
 
 reportUnnecessaryTypeIgnoreComment = "error"
@@ -238,7 +234,7 @@ incremental = true
 namespace_packages = true
 no_implicit_optional = true
 pretty = true
-python_version = "3.10"
+python_version = "3.11"
 show_column_numbers = true
 show_error_codes = true
 show_error_context = true
