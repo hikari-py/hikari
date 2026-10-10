@@ -732,7 +732,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (install_payload := payload.get("install_params")) is not None:
             install_parameters = application_models.ApplicationInstallParameters(
                 scopes=[application_models.OAuth2Scope(scope) for scope in install_payload["scopes"]],
-                permissions=permission_models.Permissions(install_payload["permissions"]),
+                permissions=permission_models.Permissions(int(install_payload["permissions"])),
             )
 
         integration_types_config: typing.MutableMapping[
@@ -2753,11 +2753,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
-        default_member_permissions = payload["default_member_permissions"]
-        if default_member_permissions == 0:
+        raw_default_member_permissions = payload["default_member_permissions"]
+        default_member_permissions = permission_models.Permissions(int(raw_default_member_permissions or 0))
+        if raw_default_member_permissions is not None and not default_member_permissions:
             default_member_permissions = permission_models.Permissions.ADMINISTRATOR
-        else:
-            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
         integration_types = [
             application_models.ApplicationIntegrationType(int(integration_type))
@@ -2805,11 +2804,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
-        default_member_permissions = payload["default_member_permissions"]
-        if default_member_permissions == 0:
+        raw_default_member_permissions = payload["default_member_permissions"]
+        default_member_permissions = permission_models.Permissions(int(raw_default_member_permissions or 0))
+        if raw_default_member_permissions is not None and not default_member_permissions:
             default_member_permissions = permission_models.Permissions.ADMINISTRATOR
-        else:
-            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
         integration_types = [
             application_models.ApplicationIntegrationType(int(integration_type))
@@ -3087,7 +3085,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=entitlements,
             authorizing_integration_owners=authorizing_integration_owners,
@@ -3141,7 +3139,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_type=commands.CommandType(data_payload.get("type") or commands.CommandType.SLASH),
             options=options,
             locale=locales.Locale(payload["locale"]),
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
@@ -3186,7 +3184,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel=self._deserialize_interaction_channel(payload["channel"]),
@@ -3346,7 +3344,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
