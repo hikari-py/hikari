@@ -1538,6 +1538,33 @@ class TestEntityFactoryImpl:
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
 
     @pytest.fixture
+    def voice_channel_status_create_info_payload(self):
+        return {"channel_id": "22222222", "status": "very cool status"}
+
+    def test__deserialize_voice_channel_status_create_entry_info(
+        self, entity_factory_impl, voice_channel_status_create_info_payload
+    ):
+        info = entity_factory_impl._deserialize_voice_channel_status_create_entry_info(
+            voice_channel_status_create_info_payload
+        )
+        assert info.channel_id == 22222222
+        assert info.status == "very cool status"
+        assert isinstance(info, audit_log_models.VoiceChannelStatusCreateEntryInfo)
+
+    @pytest.fixture
+    def voice_channel_status_delete_info_payload(self):
+        return {"channel_id": "22222222"}
+
+    def test__deserialize_voice_channel_status_delete_entry_info(
+        self, entity_factory_impl, voice_channel_status_delete_info_payload
+    ):
+        info = entity_factory_impl._deserialize_voice_channel_status_delete_entry_info(
+            voice_channel_status_delete_info_payload
+        )
+        assert info.channel_id == 22222222
+        assert isinstance(info, audit_log_models.VoiceChannelStatusDeleteEntryInfo)
+
+    @pytest.fixture
     def audit_log_entry_payload(self):
         return {
             "action_type": 14,
@@ -7627,6 +7654,18 @@ class TestEntityFactoryImpl:
             "sku_ids": [],
             "creator": user_payload,
             "user_count": 2,
+            "recurrence_rule": {
+                "start": "2022-03-05T21:15:00.654000+00:00",
+                "end": "2023-03-05T21:15:00.654000+00:00",
+                "frequency": 2,
+                "interval": 2,
+                "by_weekday": [2, 4],
+                "by_n_weekday": [{"n": 4, "day": 2}],
+                "by_month": [7],
+                "by_month_day": [24],
+                "by_year_day": [180],
+                "count": 10,
+            },
         }
 
     def test_deserialize_scheduled_external_event(
@@ -7651,6 +7690,25 @@ class TestEntityFactoryImpl:
         assert event.creator == entity_factory_impl.deserialize_user(user_payload)
         assert event.user_count == 2
         assert event.image_hash == "dsaasdasd"
+        assert event.recurrence_rule == scheduled_event_models.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2023, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_event_models.ScheduledEventRecurrenceFrequency.WEEKLY,
+            interval=2,
+            by_weekday=[
+                scheduled_event_models.ScheduledEventRecurrenceWeekday.WEDNESDAY,
+                scheduled_event_models.ScheduledEventRecurrenceWeekday.FRIDAY,
+            ],
+            by_n_weekday=[
+                scheduled_event_models.ScheduledEventRecurrenceNWeekday(
+                    n=4, day=scheduled_event_models.ScheduledEventRecurrenceWeekday.WEDNESDAY
+                )
+            ],
+            by_month=[scheduled_event_models.ScheduledEventRecurrenceMonth.JULY],
+            by_month_day=[24],
+            by_year_day=[180],
+            count=10,
+        )
         assert isinstance(event, scheduled_event_models.ScheduledExternalEvent)
 
     def test_deserialize_scheduled_external_event_with_null_fields(
@@ -7677,6 +7735,7 @@ class TestEntityFactoryImpl:
         del scheduled_external_event_payload["description"]
         del scheduled_external_event_payload["image"]
         del scheduled_external_event_payload["user_count"]
+        del scheduled_external_event_payload["recurrence_rule"]
 
         event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
 
@@ -7684,6 +7743,33 @@ class TestEntityFactoryImpl:
         assert event.image_hash is None
         assert event.creator is None
         assert event.user_count is None
+        assert event.recurrence_rule is None
+
+    def test_deserialize_scheduled_external_event_with_minimal_recurrence_rule(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        scheduled_external_event_payload: dict[str, typing.Any],
+    ):
+        scheduled_external_event_payload["recurrence_rule"] = {
+            "start": "2022-03-05T21:15:00.654000+00:00",
+            "end": None,
+            "frequency": 3,
+            "interval": 1,
+            "by_weekday": None,
+            "by_n_weekday": None,
+            "by_month": None,
+            "by_month_day": None,
+            "by_year_day": None,
+            "count": None,
+        }
+
+        event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
+
+        assert event.recurrence_rule == scheduled_event_models.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_event_models.ScheduledEventRecurrenceFrequency.DAILY,
+            interval=1,
+        )
 
     @pytest.fixture
     def scheduled_stage_event_payload(self, user_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
@@ -7730,6 +7816,7 @@ class TestEntityFactoryImpl:
         assert event.creator == entity_factory_impl.deserialize_user(user_payload)
         assert event.user_count == 3
         assert event.image_hash == "ooooooooggaaaaa"
+        assert event.recurrence_rule is None
         assert isinstance(event, scheduled_event_models.ScheduledStageEvent)
 
     def test_deserialize_scheduled_stage_event_with_null_fields(
@@ -7811,6 +7898,7 @@ class TestEntityFactoryImpl:
         assert event.creator == entity_factory_impl.deserialize_user(user_payload)
         assert event.user_count == 1
         assert event.image_hash == "eeeeeeeeeeeeeeeeeee"
+        assert event.recurrence_rule is None
         assert isinstance(event, scheduled_event_models.ScheduledVoiceEvent)
 
     def test_deserialize_scheduled_voice_event_with_null_fields(

@@ -70,9 +70,9 @@ if not typing.TYPE_CHECKING:
 
 if typing.TYPE_CHECKING:
     import datetime
+    from typing import Self
 
     import typing_extensions  # noqa: TC004
-    from typing_extensions import Self
 
     from hikari import applications
     from hikari import channels as channels_

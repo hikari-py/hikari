@@ -540,6 +540,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MESSAGE_DELETE: self._deserialize_message_delete_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_DISCONNECT: self._deserialize_member_disconnect_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
+            audit_log_models.AuditLogEventType.VOICE_CHANNEL_STATUS_CREATE: self._deserialize_voice_channel_status_create_entry_info,  # noqa: E501
+            audit_log_models.AuditLogEventType.VOICE_CHANNEL_STATUS_DELETE: self._deserialize_voice_channel_status_delete_entry_info,  # noqa: E501
         }
         self._auto_mod_action_mapping = {
             auto_mod_models.AutoModActionType.BLOCK_MESSAGE: self._deserialize_auto_mod_block_message,
@@ -969,6 +971,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> audit_log_models.MemberMoveEntryInfo:
         return audit_log_models.MemberMoveEntryInfo(
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
+        )
+
+    def _deserialize_voice_channel_status_create_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.VoiceChannelStatusCreateEntryInfo:
+        return audit_log_models.VoiceChannelStatusCreateEntryInfo(
+            app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), status=payload["status"]
+        )
+
+    def _deserialize_voice_channel_status_delete_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.VoiceChannelStatusDeleteEntryInfo:
+        return audit_log_models.VoiceChannelStatusDeleteEntryInfo(
+            app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"])
         )
 
     @typing_extensions.override
@@ -4259,6 +4275,59 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # SCHEDULED EVENT MODELS #
     ##########################
 
+    def _deserialize_scheduled_event_recurrence_rule(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledEventRecurrenceRule:
+        end: datetime.datetime | None = None
+        if raw_end := payload.get("end"):
+            end = time.iso8601_datetime_string_to_datetime(raw_end)
+
+        by_weekday: list[scheduled_events_models.ScheduledEventRecurrenceWeekday | int] | None = None
+        if (raw_by_weekday := payload.get("by_weekday")) is not None:
+            by_weekday = [scheduled_events_models.ScheduledEventRecurrenceWeekday(day) for day in raw_by_weekday]
+
+        by_n_weekday: list[scheduled_events_models.ScheduledEventRecurrenceNWeekday] | None = None
+        if (raw_by_n_weekday := payload.get("by_n_weekday")) is not None:
+            by_n_weekday = [
+                scheduled_events_models.ScheduledEventRecurrenceNWeekday(
+                    n=int(n_weekday["n"]), day=scheduled_events_models.ScheduledEventRecurrenceWeekday(n_weekday["day"])
+                )
+                for n_weekday in raw_by_n_weekday
+            ]
+
+        by_month: list[scheduled_events_models.ScheduledEventRecurrenceMonth | int] | None = None
+        if (raw_by_month := payload.get("by_month")) is not None:
+            by_month = [scheduled_events_models.ScheduledEventRecurrenceMonth(month) for month in raw_by_month]
+
+        by_month_day: list[int] | None = None
+        if (raw_by_month_day := payload.get("by_month_day")) is not None:
+            by_month_day = [int(day) for day in raw_by_month_day]
+
+        by_year_day: list[int] | None = None
+        if (raw_by_year_day := payload.get("by_year_day")) is not None:
+            by_year_day = [int(day) for day in raw_by_year_day]
+
+        return scheduled_events_models.ScheduledEventRecurrenceRule(
+            start=time.iso8601_datetime_string_to_datetime(payload["start"]),
+            end=end,
+            frequency=scheduled_events_models.ScheduledEventRecurrenceFrequency(payload["frequency"]),
+            interval=payload["interval"],
+            by_weekday=by_weekday,
+            by_n_weekday=by_n_weekday,
+            by_month=by_month,
+            by_month_day=by_month_day,
+            by_year_day=by_year_day,
+            count=payload.get("count"),
+        )
+
+    def _deserialize_optional_scheduled_event_recurrence_rule(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledEventRecurrenceRule | None:
+        if raw_recurrence_rule := payload.get("recurrence_rule"):
+            return self._deserialize_scheduled_event_recurrence_rule(raw_recurrence_rule)
+
+        return None
+
     @typing_extensions.override
     def deserialize_scheduled_external_event(
         self, payload: data_binding.JSONObject
@@ -4281,6 +4350,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             creator=creator,
             user_count=payload.get("user_count"),
             image_hash=payload.get("image"),
+            recurrence_rule=self._deserialize_optional_scheduled_event_recurrence_rule(payload),
             location=payload["entity_metadata"]["location"],
         )
 
@@ -4310,6 +4380,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             creator=creator,
             user_count=payload.get("user_count"),
             image_hash=payload.get("image"),
+            recurrence_rule=self._deserialize_optional_scheduled_event_recurrence_rule(payload),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 
@@ -4339,6 +4410,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             creator=creator,
             user_count=payload.get("user_count"),
             image_hash=payload.get("image"),
+            recurrence_rule=self._deserialize_optional_scheduled_event_recurrence_rule(payload),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 
