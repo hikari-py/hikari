@@ -1621,6 +1621,21 @@ class EntityFactory(abc.ABC):
             The deserialized invite with metadata object.
         """
 
+    @abc.abstractmethod
+    def deserialize_target_users_job(self, payload: data_binding.JSONObject) -> invite_models.TargetUsersJob:
+        """Parse a raw payload from Discord into a target users job object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.invites.TargetUsersJob
+            The deserialized target users job object.
+        """
+
     ##################
     # STICKER MODELS #
     ##################
