@@ -119,7 +119,7 @@ def _deserialize_max_age(seconds: int) -> datetime.timedelta | None:
 class _GuildChannelFields:
     id: snowflakes.Snowflake = attrs.field()
     name: str | None = attrs.field()
-    type: channel_models.ChannelType | int = attrs.field()
+    type: channel_models.ChannelType = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
     application_id: snowflakes.Snowflake | None = attrs.field()
     parent_id: snowflakes.Snowflake | None = attrs.field()
@@ -131,7 +131,7 @@ class _GuildChannelFields:
 class _IntegrationFields:
     id: snowflakes.Snowflake = attrs.field()
     name: str = attrs.field()
-    type: guild_models.IntegrationType | str = attrs.field()
+    type: guild_models.IntegrationType = attrs.field()
     account: guild_models.IntegrationAccount = attrs.field()
 
 
@@ -141,16 +141,16 @@ class _GuildFields:
     id: snowflakes.Snowflake = attrs.field()
     name: str = attrs.field()
     icon_hash: str = attrs.field()
-    features: list[guild_models.GuildFeature | str] = attrs.field()
+    features: list[guild_models.GuildFeature] = attrs.field()
     splash_hash: str | None = attrs.field()
     discovery_splash_hash: str | None = attrs.field()
     owner_id: snowflakes.Snowflake = attrs.field()
     afk_channel_id: snowflakes.Snowflake | None = attrs.field()
     afk_timeout: datetime.timedelta = attrs.field()
-    verification_level: guild_models.GuildVerificationLevel | int = attrs.field()
-    default_message_notifications: guild_models.GuildMessageNotificationsLevel | int = attrs.field()
-    explicit_content_filter: guild_models.GuildVerificationLevel | int = attrs.field()
-    mfa_level: guild_models.GuildMFALevel | int = attrs.field()
+    verification_level: guild_models.GuildVerificationLevel = attrs.field()
+    default_message_notifications: guild_models.GuildMessageNotificationsLevel = attrs.field()
+    explicit_content_filter: guild_models.GuildExplicitContentFilterLevel = attrs.field()
+    mfa_level: guild_models.GuildMFALevel = attrs.field()
     application_id: snowflakes.Snowflake | None = attrs.field()
     widget_channel_id: snowflakes.Snowflake | None = attrs.field()
     system_channel_id: snowflakes.Snowflake | None = attrs.field()
@@ -161,9 +161,9 @@ class _GuildFields:
     vanity_url_code: str | None = attrs.field()
     description: str | None = attrs.field()
     banner_hash: str | None = attrs.field()
-    premium_tier: guild_models.GuildPremiumTier | int = attrs.field()
+    premium_tier: guild_models.GuildPremiumTier = attrs.field()
     premium_subscription_count: int | None = attrs.field()
-    preferred_locale: str | locales.Locale = attrs.field()
+    preferred_locale: locales.Locale = attrs.field()
     public_updates_channel_id: snowflakes.Snowflake | None = attrs.field()
     nsfw_level: guild_models.GuildNSFWLevel = attrs.field()
 
@@ -223,7 +223,7 @@ class _GuildFields:
 @attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _InviteFields:
     code: str = attrs.field()
-    type: invite_models.InviteType | int = attrs.field()
+    type: invite_models.InviteType = attrs.field()
     guild: invite_models.InviteGuild | None = attrs.field()
     guild_id: snowflakes.Snowflake | None = attrs.field()
     channel: channel_models.PartialChannel | None = attrs.field()
@@ -231,7 +231,7 @@ class _InviteFields:
     inviter: user_models.User | None = attrs.field()
     target_user: user_models.User | None = attrs.field()
     target_application: application_models.InviteApplication | None = attrs.field()
-    target_type: invite_models.TargetType | int | None = attrs.field()
+    target_type: invite_models.TargetType | None = attrs.field()
     guild_scheduled_event: scheduled_events_models.ScheduledEvent | None = attrs.field()
     flags: invite_models.InviteFlags = attrs.field()
     roles: list[invite_models.InviteRole] = attrs.field()
@@ -490,10 +490,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.AFK_TIMEOUT: _deserialize_seconds_timedelta,
             audit_log_models.AuditLogChangeKey.RULES_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PUBLIC_UPDATES_CHANNEL_ID: snowflakes.Snowflake,
-            audit_log_models.AuditLogChangeKey.MFA_LEVEL: guild_models.GuildMFALevel,
-            audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
-            audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
-            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,  # noqa: E501
+            audit_log_models.AuditLogChangeKey.MFA_LEVEL: _with_int_cast(guild_models.GuildMFALevel),
+            audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: _with_int_cast(guild_models.GuildVerificationLevel),
+            audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: _with_int_cast(
+                guild_models.GuildExplicitContentFilterLevel
+            ),
+            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: _with_int_cast(
+                guild_models.GuildMessageNotificationsLevel
+            ),
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
@@ -515,11 +519,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.TYPE: str,
             audit_log_models.AuditLogChangeKey.ENABLE_EMOTICONS: bool,
-            audit_log_models.AuditLogChangeKey.EXPIRE_BEHAVIOR: guild_models.IntegrationExpireBehaviour,
+            audit_log_models.AuditLogChangeKey.EXPIRE_BEHAVIOR: _with_int_cast(guild_models.IntegrationExpireBehaviour),
             audit_log_models.AuditLogChangeKey.EXPIRE_GRACE_PERIOD: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.RATE_LIMIT_PER_USER: _deserialize_seconds_timedelta,
             audit_log_models.AuditLogChangeKey.SYSTEM_CHANNEL_ID: snowflakes.Snowflake,
-            audit_log_models.AuditLogChangeKey.FORMAT_TYPE: sticker_models.StickerFormatType,
+            audit_log_models.AuditLogChangeKey.FORMAT_TYPE: _with_int_cast(sticker_models.StickerFormatType),
             audit_log_models.AuditLogChangeKey.GUILD_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
@@ -527,7 +531,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL: time.iso8601_datetime_string_to_datetime,
         }
         self._audit_log_event_mapping: dict[
-            int | audit_log_models.AuditLogEventType,
+            audit_log_models.AuditLogEventType,
             typing.Callable[[data_binding.JSONObject], audit_log_models.BaseAuditLogEntryInfo],
         ] = {
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_CREATE: self._deserialize_channel_overwrite_entry_info,
@@ -728,7 +732,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (install_payload := payload.get("install_params")) is not None:
             install_parameters = application_models.ApplicationInstallParameters(
                 scopes=[application_models.OAuth2Scope(scope) for scope in install_payload["scopes"]],
-                permissions=permission_models.Permissions(install_payload["permissions"]),
+                permissions=permission_models.Permissions(int(install_payload["permissions"])),
             )
 
         integration_types_config: typing.MutableMapping[
@@ -774,7 +778,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             integration_types_config=integration_types_config,
             event_webhooks_url=payload.get("event_webhooks_url"),
             event_webhooks_status=application_models.ApplicationEventWebhookStatus(
-                payload.get("event_webhooks_status", application_models.ApplicationEventWebhookStatus.DISABLED)
+                payload.get("event_webhooks_status") or application_models.ApplicationEventWebhookStatus.DISABLED
             ),
             event_webhooks_types=[
                 application_models.ApplicationEventWebhookType(t) for t in payload.get("event_webhooks_types") or []
@@ -828,13 +832,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_application_connection_metadata_record(
         self, payload: data_binding.JSONObject
     ) -> application_models.ApplicationRoleConnectionMetadataRecord:
-        name_localizations: typing.Mapping[str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str]
+        description_localizations: typing.Mapping[locales.Locale, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
@@ -1002,9 +1006,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         changes: list[audit_log_models.AuditLogChange] = []
         if (change_payloads := payload.get("changes")) is not None:
             for change_payload in change_payloads:
-                key: audit_log_models.AuditLogChangeKey | str = audit_log_models.AuditLogChangeKey(
-                    change_payload["key"]
-                )
+                key = audit_log_models.AuditLogChangeKey(change_payload["key"])
 
                 new_value = change_payload.get("new_value")
                 old_value = change_payload.get("old_value")
@@ -1012,7 +1014,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                     new_value = value_converter(new_value) if new_value is not None else None
                     old_value = value_converter(old_value) if old_value is not None else None
 
-                elif not isinstance(key, audit_log_models.AuditLogChangeKey):  # pyright: ignore [reportUnnecessaryIsInstance]
+                elif key.is_unknown:
                     _LOGGER.debug("Unknown audit log change key found %r", key)
 
                 changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
@@ -1025,7 +1027,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_user_id := payload["user_id"]) is not None:
             user_id = snowflakes.Snowflake(raw_user_id)
 
-        action_type: audit_log_models.AuditLogEventType | int
         action_type = audit_log_models.AuditLogEventType(payload["action_type"])
 
         options: audit_log_models.BaseAuditLogEntryInfo | None = None
@@ -1126,7 +1127,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return channel_models.PermissionOverwrite(
             # PermissionOverwrite's init has converters set for these fields which will handle casting
             id=payload["id"],
-            type=payload["type"],
+            type=int(payload["type"]),
             # Permissions still have to be cast to int before they can be cast to Permission typing wise.
             allow=int(payload["allow"]),
             deny=int(payload["deny"]),
@@ -1487,7 +1488,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             available_tags=available_tags,
             flags=channel_fields.flags,
             # Discord may send None here for old channels, but they are just NOT_SET
-            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout") or 0),
             # Discord may send None here for old channels, but they are just LATEST_ACTIVITY
             default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
             default_reaction_emoji_id=reaction_emoji_id,
@@ -1753,7 +1754,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # Discord's docs are just wrong about this never being null.
             default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
             # Discord may send None here for old channels, but they are just NOT_SET
-            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout") or 0),
             default_reaction_emoji_id=reaction_emoji_id,
             default_reaction_emoji_name=reaction_emoji_name,
         )
@@ -2303,7 +2304,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_expire_grace_period := payload.get("expire_grace_period")) is not None:
             expire_grace_period = datetime.timedelta(days=raw_expire_grace_period)
 
-        expire_behavior: guild_models.IntegrationExpireBehaviour | int | None = None
+        expire_behavior: guild_models.IntegrationExpireBehaviour | None = None
         if (raw_expire_behavior := payload.get("expire_behavior")) is not None:
             expire_behavior = guild_models.IntegrationExpireBehaviour(raw_expire_behavior)
 
@@ -2552,7 +2553,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return _InviteFields(
             code=payload["code"],
-            type=invite_models.InviteType(payload.get("type", invite_models.InviteType.GUILD)),
+            type=invite_models.InviteType(payload.get("type") or invite_models.InviteType.GUILD),
             guild=guild,
             guild_id=guild_id,
             channel=channel,
@@ -2666,30 +2667,37 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_command_option(self, payload: data_binding.JSONObject) -> commands.CommandOption:
         choices: list[commands.CommandChoice] | None = None
         if raw_choices := payload.get("choices"):
-            choices = [
-                commands.CommandChoice(
-                    name=choice["name"],
-                    name_localizations=choice.get("name_localizations") or {},
-                    value=choice["value"],
+            choices = []
+            for choice in raw_choices:
+                choice_name_localizations: typing.Mapping[locales.Locale, str]
+                if raw_choice_name_localizations := choice.get("name_localizations"):
+                    choice_name_localizations = {
+                        locales.Locale(k): raw_choice_name_localizations[k] for k in raw_choice_name_localizations
+                    }
+                else:
+                    choice_name_localizations = {}
+
+                choices.append(
+                    commands.CommandChoice(
+                        name=choice["name"], name_localizations=choice_name_localizations, value=choice["value"]
+                    )
                 )
-                for choice in raw_choices
-            ]
 
         suboptions: list[commands.CommandOption] | None = None
         if raw_options := payload.get("options"):
             suboptions = [self._deserialize_command_option(option) for option in raw_options]
 
-        channel_types: typing.Sequence[channel_models.ChannelType | int] | None = None
+        channel_types: typing.Sequence[channel_models.ChannelType] | None = None
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
-        name_localizations: typing.Mapping[str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str]
+        description_localizations: typing.Mapping[locales.Locale, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
@@ -2729,13 +2737,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
-        name_localizations: typing.Mapping[locales.Locale | str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[locales.Locale | str, str]
+        description_localizations: typing.Mapping[locales.Locale, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
@@ -2745,11 +2753,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
-        default_member_permissions = payload["default_member_permissions"]
-        if default_member_permissions == 0:
+        raw_default_member_permissions = payload["default_member_permissions"]
+        default_member_permissions = permission_models.Permissions(int(raw_default_member_permissions or 0))
+        if raw_default_member_permissions is not None and not default_member_permissions:
             default_member_permissions = permission_models.Permissions.ADMINISTRATOR
-        else:
-            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
         integration_types = [
             application_models.ApplicationIntegrationType(int(integration_type))
@@ -2789,7 +2796,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
-        name_localizations: typing.Mapping[locales.Locale | str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
@@ -2797,11 +2804,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by setting it correctly.
-        default_member_permissions = payload["default_member_permissions"]
-        if default_member_permissions == 0:
+        raw_default_member_permissions = payload["default_member_permissions"]
+        default_member_permissions = permission_models.Permissions(int(raw_default_member_permissions or 0))
+        if raw_default_member_permissions is not None and not default_member_permissions:
             default_member_permissions = permission_models.Permissions.ADMINISTRATOR
-        else:
-            default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
         integration_types = [
             application_models.ApplicationIntegrationType(int(integration_type))
@@ -3075,11 +3081,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
+            command_type=commands.CommandType(data_payload.get("type") or commands.CommandType.SLASH),
             options=options,
             resolved=resolved,
             target_id=target_id,
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=entitlements,
             authorizing_integration_owners=authorizing_integration_owners,
@@ -3130,10 +3136,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
+            command_type=commands.CommandType(data_payload.get("type") or commands.CommandType.SLASH),
             options=options,
             locale=locales.Locale(payload["locale"]),
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
@@ -3178,7 +3184,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel=self._deserialize_interaction_channel(payload["channel"]),
@@ -3338,7 +3344,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
-            app_permissions=permission_models.Permissions(payload["app_permissions"]),
+            app_permissions=permission_models.Permissions(int(payload["app_permissions"])),
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
@@ -3518,7 +3524,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_channel_select_menu(
         self, payload: data_binding.JSONObject
     ) -> component_models.ChannelSelectMenuComponent:
-        channel_types: list[int | channel_models.ChannelType] = []
+        channel_types: list[channel_models.ChannelType] = []
         if "channel_types" in payload:
             channel_types.extend(channel_models.ChannelType(t) for t in payload["channel_types"])
 
@@ -3592,8 +3598,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         accessory_payload = payload["accessory"]
         accessory_type = component_models.ComponentType(accessory_payload["type"])
         if (accessory_deserializer := self._section_accessory_mapping.get(accessory_type)) is None:
-            _LOGGER.debug("Unknown section accessory type %s", accessory_type)
-            msg = f"Unknown section accessory type {accessory_type}"
+            _LOGGER.debug("Unknown section accessory type %r", accessory_type)
+            msg = f"Unknown section accessory type {accessory_type!r}"
             raise errors.UnrecognisedEntityError(msg)
         accessory = accessory_deserializer(accessory_payload)
 
@@ -3754,7 +3760,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return message_models.MessageReference(
             app=self._app,
-            type=message_models.MessageReferenceType(payload.get("type", 0)),
+            type=message_models.MessageReferenceType(payload.get("type") or 0),
             id=message_reference_message_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             guild_id=message_reference_guild_id,
@@ -4283,7 +4289,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_end := payload.get("end"):
             end = time.iso8601_datetime_string_to_datetime(raw_end)
 
-        by_weekday: list[scheduled_events_models.ScheduledEventRecurrenceWeekday | int] | None = None
+        by_weekday: list[scheduled_events_models.ScheduledEventRecurrenceWeekday] | None = None
         if (raw_by_weekday := payload.get("by_weekday")) is not None:
             by_weekday = [scheduled_events_models.ScheduledEventRecurrenceWeekday(day) for day in raw_by_weekday]
 
@@ -4296,7 +4302,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 for n_weekday in raw_by_n_weekday
             ]
 
-        by_month: list[scheduled_events_models.ScheduledEventRecurrenceMonth | int] | None = None
+        by_month: list[scheduled_events_models.ScheduledEventRecurrenceMonth] | None = None
         if (raw_by_month := payload.get("by_month")) is not None:
             by_month = [scheduled_events_models.ScheduledEventRecurrenceMonth(month) for month in raw_by_month]
 

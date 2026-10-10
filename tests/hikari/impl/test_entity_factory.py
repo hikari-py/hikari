@@ -4456,7 +4456,7 @@ class TestEntityFactoryImpl:
             "type": 1,
             "name": "good name",
             "description": "very good description",
-            "default_member_permissions": 8,
+            "default_member_permissions": "8",
             "dm_permission": False,
             "nsfw": True,
             "options": [
@@ -4556,7 +4556,7 @@ class TestEntityFactoryImpl:
             "name": "good name",
             "description": "very good description",
             "options": [],
-            "default_member_permissions": 0,
+            "default_member_permissions": "0",
             "version": "123312",
         }
 
@@ -4588,7 +4588,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_slash_command_standardizes_default_member_permissions(
         self, entity_factory_impl, slash_command_payload
     ):
-        slash_command_payload["default_member_permissions"] = 0
+        slash_command_payload["default_member_permissions"] = "0"
 
         command = entity_factory_impl.deserialize_slash_command(slash_command_payload)
 
@@ -5243,7 +5243,7 @@ class TestEntityFactoryImpl:
             "guild_id": "49949494",
             "type": 2,
             "name": "good name",
-            "default_member_permissions": 8,
+            "default_member_permissions": "8",
             "dm_permission": False,
             "nsfw": True,
             "version": "123321123",
@@ -5306,7 +5306,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
     ):
-        context_menu_command_payload["default_member_permissions"] = 0
+        context_menu_command_payload["default_member_permissions"] = "0"
 
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
 
@@ -5890,6 +5890,7 @@ class TestEntityFactoryImpl:
         invite = entity_factory_impl.deserialize_invite(
             {
                 "code": "aCode",
+                "type": None,
                 "channel_id": "43123123",
                 "approximate_member_count": 231,
                 "approximate_presence_count": 9,
@@ -5902,6 +5903,7 @@ class TestEntityFactoryImpl:
                 },
             }
         )
+        assert invite.type is invite_models.InviteType.GUILD
         assert invite.expires_at is None
         assert invite.target_application.description is None
 
@@ -6337,7 +6339,9 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_section_component_with_unknown_accessory_type(self, entity_factory_impl, section_payload):
         section_payload["accessory"] = {"type": 9999}
-        with pytest.raises(errors.UnrecognisedEntityError, match=r"Unknown section accessory type 9999"):
+        with pytest.raises(
+            errors.UnrecognisedEntityError, match=r"Unknown section accessory type <ComponentType\.UNKNOWN 9999: 9999>"
+        ):
             entity_factory_impl._deserialize_section_component(section_payload)
 
     def test__deserialize_thumbnail_component(self, entity_factory_impl, thumbnail_payload, media_payload):
@@ -6604,7 +6608,7 @@ class TestEntityFactoryImpl:
             "embeds": [],
             "type": 1,
             "pinned": True,
-            "flags": "222",
+            "flags": 222,
         }
 
     @pytest.fixture
@@ -7381,7 +7385,7 @@ class TestEntityFactoryImpl:
             "attachments": [],
             "embeds": [],
             "pinned": True,
-            "flags": "2222",
+            "flags": 2222,
             "type": 0,
         }
 

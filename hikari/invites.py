@@ -134,7 +134,7 @@ class VanityURL(InviteCode):
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
-    features: typing.Sequence[str | guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
@@ -150,7 +150,7 @@ class InviteGuild(guilds.PartialGuild):
     description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description."""
 
-    verification_level: guilds.GuildVerificationLevel | int = attrs.field(eq=False, hash=False, repr=False)
+    verification_level: guilds.GuildVerificationLevel = attrs.field(eq=False, hash=False, repr=False)
     """The verification level required for a user to participate in this guild."""
 
     vanity_url_code: str | None = attrs.field(eq=False, hash=False, repr=True)
@@ -361,7 +361,7 @@ class Invite(InviteCode):
     code: str = attrs.field(hash=True, repr=True)
     """The code for this invite."""
 
-    type: InviteType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: InviteType = attrs.field(eq=False, hash=False, repr=True)
     """The type of this invite.
 
     !!! note
@@ -399,7 +399,7 @@ class Invite(InviteCode):
     inviter: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The object of the user who created this invite."""
 
-    target_type: TargetType | int | None = attrs.field(eq=False, hash=False, repr=False)
+    target_type: TargetType | None = attrs.field(eq=False, hash=False, repr=False)
     """The type of the target of this invite, if applicable."""
 
     target_user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
