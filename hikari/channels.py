@@ -1075,7 +1075,7 @@ class GuildChannel(PartialChannel):
             If provided, whether the channel should be marked as NSFW or not.
         bitrate
             If provided, the new bitrate for the channel.
-        video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode
             If provided, the new video quality mode for the channel.
         user_limit
             If provided, the new user limit in the channel.
