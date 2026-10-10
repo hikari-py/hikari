@@ -43,7 +43,7 @@ from hikari import snowflakes
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 """Type-hint A type hint used for mapped collection objects."""
 KeyT = typing.TypeVar("KeyT", bound=typing.Hashable)
