@@ -21,13 +21,11 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import copy
 import functools
 import inspect
 import typing
 
-import async_timeout
 import mock
 
 # How long to reasonably expect something to take if it is considered instant.
@@ -110,7 +108,7 @@ def timeout(time_period=REASONABLE_TIMEOUT_AFTER):
             thrown_timeout_error = None
 
             try:
-                async with async_timeout.timeout(time_period):
+                async with asyncio.timeout(time_period):
                     try:
                         await func(*args, **kwargs)
                     except asyncio.TimeoutError as ex:
@@ -124,12 +122,6 @@ def timeout(time_period=REASONABLE_TIMEOUT_AFTER):
         return wrapper
 
     return decorator
-
-
-@contextlib.contextmanager
-def ensure_occurs_quickly():
-    with async_timeout.timeout(REASONABLE_QUICK_RESPONSE_TIME):
-        yield
 
 
 class ContextManagerMock:
