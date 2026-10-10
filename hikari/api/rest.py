@@ -6369,14 +6369,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the maximum amount of messages to return (1-25).
 
             !!! note
-                Due to speed optimizations, the search may return slightly
-                fewer results than specified here. Do not rely on the length
-                of the returned sequence to paginate the results; use `offset`
-                and [`hikari.messages.MessageSearchResult.total_results`][]
-                instead.
+                Due to speed optimizations on Discord's side, the search may
+                return slightly fewer results than specified here when messages
+                have not been accessed for a long time. Do not rely on the
+                length of the returned sequence to paginate the results; use
+                `offset` and [`hikari.messages.MessageSearchResult.total_results`][]
+                instead. Discord also notes that `total_results` may not be
+                accurate while messages are actively being created or deleted.
         offset
             If provided, the number to offset the returned messages by
-            (max 9975).
+            (max 9975). Together with the maximum `limit` of 25, this means
+            Discord only allows retrieving the first 10000 results of a search.
         max_id
             If provided, only return messages before this snowflake. If you
             provide a datetime object, it will be transformed into a snowflake.
