@@ -225,6 +225,25 @@ class TestEnum:
         assert returned == Enum.foo
         assert type(returned) is Enum
 
+    def test_getitem_when_name_unknown(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        with pytest.raises(KeyError):
+            Enum["missing"]
+
+    def test_getitem_when_deprecated_alias(self):
+        with mock.patch.object(deprecation, "check_if_past_removal"):
+
+            class Enum(int, enums.Enum):
+                foo = 9
+                old_foo = enums.deprecated(9, removal_version="4.0.0")
+
+        with mock.patch.object(deprecation, "check_if_past_removal"), mock.patch.object(warnings, "warn") as warn:
+            assert Enum["old_foo"] is Enum.foo
+
+        warn.assert_called_once()
+
     def test_contains(self):
         class Enum(int, enums.Enum):
             foo = 9
@@ -1022,6 +1041,16 @@ class TestIntFlag:
         assert len(val3) == 3
         assert len(val3_comb) == 3
 
+    def test_len_with_unrecognised_bits(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            QUX = 0x10
+
+        # 0x4 and 0x8 are not defined members, so they must not be counted.
+        assert len(TestFlag(0x1 | 0x4 | 0x8 | 0x10)) == 2
+        assert len(TestFlag(0x4 | 0x8)) == 0
+
     def test_or(self):
         class TestFlag(enums.Flag):
             FOO = 0x1
@@ -1098,6 +1127,53 @@ class TestIntFlag:
 
         # Baz is a combined field technically, so we don't expect it to be output here
         assert val.split() == [TestFlag.BAR, TestFlag.BORK, TestFlag.FOO]
+
+    def test_set_predicates_reject_non_integer_operands(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+
+        val = TestFlag.FOO | TestFlag.BAR
+
+        with pytest.raises(TypeError):
+            val.is_subset(1.5)
+        with pytest.raises(TypeError):
+            val.is_superset("1")
+        with pytest.raises(TypeError):
+            val.is_disjoint(1.5)
+        with pytest.raises(TypeError):
+            val.all(1.5)
+        with pytest.raises(TypeError):
+            val.any("1")
+        with pytest.raises(TypeError):
+            val.none(1.5)
+        with pytest.raises(TypeError):
+            1.5 in val
+
+    def test_split_with_unrecognised_bits(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            QUX = 0x10
+
+        val = TestFlag(0x1 | 0x2 | 0x4 | 0x8 | 0x20)
+
+        # 0x4, 0x8 and 0x20 are not defined members, so they must be omitted.
+        assert val.split() == [TestFlag.BAR, TestFlag.FOO]
+
+    def test_split_with_only_unrecognised_bits(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+
+        assert TestFlag(0x4 | 0x8).split() == []
+
+    def test_split_on_empty_value(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+
+        assert TestFlag(0).split() == []
 
     def test_str_operator(self):
         class TestFlag(enums.Flag):
@@ -1254,6 +1330,25 @@ class TestIntFlag:
         returned = TestFlag["FOO"]
         assert returned == TestFlag.FOO
         assert type(returned) is TestFlag
+
+    def test_getitem_when_name_unknown(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+
+        with pytest.raises(KeyError):
+            TestFlag["MISSING"]
+
+    def test_getitem_when_deprecated_alias(self):
+        with mock.patch.object(deprecation, "check_if_past_removal"):
+
+            class TestFlag(enums.Flag):
+                FOO = 0x1
+                OLD_FOO = enums.deprecated(0x1, removal_version="4.0.0")
+
+        with mock.patch.object(deprecation, "check_if_past_removal"), mock.patch.object(warnings, "warn") as warn:
+            assert TestFlag["OLD_FOO"] is TestFlag.FOO
+
+        warn.assert_called_once()
 
     def test_repr(self):
         class TestFlag(enums.Flag):

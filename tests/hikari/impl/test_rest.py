@@ -586,6 +586,64 @@ class TestParseTargetUsersFile:
         assert rest._parse_target_users_file(b"") == []
 
 
+class TestSerializeRecurrenceRule:
+    def test_with_all_settable_fields(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+            interval=2,
+            by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            by_n_weekday=[
+                scheduled_events.ScheduledEventRecurrenceNWeekday(
+                    n=4, day=scheduled_events.ScheduledEventRecurrenceWeekday.FRIDAY
+                )
+            ],
+            by_month=[scheduled_events.ScheduledEventRecurrenceMonth.JULY],
+            by_month_day=[24],
+        )
+
+        assert rest._serialize_recurrence_rule(rule) == {
+            "start": "2001-01-01T00:00:00+00:00",
+            "frequency": 2,
+            "interval": 2,
+            "by_weekday": [2],
+            "by_n_weekday": [{"n": 4, "day": 4}],
+            "by_month": [7],
+            "by_month_day": [24],
+        }
+
+    def test_with_minimal_fields(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
+        )
+
+        assert rest._serialize_recurrence_rule(rule) == {
+            "start": "2001-01-01T00:00:00+00:00",
+            "frequency": 3,
+            "interval": 1,
+            "by_weekday": None,
+            "by_n_weekday": None,
+            "by_month": None,
+            "by_month_day": None,
+        }
+
+    def test_ignores_fields_which_can_not_be_set_externally(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
+            end=datetime.datetime(2002, 1, 1, tzinfo=datetime.timezone.utc),
+            by_year_day=[180],
+            count=10,
+        )
+
+        result = rest._serialize_recurrence_rule(rule)
+
+        assert "end" not in result
+        assert "by_year_day" not in result
+        assert "count" not in result
+
+
 class TestRESTClientImpl:
     def test__init__when_max_retries_over_5(self):
         with pytest.raises(ValueError, match="'max_retries' must be below or equal to 5"):
@@ -2095,6 +2153,34 @@ class TestRESTClientImplAsync:
         assert kwargs["data"] is json_payload.return_value
 
     @hikari_test_helpers.timeout()
+    async def test_request_when_redirects_are_disabled(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+        rest_client._http_settings.max_redirects = None
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["allow_redirects"] is False
+        assert isinstance(kwargs["max_redirects"], int)
+
+    @hikari_test_helpers.timeout()
+    async def test_request_when_redirects_are_enabled(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+        rest_client._http_settings.max_redirects = 5
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["allow_redirects"] is True
+        assert kwargs["max_redirects"] == 5
+
+    @hikari_test_helpers.timeout()
     async def test_request_builds_form_when_passed(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.side_effect = exit_exception
@@ -2673,6 +2759,48 @@ class TestRESTClientImplAsync:
         assert await rest_client.edit_channel(StubModel(123)) == mock_object
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_edit_channel_with_icon(self, rest_client, file_resource_patch):
+        expected_route = routes.PATCH_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock()
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "yes"})
+
+        assert await rest_client.edit_channel(StubModel(123), icon="somefile.png") == mock_object
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"icon": "some data"}, reason=undefined.UNDEFINED
+        )
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_edit_channel_with_null_icon(self, rest_client):
+        expected_route = routes.PATCH_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock()
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "yes"})
+
+        assert await rest_client.edit_channel(StubModel(123), icon=None) == mock_object
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"icon": None}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_set_voice_channel_status(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.set_voice_channel_status(StubModel(123), "very cool status", reason="because")
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"status": "very cool status"}, reason="because"
+        )
+
+    async def test_set_voice_channel_status_with_null_status(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.set_voice_channel_status(StubModel(123), None)
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"status": None}, reason=undefined.UNDEFINED)
 
     async def test_delete_channel(self, rest_client):
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
@@ -4390,6 +4518,62 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
         mock_cache.set_dm_channel_id.assert_not_called()
+
+    async def test_create_group_dm_channel(self, rest_client):
+        group_dm = StubModel(4444)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"access_tokens": ["token1", "token2"], "nicks": {"123": "nick1", "456": "nick2"}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "4444"})
+        rest_client._entity_factory.deserialize_group_dm = mock.Mock(return_value=group_dm)
+
+        result = await rest_client.create_group_dm_channel(
+            ["token1", "token2"], nicknames={StubModel(123): "nick1", 456: "nick2"}
+        )
+
+        assert result == group_dm
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_group_dm.assert_called_once_with({"id": "4444"})
+
+    async def test_create_group_dm_channel_without_nicknames(self, rest_client):
+        group_dm = StubModel(4444)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"access_tokens": ["token1"]}
+        rest_client._request = mock.AsyncMock(return_value={"id": "4444"})
+        rest_client._entity_factory.deserialize_group_dm = mock.Mock(return_value=group_dm)
+
+        result = await rest_client.create_group_dm_channel(["token1"])
+
+        assert result == group_dm
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_group_dm.assert_called_once_with({"id": "4444"})
+
+    async def test_add_recipient_to_group_dm(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        expected_json = {"access_token": "token", "nick": "cool nickname"}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_recipient_to_group_dm(
+            StubModel(45411), StubModel(123), access_token="token", nickname="cool nickname"
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    async def test_add_recipient_to_group_dm_without_nickname(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        expected_json = {"access_token": "token"}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_recipient_to_group_dm(StubModel(45411), StubModel(123), access_token="token")
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    async def test_remove_recipient_from_group_dm(self, rest_client):
+        expected_route = routes.DELETE_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.remove_recipient_from_group_dm(StubModel(45411), StubModel(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_application(self, rest_client):
         application = StubModel(123)
@@ -7456,6 +7640,11 @@ class TestRESTClientImplAsync:
             end_time=datetime.datetime(2002, 2, 2, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
             image="tksksk.txt",
             privacy_level=654134,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="bye bye",
         )
 
@@ -7473,6 +7662,15 @@ class TestRESTClientImplAsync:
                 "privacy_level": 654134,
                 "scheduled_start_time": "2001-01-01T17:42:41.891222+00:00",
                 "scheduled_end_time": "2002-02-02T17:42:41.891222+00:00",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="bye bye",
@@ -7518,6 +7716,11 @@ class TestRESTClientImplAsync:
             end_time=datetime.datetime(2069, 3, 9, 13, 1, 41, 891222, tzinfo=datetime.timezone.utc),
             image="meow.txt",
             privacy_level=6523123,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="it was the {insert political part here}",
         )
 
@@ -7535,6 +7738,15 @@ class TestRESTClientImplAsync:
                 "scheduled_start_time": "2021-03-09T13:42:41.891222+00:00",
                 "scheduled_end_time": "2069-03-09T13:01:41.891222+00:00",
                 "description": "hhhhh",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="it was the {insert political part here}",
@@ -7580,6 +7792,11 @@ class TestRESTClientImplAsync:
             description="This is a description",
             image="icon.png",
             privacy_level=6454,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="chairman meow",
         )
 
@@ -7597,6 +7814,15 @@ class TestRESTClientImplAsync:
                 "scheduled_start_time": "2021-03-06T02:42:41.891222+00:00",
                 "scheduled_end_time": "2023-05-06T16:42:41.891222+00:00",
                 "description": "This is a description",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="chairman meow",
@@ -7647,6 +7873,11 @@ class TestRESTClientImplAsync:
             privacy_level=69,
             start_time=datetime.datetime(2022, 3, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
             end_time=datetime.datetime(2022, 5, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             status=64,
             reason="go home",
         )
@@ -7667,6 +7898,15 @@ class TestRESTClientImplAsync:
                 "description": "hihihi",
                 "entity_type": scheduled_events.ScheduledEventType.VOICE,
                 "status": 64,
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="go home",
@@ -7677,7 +7917,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "494949", "name": "ME222222OW"})
 
         result = await rest_client.edit_scheduled_event(
-            StubModel(345543), StubModel(123321123), channel=None, description=None, end_time=None
+            StubModel(345543), StubModel(123321123), channel=None, description=None, end_time=None, recurrence_rule=None
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_event.return_value
@@ -7686,7 +7926,7 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"channel_id": None, "description": None, "scheduled_end_time": None},
+            json={"channel_id": None, "description": None, "scheduled_end_time": None, "recurrence_rule": None},
             reason=undefined.UNDEFINED,
         )
 

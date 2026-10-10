@@ -25,6 +25,11 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "EventPrivacyLevel",
     "ScheduledEvent",
+    "ScheduledEventRecurrenceFrequency",
+    "ScheduledEventRecurrenceMonth",
+    "ScheduledEventRecurrenceNWeekday",
+    "ScheduledEventRecurrenceRule",
+    "ScheduledEventRecurrenceWeekday",
     "ScheduledEventStatus",
     "ScheduledEventType",
     "ScheduledEventUser",
@@ -91,6 +96,126 @@ class ScheduledEventStatus(int, enums.Enum):
     """Alias of [`hikari.scheduled_events.ScheduledEventStatus.CANCELED`][]."""
 
 
+class ScheduledEventRecurrenceFrequency(int, enums.Enum):
+    """Enum of how often a scheduled event recurs."""
+
+    YEARLY = 0
+    """The event recurs yearly."""
+
+    MONTHLY = 1
+    """The event recurs monthly."""
+
+    WEEKLY = 2
+    """The event recurs weekly."""
+
+    DAILY = 3
+    """The event recurs daily."""
+
+
+class ScheduledEventRecurrenceWeekday(int, enums.Enum):
+    """Enum of the weekdays a scheduled event can recur on."""
+
+    MONDAY = 0
+    TUESDAY = 1
+    WEDNESDAY = 2
+    THURSDAY = 3
+    FRIDAY = 4
+    SATURDAY = 5
+    SUNDAY = 6
+
+
+class ScheduledEventRecurrenceMonth(int, enums.Enum):
+    """Enum of the months a scheduled event can recur on."""
+
+    JANUARY = 1
+    FEBRUARY = 2
+    MARCH = 3
+    APRIL = 4
+    MAY = 5
+    JUNE = 6
+    JULY = 7
+    AUGUST = 8
+    SEPTEMBER = 9
+    OCTOBER = 10
+    NOVEMBER = 11
+    DECEMBER = 12
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ScheduledEventRecurrenceNWeekday:
+    """A specific day within a specific week for a scheduled event to recur on."""
+
+    n: int = attrs.field(repr=True)
+    """The week within the month to recur on, between 1 and 5."""
+
+    day: ScheduledEventRecurrenceWeekday | int = attrs.field(repr=True)
+    """The day within the week to recur on."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ScheduledEventRecurrenceRule:
+    """The definition for how often a scheduled event should recur.
+
+    This is a subset of the behaviours defined in the
+    [iCalendar RFC](https://datatracker.ietf.org/doc/html/rfc5545) and is
+    subject to several limitations on which field combinations are valid,
+    which are documented
+    [here](https://discord.com/developers/docs/resources/guild-scheduled-event#guild-scheduled-event-recurrence-rule-object).
+    """
+
+    start: datetime.datetime = attrs.field(repr=True)
+    """The starting time of the recurrence interval."""
+
+    frequency: ScheduledEventRecurrenceFrequency | int = attrs.field(repr=True)
+    """How often the event occurs."""
+
+    interval: int = attrs.field(default=1, repr=True)
+    """The spacing between events, defined by `frequency`.
+
+    For example, a `frequency` of
+    [`hikari.scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY`][] and
+    an `interval` of `2` would be "every-other week".
+    """
+
+    by_weekday: typing.Sequence[ScheduledEventRecurrenceWeekday | int] | None = attrs.field(default=None, repr=False)
+    """The specific days within a week for the event to recur on, if set."""
+
+    by_n_weekday: typing.Sequence[ScheduledEventRecurrenceNWeekday] | None = attrs.field(default=None, repr=False)
+    """The specific days within specific weeks for the event to recur on, if set."""
+
+    by_month: typing.Sequence[ScheduledEventRecurrenceMonth | int] | None = attrs.field(default=None, repr=False)
+    """The specific months to recur on, if set."""
+
+    by_month_day: typing.Sequence[int] | None = attrs.field(default=None, repr=False)
+    """The specific dates within a month to recur on (1-31), if set."""
+
+    end: datetime.datetime | None = attrs.field(default=None, repr=False)
+    """The ending time of the recurrence interval, if set.
+
+    !!! note
+        This cannot be set when creating or editing a scheduled event and
+        will be ignored there.
+    """
+
+    by_year_day: typing.Sequence[int] | None = attrs.field(default=None, repr=False)
+    """The specific days within a year to recur on (1-364), if set.
+
+    !!! note
+        This cannot be set when creating or editing a scheduled event and
+        will be ignored there.
+    """
+
+    count: int | None = attrs.field(default=None, repr=False)
+    """The total amount of times the event is allowed to recur before stopping, if set.
+
+    !!! note
+        This cannot be set when creating or editing a scheduled event and
+        will be ignored there.
+    """
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledEvent(snowflakes.Unique):
@@ -149,6 +274,9 @@ class ScheduledEvent(snowflakes.Unique):
 
     image_hash: str | None = attrs.field(hash=False, repr=False)
     """Hash of the image used for the scheduled event, if set."""
+
+    recurrence_rule: ScheduledEventRecurrenceRule | None = attrs.field(hash=False, repr=False)
+    """The definition for how often this event should recur, if set."""
 
     def make_image_url(
         self,

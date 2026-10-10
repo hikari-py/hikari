@@ -956,6 +956,14 @@ class TestEventManagerImpl:
         )
         event_manager_impl.dispatch.assert_called_once_with(event)
 
+    def test_on_guild_stickers_update_is_enabled_for_the_sticker_cache(self, entity_factory, event_factory):
+        settings = config.CacheSettings(components=config.CacheComponents.GUILD_STICKERS)
+        manager = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
+            entity_factory, event_factory, intents.Intents.ALL, cache=mock.Mock(settings=settings)
+        )
+
+        assert manager._consumers["guild_stickers_update"].is_enabled
+
     def test_on_guild_stickers_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
         payload = {"guild_id": 123}
 
@@ -1496,6 +1504,17 @@ class TestEventManagerImpl:
         event_manager_impl.on_voice_channel_start_time_update(shard, payload)
 
         event_factory.deserialize_voice_channel_start_time_update_event.assert_called_once_with(shard, payload)
+        event_manager_impl.dispatch.assert_called_once_with(event)
+
+    def test_on_voice_channel_status_update(self, event_manager_impl, shard, event_factory):
+        payload = {}
+        event = mock.Mock()
+
+        event_factory.deserialize_voice_channel_status_update_event.return_value = event
+
+        event_manager_impl.on_voice_channel_status_update(shard, payload)
+
+        event_factory.deserialize_voice_channel_status_update_event.assert_called_once_with(shard, payload)
         event_manager_impl.dispatch.assert_called_once_with(event)
 
     def test_on_webhooks_update(self, event_manager_impl, shard, event_factory):
