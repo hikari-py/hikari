@@ -2066,6 +2066,34 @@ class TestRESTClientImplAsync:
         assert kwargs["data"] is json_payload.return_value
 
     @hikari_test_helpers.timeout()
+    async def test_request_when_redirects_are_disabled(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+        rest_client._http_settings.max_redirects = None
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["allow_redirects"] is False
+        assert isinstance(kwargs["max_redirects"], int)
+
+    @hikari_test_helpers.timeout()
+    async def test_request_when_redirects_are_enabled(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+        rest_client._http_settings.max_redirects = 5
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["allow_redirects"] is True
+        assert kwargs["max_redirects"] == 5
+
+    @hikari_test_helpers.timeout()
     async def test_request_builds_form_when_passed(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.side_effect = exit_exception

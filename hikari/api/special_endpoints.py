@@ -77,8 +77,7 @@ from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import applications
     from hikari import auto_mod

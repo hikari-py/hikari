@@ -778,9 +778,8 @@ class GatewayBot(traits.GatewayBotAware):
             event loop will be shut down.
 
             This will wait until all hikari-owned [`aiohttp`][] connectors have
-            had time to attempt to shut down correctly (around 250ms), and on
-            Python 3.9 and newer, will also shut down the default event loop
-            executor too.
+            had time to attempt to shut down correctly (around 250ms), and will also
+            shut down the default event loop executor.
         coroutine_tracking_depth
             If an integer value and supported by
             the interpreter, then this many nested coroutine calls will be

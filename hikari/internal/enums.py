@@ -33,7 +33,7 @@ import typing
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 _T = typing.TypeVar("_T")
 _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12

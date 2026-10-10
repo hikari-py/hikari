@@ -86,8 +86,7 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import audit_logs
     from hikari import auto_mod
@@ -856,7 +855,8 @@ class RESTClientImpl(rest_api.RESTClient):
                             params=query,
                             data=data,
                             allow_redirects=self._http_settings.max_redirects is not None,
-                            max_redirects=self._http_settings.max_redirects,
+                            # Ignored by aiohttp when redirects are disabled, but it must be an int
+                            max_redirects=self._http_settings.max_redirects or 0,
                             proxy=self._proxy_settings.url,
                             proxy_headers=self._proxy_settings.all_headers,
                         )
