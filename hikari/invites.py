@@ -31,6 +31,8 @@ __all__: typing.Sequence[str] = (
     "InviteType",
     "InviteWithMetadata",
     "TargetType",
+    "TargetUsersJob",
+    "TargetUsersJobStatus",
     "VanityURL",
 )
 
@@ -96,6 +98,26 @@ class InviteFlags(enums.Flag):
 
     IS_GUEST_INVITE = 1 << 0
     """This invite is a guest invite for a voice channel."""
+
+
+@typing.final
+class TargetUsersJobStatus(int, enums.Enum):
+    """The status of an invite's target users processing job."""
+
+    UNSPECIFIED = 0
+    """The default value."""
+
+    PROCESSING = 1
+    """The job is still being processed."""
+
+    COMPLETED = 2
+    """The job has been completed successfully."""
+
+    FAILED = 3
+    """The job has failed.
+
+    See [`hikari.invites.TargetUsersJob.error_message`][] for more details.
+    """
 
 
 class InviteCode(abc.ABC):
@@ -494,3 +516,34 @@ class InviteWithMetadata(Invite):
             return self.max_uses - self.uses
 
         return None
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class TargetUsersJob:
+    """The status of the job which processes an invite's target users file.
+
+    Processing the target users of an invite is done asynchronously, so this
+    can be used to keep track of the progress of that job.
+    """
+
+    status: TargetUsersJobStatus | int = attrs.field(repr=True)
+    """The status of this job."""
+
+    total_users: int = attrs.field(repr=True)
+    """The total amount of users this job has to process."""
+
+    processed_users: int = attrs.field(repr=True)
+    """The amount of users this job has processed so far."""
+
+    created_at: datetime.datetime = attrs.field(repr=False)
+    """When this job was created."""
+
+    completed_at: datetime.datetime | None = attrs.field(repr=False)
+    """When this job was completed, if it has been."""
+
+    error_message: str | None = attrs.field(repr=False)
+    """The message describing why this job failed, if it did.
+
+    See [`hikari.invites.TargetUsersJobStatus.FAILED`][].
+    """
