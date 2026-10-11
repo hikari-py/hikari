@@ -6354,8 +6354,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         !!! note
             If the guild is not yet indexed, Discord asks to retry the search
-            later. By default this waits and retries until the index is ready,
-            see `wait_for_index`.
+            later. By default this waits for the time Discord asks for and
+            retries once, see `wait_for_index`.
 
         Parameters
         ----------
@@ -6434,11 +6434,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         include_nsfw
             If provided, whether to include results from age-restricted channels.
         wait_for_index
-            Whether to wait and retry if the guild's messages have not yet been
-            indexed. Defaults to [`True`][].
+            Whether to wait for the time Discord asks for and retry once if the
+            guild's messages have not yet been indexed. Defaults to [`True`][].
 
-            The total time spent waiting is limited by `max_rate_limit`. If
-            [`False`][], a [`hikari.errors.SearchNotIndexedError`][] is raised
+            If [`False`][], a [`hikari.errors.SearchNotIndexedError`][] is raised
             immediately instead.
 
         Returns
@@ -6449,9 +6448,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.SearchNotIndexedError
-            If the guild's messages have not yet been indexed and either
-            `wait_for_index` is [`False`][] or waiting for the index would take
-            longer than `max_rate_limit`.
+            If the guild's messages have not yet been indexed, either
+            immediately if `wait_for_index` is [`False`][] or if they are still
+            not indexed after the retry.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError

@@ -606,7 +606,6 @@ class RESTClientImpl(rest_api.RESTClient):
         "_executor",
         "_http_settings",
         "_loads",
-        "_max_rate_limit",
         "_max_retries",
         "_proxy_settings",
         "_rest_url",
@@ -653,7 +652,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self._entity_factory = entity_factory
         self._executor = executor
         self._http_settings = http_settings
-        self._max_rate_limit = max_rate_limit
         self._max_retries = max_retries
         self._proxy_settings = proxy_settings
         self._dumps = dumps
@@ -3940,24 +3938,21 @@ class RESTClientImpl(rest_api.RESTClient):
         query.put_array("attachment_filename", attachment_filenames)
         query.put_array("attachment_extension", attachment_extensions)
 
-        waited = 0.0
-        while True:
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
+
+        if wait_for_index and response.get("code") == _SEARCH_NOT_INDEXED_ERROR_CODE:
+            # Discord asks for "a short delay" when it reports a retry_after of 0
+            await asyncio.sleep(float(response["retry_after"]) or 1.0)
             response = await self._request(route, query=query)
             assert isinstance(response, dict)
 
-            if response.get("code") != _SEARCH_NOT_INDEXED_ERROR_CODE:
-                return self._entity_factory.deserialize_message_search_result(response)
-
-            error = errors.SearchNotIndexedError(
+        if response.get("code") == _SEARCH_NOT_INDEXED_ERROR_CODE:
+            raise errors.SearchNotIndexedError(
                 documents_indexed=int(response["documents_indexed"]), retry_after=float(response["retry_after"])
             )
-            # Discord asks for "a short delay" when it reports a retry_after of 0
-            retry_after = error.retry_after or 1.0
-            if not wait_for_index or waited + retry_after > self._max_rate_limit:
-                raise error
 
-            waited += retry_after
-            await asyncio.sleep(retry_after)
+        return self._entity_factory.deserialize_message_search_result(response)
 
     @typing_extensions.override
     async def edit_member(

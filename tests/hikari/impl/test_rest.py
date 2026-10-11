@@ -6047,8 +6047,7 @@ class TestRESTClientImplAsync:
 
         sleep.assert_awaited_once_with(1.0)
 
-    async def test_search_messages_when_not_indexed_and_wait_would_exceed_max_rate_limit(self, rest_client):
-        rest_client._max_rate_limit = 3
+    async def test_search_messages_when_still_not_indexed_after_retry(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
         rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
 
@@ -6059,6 +6058,7 @@ class TestRESTClientImplAsync:
         assert exc_info.value.documents_indexed == 100
         assert exc_info.value.retry_after == 2.0
         sleep.assert_awaited_once_with(2.0)
+        assert rest_client._request.await_count == 2
         rest_client._entity_factory.deserialize_message_search_result.assert_not_called()
 
     async def test_search_messages_when_not_indexed_and_not_waiting_for_index(self, rest_client):
