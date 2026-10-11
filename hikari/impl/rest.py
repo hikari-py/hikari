@@ -3926,32 +3926,19 @@ class RESTClientImpl(rest_api.RESTClient):
         query.put("max_id", _to_searchable_snowflake_str(max_id))
         query.put("min_id", _to_searchable_snowflake_str(min_id))
 
-        snowflake_arrays: tuple[tuple[str, undefined.UndefinedOr[snowflakes.SnowflakeishSequence[typing.Any]]], ...] = (
-            ("channel_id", channels),
-            ("author_id", authors),
-            ("mentions", mentioned_users),
-            ("mentions_role_id", mentioned_roles),
-            ("replied_to_user_id", replied_to_users),
-            ("replied_to_message_id", replied_to_messages),
-        )
-        for key, values in snowflake_arrays:
-            if values is not undefined.UNDEFINED:
-                for value in values:
-                    query.add(key, str(int(value)))
-
-        string_arrays: tuple[tuple[str, undefined.UndefinedOr[typing.Sequence[str]]], ...] = (
-            ("author_type", author_types),
-            ("has", has),
-            ("embed_type", embed_types),
-            ("embed_provider", embed_providers),
-            ("link_hostname", link_hostnames),
-            ("attachment_filename", attachment_filenames),
-            ("attachment_extension", attachment_extensions),
-        )
-        for key, values in string_arrays:
-            if values is not undefined.UNDEFINED:
-                for value in values:
-                    query.add(key, str(value))
+        query.put_array("channel_id", channels)
+        query.put_array("author_id", authors)
+        query.put_array("mentions", mentioned_users)
+        query.put_array("mentions_role_id", mentioned_roles)
+        query.put_array("replied_to_user_id", replied_to_users)
+        query.put_array("replied_to_message_id", replied_to_messages)
+        query.put_array("author_type", author_types)
+        query.put_array("has", has)
+        query.put_array("embed_type", embed_types)
+        query.put_array("embed_provider", embed_providers)
+        query.put_array("link_hostname", link_hostnames)
+        query.put_array("attachment_filename", attachment_filenames)
+        query.put_array("attachment_extension", attachment_extensions)
 
         waited = 0.0
         while True:
