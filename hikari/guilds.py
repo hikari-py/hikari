@@ -216,6 +216,9 @@ class GuildFeature(str, enums.Enum):
     ENHANCED_ROLE_COLORS = "ENHANCED_ROLE_COLORS"
     """Guild is able to set gradient and holographic role colors."""
 
+    PRUNE_REQUIRES_ADMIN = "PRUNE_REQUIRES_ADMIN"
+    """Guild requires the [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission to prune members."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
