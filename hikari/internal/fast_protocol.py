@@ -28,7 +28,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 _Protocol: type[FastProtocolChecking] = NotImplemented
 _IGNORED_ATTRS = frozenset(typing.EXCLUDED_ATTRIBUTES) | {"__qualname__", "__slots__"}

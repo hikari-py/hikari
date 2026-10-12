@@ -187,10 +187,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_channel(  # noqa: PLR0913 - Too many arguments
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -232,6 +233,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             existing channel.
         name
             If provided, the new name for the channel.
+        icon
+            If provided, the new icon for the channel. This is only applicable
+            to group DM channels. If [`None`][], the icon will be removed.
         flags
             If provided, the new channel flags to use for the channel. This can
             only be used on a forum or media channel to apply [`hikari.channels.ChannelFlag.REQUIRE_TAG`][], or
@@ -404,6 +408,47 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def set_voice_channel_status(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
+        status: str | None,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Set the status of a voice channel.
+
+        Parameters
+        ----------
+        channel
+            The voice channel to set the status of. This may be the object
+            or the ID of an existing channel.
+        status
+            The new voice channel status (up to 500 characters) or
+            [`None`][] to remove it.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the provided status is longer than 500 characters.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.SET_VOICE_CHANNEL_STATUS`][]
+            permission, or the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission
+            when not connected to the voice channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -3114,6 +3159,119 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.BadRequestError
             If the user is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_group_dm_channel(
+        self,
+        access_tokens: typing.Sequence[str],
+        /,
+        *,
+        nicknames: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.SnowflakeishOr[users_.PartialUser], str]
+        ] = undefined.UNDEFINED,
+    ) -> channels_.GroupDMChannel:
+        """Create a new group DM channel with multiple users.
+
+        !!! note
+            This endpoint is limited to 10 active group DMs and was intended
+            to be used with the now-deprecated GameBridge SDK.
+
+        Parameters
+        ----------
+        access_tokens
+            The access tokens of the users to add to the group DM. These
+            must have granted your application the `gdm.join` OAuth2 scope.
+        nicknames
+            If provided, a mapping of the users to their respective nicknames
+            within the group DM.
+
+        Returns
+        -------
+        hikari.channels.GroupDMChannel
+            The created group DM channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the access tokens are invalid.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def add_recipient_to_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+        *,
+        access_token: str,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Add a recipient to a group DM using their access token.
+
+        Parameters
+        ----------
+        channel
+            The group DM channel to add the recipient to. This may be the
+            object or the ID of an existing channel.
+        user
+            The user to add to the group DM. This may be the object or the
+            ID of an existing user.
+        access_token
+            The access token of the user to add. This must have granted your
+            application the `gdm.join` OAuth2 scope.
+        nickname
+            If provided, the nickname of the user being added.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the access token is invalid.
+        hikari.errors.NotFoundError
+            If the channel or user is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def remove_recipient_from_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+    ) -> None:
+        """Remove a recipient from a group DM.
+
+        Parameters
+        ----------
+        channel
+            The group DM channel to remove the recipient from. This may be
+            the object or the ID of an existing channel.
+        user
+            The user to remove from the group DM. This may be the object or
+            the ID of an existing user.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the channel or user is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -6143,6 +6301,173 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def search_messages(  # noqa: PLR0913 - Too many arguments
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        content: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        offset: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_id: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        min_id: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        slop: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        author_types: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchAuthorType]] = undefined.UNDEFINED,
+        authors: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.PartialUser]] = undefined.UNDEFINED,
+        mentioned_users: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[users_.PartialUser]
+        ] = undefined.UNDEFINED,
+        mentioned_roles: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[guilds.PartialRole]
+        ] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        replied_to_users: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[users_.PartialUser]
+        ] = undefined.UNDEFINED,
+        replied_to_messages: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        pinned: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        has: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchHasType]] = undefined.UNDEFINED,
+        embed_types: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchEmbedType]] = undefined.UNDEFINED,
+        embed_providers: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        link_hostnames: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        attachment_filenames: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        attachment_extensions: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        sort_by: undefined.UndefinedOr[messages_.MessageSearchSortMode] = undefined.UNDEFINED,
+        sort_order: undefined.UndefinedOr[messages_.MessageSearchSortOrder] = undefined.UNDEFINED,
+        include_nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        wait_for_index: bool = True,
+    ) -> messages_.MessageSearchResult:
+        """Search the messages in a guild.
+
+        !!! warning
+            This endpoint requires the [`hikari.permissions.Permissions.READ_MESSAGE_HISTORY`][]
+            permission and is restricted according to whether the message content
+            intent is enabled for your application.
+
+        !!! note
+            If the guild is not yet indexed, Discord asks to retry the search
+            later. By default this waits for the time Discord asks for and
+            retries once, see `wait_for_index`.
+
+        Parameters
+        ----------
+        guild
+            The guild to search the messages in. This may be the object
+            or the ID of an existing guild.
+        content
+            If provided, filter the messages by their content
+            (max 1024 characters).
+        limit
+            If provided, the maximum amount of messages to return (1-25).
+
+            !!! note
+                Due to speed optimizations on Discord's side, the search may
+                return slightly fewer results than specified here when messages
+                have not been accessed for a long time. Do not rely on the
+                length of the returned sequence to paginate the results; use
+                `offset` and [`hikari.messages.MessageSearchResult.total_results`][]
+                instead. Discord also notes that `total_results` may not be
+                accurate while messages are actively being created or deleted.
+        offset
+            If provided, the number to offset the returned messages by
+            (max 9975). Together with the maximum `limit` of 25, this means
+            Discord only allows retrieving the first 10000 results of a search.
+        max_id
+            If provided, only return messages before this snowflake. If you
+            provide a datetime object, it will be transformed into a snowflake.
+            This may be any other Discord entity that has an ID. In this
+            case, the date the object was first created will be used.
+        min_id
+            If provided, only return messages after this snowflake. If you
+            provide a datetime object, it will be transformed into a snowflake.
+            This may be any other Discord entity that has an ID. In this
+            case, the date the object was first created will be used.
+        slop
+            If provided, the maximum number of words to skip between matching
+            tokens in the search content (max 100, defaults to `2`).
+        channels
+            If provided, filter the messages by the channels they were sent in.
+        author_types
+            If provided, filter the messages by the type of their author.
+        authors
+            If provided, filter the messages by their authors.
+        mentioned_users
+            If provided, filter the messages by the users they mention.
+        mentioned_roles
+            If provided, filter the messages by the roles they mention.
+        mentions_everyone
+            If provided, filter the messages by whether they do or do not mention `@everyone`.
+        replied_to_users
+            If provided, filter the messages by the users they reply to.
+        replied_to_messages
+            If provided, filter the messages by the messages they reply to.
+        pinned
+            If provided, filter the messages by whether they are or are not pinned.
+        has
+            If provided, filter the messages by whether or not they have specific things.
+        embed_types
+            If provided, filter the messages by their embed types.
+        embed_providers
+            If provided, filter the messages by their embed providers. This is case-sensitive.
+        link_hostnames
+            If provided, filter the messages by their link hostnames.
+        attachment_filenames
+            If provided, filter the messages by their attachment filenames.
+        attachment_extensions
+            If provided, filter the messages by their attachment extensions.
+        sort_by
+            If provided, the sorting algorithm to use for the results.
+            Defaults to [`hikari.messages.MessageSearchSortMode.TIMESTAMP`][].
+        sort_order
+            If provided, the direction to sort the results in. Defaults to
+            [`hikari.messages.MessageSearchSortOrder.DESCENDING`][]. This is
+            not respected when sorting by
+            [`hikari.messages.MessageSearchSortMode.RELEVANCE`][].
+        include_nsfw
+            If provided, whether to include results from age-restricted channels.
+        wait_for_index
+            Whether to wait for the time Discord asks for and retry once if the
+            guild's messages have not yet been indexed. Defaults to [`True`][].
+
+            If [`False`][], a [`hikari.errors.SearchNotIndexedError`][] is raised
+            immediately instead.
+
+        Returns
+        -------
+        hikari.messages.MessageSearchResult
+            The result of the search.
+
+        Raises
+        ------
+        hikari.errors.SearchNotIndexedError
+            If the guild's messages have not yet been indexed, either
+            immediately if `wait_for_index` is [`False`][] or if they are still
+            not indexed after the retry.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.READ_MESSAGE_HISTORY`][]
+            permission.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -8894,6 +9219,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         """Create a scheduled stage event.
@@ -8918,6 +9244,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -8962,6 +9290,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         """Create a scheduled voice event.
@@ -8986,6 +9315,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9030,6 +9361,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         """Create a scheduled external event.
@@ -9054,6 +9386,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The event's privacy level.
 
             This effects who can view and subscribe to the event.
+        recurrence_rule
+            If provided, the rule for how often this event should recur.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -9097,6 +9431,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         """Edit a scheduled event.
@@ -9137,6 +9472,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             `SCHEDULED` events can be set to `ACTIVE` and `CANCELED`.
             `ACTIVE` events can only be set to `COMPLETED`.
+        recurrence_rule
+            If provided, the new rule for how often this event should recur.
+            If [`None`][], the recurrence rule will be removed.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

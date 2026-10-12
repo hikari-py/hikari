@@ -28,7 +28,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import channels
     from hikari import guilds

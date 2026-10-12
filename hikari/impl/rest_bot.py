@@ -518,9 +518,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             loop will be shut down.
 
             This will wait until all hikari-owned [`aiohttp`][] connectors have
-            had time to attempt to shut down correctly (around 250ms), and on
-            Python 3.9 and newer, will also shut down the default event loop
-            executor too.
+            had time to attempt to shut down correctly (around 250ms), and will also
+            shut down the default event loop executor.
         close_passed_executor
             If [`True`][], any custom [`concurrent.futures.Executor`][] passed
             to the constructor will be shut down when the application

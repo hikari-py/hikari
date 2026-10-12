@@ -46,7 +46,7 @@ from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_

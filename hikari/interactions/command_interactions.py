@@ -44,7 +44,7 @@ from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import permissions as permissions_
     from hikari import users as users_

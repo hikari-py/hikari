@@ -23,7 +23,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import gc
-import sys
 import typing
 import warnings
 import weakref
@@ -826,7 +825,6 @@ class TestEventManagerBase:
             ]
         )
 
-    @pytest.mark.skipif(sys.version_info < (3, 10), reason="Bitwise union only available on 3.10+")
     def test_listen_when_multiple_params_provided_as_bitwise_union_in_typehint(self, event_manager):
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 

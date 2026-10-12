@@ -272,6 +272,9 @@ class TestColor:
         b = c.to_bytes(10, "little")
         assert b == b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00"
 
+    def test_Color_to_bytes_defaults_to_three_big_endian_bytes(self):
+        assert colors.Color(0xFF00AA).to_bytes() == b"\xff\x00\xaa"
+
     def test_Color_to_bytes_with_three_bytes(self):
         c = colors.Color(0xFF0000)
         b = c.to_bytes(3, "big")

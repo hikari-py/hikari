@@ -135,6 +135,24 @@ def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
     assert time.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
 
+@pytest.mark.parametrize("error", [OSError, OverflowError, ValueError])
+@pytest.mark.parametrize(
+    ("epoch", "expected"), [(996877846784536, datetime.datetime.max), (-996877846784536, datetime.datetime.min)]
+)
+def test_unix_epoch_to_datetime_when_platform_rejects_timestamp(error, epoch, expected):
+    fake_datetime = mock.Mock(
+        datetime=mock.Mock(
+            fromtimestamp=mock.Mock(side_effect=error), min=datetime.datetime.min, max=datetime.datetime.max
+        ),
+        timezone=datetime.timezone,
+    )
+
+    with mock.patch.object(time, "datetime", new=fake_datetime):
+        result = time.unix_epoch_to_datetime(epoch)
+
+    assert result == expected.replace(tzinfo=datetime.timezone.utc)
+
+
 @pytest.mark.parametrize(
     ("input_value", "expected_result"),
     [

@@ -156,12 +156,11 @@ def unix_epoch_to_datetime(epoch: float, /, *, is_millis: bool = True) -> dateti
     datetime.datetime
         Number of seconds since [1/1/1970 00:00:00 UTC][].
     """
-    # Datetime seems to raise an OSError when you try to convert an out of range timestamp on Windows and a ValueError
-    # if you try on a UNIX system so we want to catch both.
+    # Which of these an out of range timestamp raises depends on the platform and Python version
     try:
         epoch /= (is_millis * 1_000) or 1
         return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
-    except (OSError, ValueError):
+    except (OSError, OverflowError, ValueError):
         if epoch > 0:
             return datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
         return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)

@@ -42,6 +42,7 @@ __all__: typing.Sequence[str] = (
     "MissingIntentWarning",
     "NotFoundError",
     "RateLimitTooLongError",
+    "SearchNotIndexedError",
     "ShardCloseCode",
     "UnauthorizedError",
     "UnrecognisedEntityError",
@@ -507,6 +508,31 @@ class BulkDeleteError(HikariError):
     @typing_extensions.override
     def __str__(self) -> str:
         return f"Error encountered when bulk deleting messages ({len(self.deleted_messages)} messages deleted)"
+
+
+@attrs.define(auto_exc=True, repr=False, slots=False)
+class SearchNotIndexedError(HikariError):
+    """An exception thrown when the search index for the entity is not yet available.
+
+    The request should be retried after
+    [`hikari.errors.SearchNotIndexedError.retry_after`][] seconds.
+    """
+
+    documents_indexed: int = attrs.field()
+    """The number of documents that have been indexed so far."""
+
+    retry_after: float = attrs.field()
+    """How many seconds to wait before the request should be retried.
+
+    If this is `0`, the request should be retried after a short delay.
+    """
+
+    @typing_extensions.override
+    def __str__(self) -> str:
+        return (
+            f"The search index is not yet available, retry after {self.retry_after}s "
+            f"[documents_indexed={self.documents_indexed}]"
+        )
 
 
 @attrs.define(auto_exc=True, repr=False, init=False, slots=False)

@@ -911,6 +911,9 @@ class GroupDMChannel(PrivateChannel):
     If the group DM was not created by a bot, this will be [`None`][].
     """
 
+    is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether the group DM is managed by an application via the `gdm.join` OAuth2 scope."""
+
     @typing_extensions.override
     def __str__(self) -> str:
         if self.name is None:

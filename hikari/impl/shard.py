@@ -274,10 +274,8 @@ class _GatewayTransport(abc.ABC):
                 )
 
                 web_socket: aiohttp.ClientWebSocketResponse[typing.Literal[False]]
-                # Type ignore due to aiohttp returning a generic instead of a specific
-                # based on the argument on <= 3.11
                 web_socket = await exit_stack.enter_async_context(
-                    client_session.ws_connect(  # type: ignore[arg-type]
+                    client_session.ws_connect(
                         max_msg_size=0,
                         proxy=proxy_settings.url,
                         proxy_headers=proxy_settings.headers,

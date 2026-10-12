@@ -241,6 +241,50 @@ class StringMapBuilder(multidict.MultiDict[str]):
         # __setitem__ just overwrites the previous value.
         self.add(key, value)
 
+    @typing.overload
+    def put_array(self, key: str, values: undefined.UndefinedOr[typing.Iterable[Stringish]], /) -> None: ...
+
+    @typing.overload
+    def put_array(
+        self,
+        key: str,
+        values: undefined.UndefinedOr[typing.Iterable[T_co]],
+        /,
+        *,
+        conversion: typing.Callable[[T_co], Stringish],
+    ) -> None: ...
+
+    def put_array(
+        self,
+        key: str,
+        values: undefined.UndefinedOr[typing.Iterable[typing.Any]],
+        /,
+        *,
+        conversion: typing.Callable[[typing.Any], Stringish] | None = None,
+    ) -> None:
+        """Add each value under the same key, such as `?id=123&id=456` for a query string.
+
+        If the values are [`hikari.undefined.UNDEFINED`][] nothing will be stored.
+        Each value is converted the same way as in [`put`][hikari.internal.data_binding.StringMapBuilder.put].
+
+        Parameters
+        ----------
+        key
+            The string key.
+        values
+            The values to set.
+        conversion
+            An optional conversion to perform on each value.
+        """
+        if values is undefined.UNDEFINED:
+            return
+
+        if conversion is not None:
+            values = map(conversion, values)
+
+        for value in values:
+            self.put(key, value)
+
 
 @typing.final
 class JSONObjectBuilder(dict[str, JSONish]):
