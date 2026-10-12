@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
     import os
 
     from hikari import channels
-    from hikari import guilds
+    from hikari import guilds as guilds_
     from hikari import users as users_
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -1282,7 +1282,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._check_if_alive()
         return await self._event_manager.wait_for(event_type, timeout=timeout, predicate=predicate)
 
-    def _get_shard(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> gateway_shard.GatewayShard:
+    def _get_shard(self, guild: snowflakes.SnowflakeishOr[guilds_.PartialGuild]) -> gateway_shard.GatewayShard:
         guild = snowflakes.Snowflake(guild)
         if shard := self._shards.get(snowflakes.calculate_shard_id(self.shard_count, guild)):
             return shard
@@ -1312,7 +1312,7 @@ class GatewayBot(traits.GatewayBotAware):
     @typing_extensions.override
     async def update_voice_state(
         self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds_.PartialGuild],
         channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel] | None,
         *,
         self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1325,7 +1325,7 @@ class GatewayBot(traits.GatewayBotAware):
     @typing_extensions.override
     async def request_guild_members(
         self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds_.PartialGuild],
         *,
         include_presences: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         query: str = "",
@@ -1340,9 +1340,20 @@ class GatewayBot(traits.GatewayBotAware):
         )
 
     @typing_extensions.override
+    async def request_soundboard_sounds(self, guilds: snowflakes.SnowflakeishSequence[guilds_.PartialGuild], /) -> None:
+        self._check_if_alive()
+
+        shards: dict[int, tuple[gateway_shard.GatewayShard, list[snowflakes.SnowflakeishOr[guilds_.PartialGuild]]]] = {}
+        for guild in guilds:
+            shard = self._get_shard(guild)
+            shards.setdefault(shard.id, (shard, []))[1].append(guild)
+
+        await aio.all_of(*(shard.request_soundboard_sounds(guild_ids) for shard, guild_ids in shards.values()))
+
+    @typing_extensions.override
     async def request_channel_info(
         self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        guild: snowflakes.SnowflakeishOr[guilds_.PartialGuild],
         *,
         fields: typing.Sequence[gateway_shard.ChannelInfoField],
     ) -> None:
