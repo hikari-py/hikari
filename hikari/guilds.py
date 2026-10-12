@@ -408,6 +408,18 @@ class GuildMemberFlags(enums.Flag):
     IS_GUEST = 1 << 4
     """Member is a guest and can only access the voice channel they were invited to."""
 
+    STARTED_HOME_ACTIONS = 1 << 5
+    """Member has started the Server Guide new member actions."""
+
+    COMPLETED_HOME_ACTIONS = 1 << 6
+    """Member has completed the Server Guide new member actions."""
+
+    AUTOMOD_QUARANTINED_USERNAME = 1 << 7
+    """Member's username, display name or nickname is blocked by auto moderation."""
+
+    DM_SETTINGS_UPSELL_ACKNOWLEDGED = 1 << 9
+    """Member has dismissed the DM settings upsell."""
+
     AUTOMOD_QUARANTINED_GUILD_TAG = 1 << 10
     """Member's guild tag is blocked by auto moderation."""
 
