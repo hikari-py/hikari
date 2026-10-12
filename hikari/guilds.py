@@ -219,6 +219,24 @@ class GuildFeature(str, enums.Enum):
     PRUNE_REQUIRES_ADMIN = "PRUNE_REQUIRES_ADMIN"
     """Guild requires the [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission to prune members."""
 
+    ANIMATED_BANNER = "ANIMATED_BANNER"
+    """Guild has access to set an animated guild banner image."""
+
+    AUTO_MODERATION = "AUTO_MODERATION"
+    """Guild has set up auto moderation rules."""
+
+    DEVELOPER_SUPPORT_SERVER = "DEVELOPER_SUPPORT_SERVER"
+    """Guild has been set as a support server on the App Directory."""
+
+    GUESTS_ENABLED = "GUESTS_ENABLED"
+    """Guild has access to guest invites."""
+
+    GUILD_TAGS = "GUILD_TAGS"
+    """Guild has access to set guild tags."""
+
+    ROLE_ICONS = "ROLE_ICONS"
+    """Guild is able to set role icons."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
@@ -386,6 +404,12 @@ class GuildMemberFlags(enums.Flag):
 
     STARTED_ONBOARDING = 1 << 3
     """Member has started onboarding."""
+
+    IS_GUEST = 1 << 4
+    """Member is a guest and can only access the voice channel they were invited to."""
+
+    AUTOMOD_QUARANTINED_GUILD_TAG = 1 << 10
+    """Member's guild tag is blocked by auto moderation."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
