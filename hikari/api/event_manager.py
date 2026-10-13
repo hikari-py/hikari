@@ -491,7 +491,7 @@ class EventManager(abc.ABC):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: float | None,
+        timeout: float | None,  # noqa: ASYNC109
         predicate: PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.

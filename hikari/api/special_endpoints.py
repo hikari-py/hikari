@@ -2959,21 +2959,21 @@ class PollAnswerBuilder(abc.ABC):
 
 
 if typing.TYPE_CHECKING:
-    MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
+    MessageActionRowBuilderComponentsT = ButtonBuilder | SelectMenuBuilder
 
     ModalActionRowBuilderComponentsT = TextInputBuilder
 
-    ContainerBuilderComponentsT = typing.Union[
-        MessageActionRowBuilder,
-        TextDisplayComponentBuilder,
-        SectionComponentBuilder,
-        MediaGalleryComponentBuilder,
-        SeparatorComponentBuilder,
-        FileComponentBuilder,
-    ]
+    ContainerBuilderComponentsT = (
+        MessageActionRowBuilder
+        | TextDisplayComponentBuilder
+        | SectionComponentBuilder
+        | MediaGalleryComponentBuilder
+        | SeparatorComponentBuilder
+        | FileComponentBuilder
+    )
 
-    SectionBuilderAccessoriesT = typing.Union[ButtonBuilder, ThumbnailComponentBuilder]
-    SectionBuilderComponentsT = typing.Union[TextDisplayComponentBuilder]
+    SectionBuilderAccessoriesT = ButtonBuilder | ThumbnailComponentBuilder
+    SectionBuilderComponentsT = TextDisplayComponentBuilder
 
 
 class AutoModActionBuilder(abc.ABC):

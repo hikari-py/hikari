@@ -1058,7 +1058,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             try:
                 entry = self.deserialize_audit_log_entry(entry_payload, guild_id=guild_id)
 
-            except errors.UnrecognisedEntityError as exc:  # noqa: PERF203 - try-except inside a loop
+            except errors.UnrecognisedEntityError as exc:
                 _LOGGER.debug(exc.reason)
 
             else:
@@ -4163,7 +4163,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for thread_payload in payload.get("threads", ()):
             try:
                 threads.append(self.deserialize_guild_thread(thread_payload))
-            except errors.UnrecognisedEntityError:  # noqa: PERF203 - try-except inside a loop
+            except errors.UnrecognisedEntityError:
                 # Ignore the thread, this has already been logged
                 continue
 

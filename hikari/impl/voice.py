@@ -145,7 +145,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         *,
         deaf: bool = False,
         mute: bool = False,
-        timeout: int | None = 5,
+        timeout: int | None = 5,  # noqa: ASYNC109
         **kwargs: object,
     ) -> _VoiceConnectionT:
         self._check_if_alive()
@@ -193,7 +193,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
                     predicate=self._init_server_update_predicate(guild_id),
                 ),
             )
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             msg = f"Could not connect to voice channel {channel} in guild {guild}."
             raise errors.VoiceError(msg) from e
 
@@ -227,7 +227,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
             _LOGGER.debug("error occurred in initialization, leaving voice channel %s in guild %s", channel, guild)
             try:
                 await asyncio.wait_for(shard.update_voice_state(guild, None), timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
             raise

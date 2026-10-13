@@ -565,15 +565,15 @@ class ContainerComponent(PartialComponent):
     """The components within the container."""
 
 
-TopLevelComponentTypesT = typing.Union[
-    ActionRowComponent[PartialComponent],
-    TextDisplayComponent,
-    SectionComponent,
-    MediaGalleryComponent,
-    SeparatorComponent,
-    FileComponent,
-    ContainerComponent,
-]
+TopLevelComponentTypesT = (
+    ActionRowComponent[PartialComponent]
+    | TextDisplayComponent
+    | SectionComponent
+    | MediaGalleryComponent
+    | SeparatorComponent
+    | FileComponent
+    | ContainerComponent
+)
 """Type hints of the values which are valid for top level components.
 
 The following values are valid for this:
@@ -587,14 +587,14 @@ The following values are valid for this:
 * [`hikari.components.ContainerComponent`][]
 """
 
-ContainerTypesT = typing.Union[
-    ActionRowComponent[PartialComponent],
-    TextDisplayComponent,
-    SectionComponent,
-    MediaGalleryComponent,
-    SeparatorComponent,
-    FileComponent,
-]
+ContainerTypesT = (
+    ActionRowComponent[PartialComponent]
+    | TextDisplayComponent
+    | SectionComponent
+    | MediaGalleryComponent
+    | SeparatorComponent
+    | FileComponent
+)
 """Type hints of the values which are valid for container components.
 
 The following values are valid for this:
@@ -615,7 +615,7 @@ The following values are valid for this:
 * [`hikari.components.TextDisplayComponent`][]
 """
 
-SectionAccessoryTypesT = typing.Union[ButtonComponent, ThumbnailComponent]
+SectionAccessoryTypesT = ButtonComponent | ThumbnailComponent
 """Type hints of the values which are valid for section accessories.
 
 The following values are valid for this:
@@ -693,7 +693,7 @@ The following values are included in this:
 * [`hikari.components.ButtonStyle.DANGER`][]
 """
 
-MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
+MessageComponentTypesT = ButtonComponent | SelectMenuComponent
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:

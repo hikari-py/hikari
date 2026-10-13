@@ -27,7 +27,7 @@ import timeit
 from hikari.internal import enums as hikari_enum
 
 
-class BasicPyEnum(str, py_enum.Enum):
+class BasicPyEnum(py_enum.StrEnum):
     __slots__ = ()
 
     a = "0"

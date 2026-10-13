@@ -50,7 +50,7 @@ def purge(session: nox.Session) -> None:
         for trash in trash_list:
             try:
                 func(trash)
-            except Exception as exc:  # noqa: BLE001, PERF203
+            except Exception as exc:  # noqa: BLE001
                 session.warn(f"[ FAIL ] Failed to remove {trash!r}: {exc!s}")
             else:
                 session.log(f"[  OK  ] Removed {trash!r}")

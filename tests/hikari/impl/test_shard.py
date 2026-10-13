@@ -103,7 +103,7 @@ def test__serialize_datetime_when_datetime_is_None():
 
 
 def test__serialize_datetime_when_datetime_is_not_None():
-    dt = datetime.datetime(2004, 11, 22, tzinfo=datetime.timezone.utc)
+    dt = datetime.datetime(2004, 11, 22, tzinfo=datetime.UTC)
     assert shard._serialize_datetime(dt) == 1101081600000
 
 
