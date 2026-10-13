@@ -35,7 +35,7 @@ dependencies = [
     "aiohttp~=3.14",
     "attrs~=26.1",
     "colorlog~=6.10",
-    "multidict~=6.7",
+    "multidict~=7.1",
 ]
 scripts = { "hikari" = "hikari.cli:main" }
 
