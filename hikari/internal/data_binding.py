@@ -57,7 +57,7 @@ if typing.TYPE_CHECKING:
 Headers = typing.Mapping[str, str]
 """Type hint for HTTP headers."""
 
-Query = typing.Union[dict[str, str], multidict.MultiDict[str]]
+Query = dict[str, str] | multidict.MultiDict[str]
 """Type hint for HTTP query string."""
 
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
@@ -69,29 +69,27 @@ JSONObject = typing.Mapping[str, typing.Any]
 JSONArray = typing.Sequence[typing.Any]
 """Type hint for a JSON-decoded array representation as a sequence."""
 
-JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
+JSONish = str | int | float | bool | None | JSONArray | JSONObject
 """Type hint for any valid JSON-decoded type."""
 
-Stringish = typing.Union[str, int, bool, datetime.datetime, undefined.UndefinedType, None, snowflakes.Unique]
+Stringish = str | int | bool | datetime.datetime | undefined.UndefinedType | None | snowflakes.Unique
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
-JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], bytes]
+JSONEncoder = typing.Callable[[JSONArray | JSONObject], bytes]
 """Type hint for hikari-compatible JSON encoders.
 
 A hikari-compatible JSON encoder is one which will take in a JSON-ish object and output either [`str`][]
 or [`bytes`][].
 """
 
-JSONDecoder = typing.Callable[[typing.Union[str, bytes]], typing.Union[JSONArray, JSONObject]]
+JSONDecoder = typing.Callable[[str | bytes], JSONArray | JSONObject]
 """Type hint for hikari-compatible JSON decoder.
 
 A hikari-compatible JSON decoder is one which will take either a [`str`][] or [`bytes`][] and outputs
 the JSON-ish object, as well as raises a [`ValueError`][] on an incorrect JSON payload being passed in.
 """
 
-_StringMapBuilderArg = typing.Union[
-    typing.Mapping[str, str], multidict.MultiMapping[str], typing.Iterable[tuple[str, str]]
-]
+_StringMapBuilderArg = typing.Mapping[str, str] | multidict.MultiMapping[str] | typing.Iterable[tuple[str, str]]
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
@@ -476,7 +474,7 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
         try:
             results.append(cast(value))
 
-        except errors.UnrecognisedEntityError:  # noqa: PERF203 - Move try-except outside of loop
+        except errors.UnrecognisedEntityError:
             pass
 
     return results

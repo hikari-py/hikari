@@ -895,7 +895,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     # Ensure we are not rate limited, and update rate limiting headers where appropriate.
                     time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
 
-                except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as ex:
+                except (TimeoutError, aiohttp.ClientConnectionError) as ex:
                     if retry_count >= self._max_retries:
                         raise errors.HTTPError(message=str(ex)) from ex
 
@@ -4607,7 +4607,7 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))
 
-            except errors.UnrecognisedEntityError:  # noqa: PERF203 - Usage of try-except inside a loop
+            except errors.UnrecognisedEntityError:
                 pass
 
         return command_objs

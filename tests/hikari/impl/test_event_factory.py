@@ -150,9 +150,7 @@ class TestEventFactoryImpl:
         assert isinstance(event, channel_events.DMPinsUpdateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.last_pin_timestamp == datetime.datetime(
-            2020, 3, 15, 15, 23, 32, 686000, tzinfo=datetime.timezone.utc
-        )
+        assert event.last_pin_timestamp == datetime.datetime(2020, 3, 15, 15, 23, 32, 686000, tzinfo=datetime.UTC)
 
     def test_deserialize_channel_pins_update_event_without_last_pin_timestamp(
         self, event_factory, mock_app, mock_shard
@@ -431,7 +429,7 @@ class TestEventFactoryImpl:
         assert event.shard is mock_shard
         assert event.channel_id == 48585858
         assert event.guild_id == 123321
-        assert event.timestamp == datetime.datetime(2211, 12, 6, 12, 20, 33, tzinfo=datetime.timezone.utc)
+        assert event.timestamp == datetime.datetime(2211, 12, 6, 12, 20, 33, tzinfo=datetime.UTC)
         assert event.member == mock_app.entity_factory.deserialize_member.return_value
 
     def test_deserialize_typing_start_event_for_dm(self, event_factory, mock_app, mock_shard):
@@ -443,7 +441,7 @@ class TestEventFactoryImpl:
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.channel_id == 534123
-        assert event.timestamp == datetime.datetime(2211, 12, 6, 12, 20, 12, tzinfo=datetime.timezone.utc)
+        assert event.timestamp == datetime.datetime(2211, 12, 6, 12, 20, 12, tzinfo=datetime.UTC)
         assert event.user_id == 9494994
 
     ################
@@ -1478,7 +1476,7 @@ class TestEventFactoryImpl:
             5513123: shard_events.ChannelInfo(
                 channel_id=5513123,
                 status="amongus",
-                voice_start_time=datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.timezone.utc),
+                voice_start_time=datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.UTC),
             ),
             5513124: shard_events.ChannelInfo(channel_id=5513124, status=None, voice_start_time=None),
         }
@@ -1588,7 +1586,7 @@ class TestEventFactoryImpl:
         assert event.shard is mock_shard
         assert event.channel_id == 5513123
         assert event.guild_id == 54123123
-        assert event.voice_start_time == datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.timezone.utc)
+        assert event.voice_start_time == datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.UTC)
 
     def test_deserialize_voice_channel_start_time_update_event_when_no_ongoing_session(
         self, event_factory, mock_app, mock_shard

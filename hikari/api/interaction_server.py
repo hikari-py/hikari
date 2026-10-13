@@ -37,16 +37,16 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
-    _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
-    ]
-    _ModalOrMessageResponseBuilder = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
+    _MessageResponseBuilderT = (
+        special_endpoints.InteractionDeferredBuilder | special_endpoints.InteractionMessageBuilder
+    )
+    _ModalOrMessageResponseBuilder = _MessageResponseBuilderT | special_endpoints.InteractionModalBuilder
 
 
-ListenerT = typing.Union[
-    typing.Callable[["_InteractionT_co"], typing.Awaitable[typing.Union["_ResponseT_co", None]]],
-    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator[typing.Union["_ResponseT_co", None], None]],
-]
+ListenerT = (
+    typing.Callable[["_InteractionT_co"], typing.Awaitable[typing.Union["_ResponseT_co", None]]]
+    | typing.Callable[["_InteractionT_co"], typing.AsyncGenerator[typing.Union["_ResponseT_co", None], None]]
+)
 """Type hint of a Interaction server's listener callback.
 
 This should be an async callback which takes in one positional argument which

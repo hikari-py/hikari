@@ -1111,7 +1111,7 @@ class TestGuild:
             incidents=guilds.GuildIncidents(
                 invites_disabled_until=None,
                 dms_disabled_until=None,
-                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc),
+                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.UTC),
                 raid_detected_at=None,
             ),
             name="some guild",
@@ -1484,7 +1484,7 @@ class TestRestGuild:
             incidents=guilds.GuildIncidents(
                 invites_disabled_until=None,
                 dms_disabled_until=None,
-                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc),
+                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.UTC),
                 raid_detected_at=None,
             ),
             name="some guild",

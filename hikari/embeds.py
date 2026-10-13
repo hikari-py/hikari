@@ -432,7 +432,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
             ```py
             # Use UTC.
-            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> datetime.datetime.now(tz=datetime.UTC)
             datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
 
             # Use your current timezone.
@@ -460,7 +460,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
             # Instead, this is a timezone-aware timestamp, and we can use this
             # correctly. This will always return the current time in UTC.
-            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> datetime.datetime.now(tz=datetime.UTC)
             datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
 
             # We could instead use a custom timezone. Since the timezone is
@@ -486,7 +486,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             datetime.datetime(2020, 6, 5, 19, 33, 40, 967939, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
 
             # Changing timezones.
-            >>> dt = datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> dt = datetime.datetime.now(tz=datetime.UTC)
             >>> print(dt)
             datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
             >>> dt.astimezone(tzlocal.get_localzone())
@@ -523,7 +523,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
               timestamp = datetime.datetime.now().astimezone()
               # or
-              timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+              timestamp = datetime.datetime.now(tz=datetime.UTC)
 
             NOTE: datetime.utcnow WILL NOT WORK CORRECTLY WITH THIS IMPLEMENTATION.
 

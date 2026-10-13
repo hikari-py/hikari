@@ -1056,7 +1056,7 @@ class GatewayBot(traits.GatewayBotAware):
                     _LOGGER.critical("one or more shards closed while starting; shutting down")
                     msg = "One or more shards closed while starting"
                     raise RuntimeError(msg)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # new window starts.
                     pass
 
@@ -1234,7 +1234,7 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: float | None,
+        timeout: float | None,  # noqa: ASYNC109
         predicate: event_manager_.PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
