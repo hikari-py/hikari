@@ -1143,6 +1143,22 @@ class TestEntityFactoryImpl:
         assert application.guild_id is None
         assert application.guild is None
 
+    def test_deserialize_application_with_only_guild(self, entity_factory_impl, application_payload):
+        del application_payload["guild_id"]
+
+        application = entity_factory_impl.deserialize_application(application_payload)
+
+        assert application.guild_id == 4949494949
+        assert application.guild.id == 4949494949
+
+    def test_deserialize_application_with_only_guild_id(self, entity_factory_impl, application_payload):
+        del application_payload["guild"]
+
+        application = entity_factory_impl.deserialize_application(application_payload)
+
+        assert application.guild_id == 4949494949
+        assert application.guild is None
+
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
             {

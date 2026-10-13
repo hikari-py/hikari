@@ -749,11 +749,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 oauth2_install_parameters=oauth2_install_parameters
             )
 
-        guild_id: snowflakes.Snowflake | None = None
-        if (raw_guild_id := payload.get("guild_id")) is not None:
-            guild_id = snowflakes.Snowflake(raw_guild_id)
-
         guild: guild_models.PartialGuild | None = None
+        guild_id: snowflakes.Snowflake | None = None
         if (guild_payload := payload.get("guild")) is not None:
             guild = guild_models.PartialGuild(
                 app=self._app,
@@ -761,6 +758,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 name=guild_payload["name"],
                 icon_hash=guild_payload.get("icon"),
             )
+            guild_id = guild.id
+        elif (raw_guild_id := payload.get("guild_id")) is not None:
+            guild_id = snowflakes.Snowflake(raw_guild_id)
 
         return application_models.Application(
             app=self._app,
