@@ -793,6 +793,12 @@ class Application(guilds.PartialApplication):
     If the application is not part of a team, this will be [`None`][].
     """
 
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the guild associated with this application, such as its developer support server."""
+
+    guild: guilds.PartialGuild | None = attrs.field(eq=False, hash=False, repr=False)
+    """The guild associated with this application, such as its developer support server."""
+
     cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
