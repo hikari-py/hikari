@@ -352,7 +352,7 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> int | base_interactions.ResponseType:
+    def type(self) -> base_interactions.ResponseType:
         """Type of this response."""
 
     @abc.abstractmethod
@@ -387,7 +387,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
+    def flags(self) -> undefined.UndefinedType | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -397,7 +397,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -760,7 +760,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
+    def flags(self) -> undefined.UndefinedType | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -899,7 +899,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -1099,7 +1099,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions | int:
+    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions:
         """Member permissions necessary to utilize this command by default.
 
         If `0`, then it will be available for all members. Note that this doesn't affect
@@ -1113,7 +1113,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
+    def name_localizations(self) -> typing.Mapping[locales.Locale, str]:
         """Name localizations set for this command."""
 
     @property
@@ -1158,7 +1158,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_default_member_permissions(
-        self, default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions, /
+        self, default_member_permissions: undefined.UndefinedType | permissions_.Permissions, /
     ) -> Self:
         """Set the member permissions necessary to utilize this command by default.
 
@@ -1192,7 +1192,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale | str, str], /) -> Self:
+    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale, str], /) -> Self:
         """Set the name localizations for this command.
 
         Parameters
@@ -1300,7 +1300,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
+    def description_localizations(self) -> typing.Mapping[locales.Locale, str]:
         """Command's localised descriptions."""
 
     @property
@@ -1324,9 +1324,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
-    def set_description_localizations(
-        self, description_localizations: typing.Mapping[locales.Locale | str, str], /
-    ) -> Self:
+    def set_description_localizations(self, description_localizations: typing.Mapping[locales.Locale, str], /) -> Self:
         """Set the localised descriptions for this command.
 
         Parameters
@@ -1437,7 +1435,7 @@ class ComponentBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> int | components_.ComponentType:
+    def type(self) -> components_.ComponentType:
         """Type of component this builder represents."""
 
     @property
@@ -1476,7 +1474,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def style(self) -> components_.ButtonStyle | int:
+    def style(self) -> components_.ButtonStyle:
         """Button's style."""
 
     @property
@@ -1974,7 +1972,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self, style: components_.TextInputStyle | int, /) -> Self:
+    def set_style(self, style: components_.TextInputStyle, /) -> Self:
         """Set the style to use for the text input.
 
         Parameters
@@ -2231,7 +2229,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_select_menu(
         self,
-        type_: components_.ComponentType | int,
+        type_: components_.ComponentType,
         custom_id: str,
         /,
         *,

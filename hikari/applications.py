@@ -355,7 +355,7 @@ class OwnConnection:
     is_activity_visible: bool = attrs.field(eq=False, hash=False, repr=False)
     """[`True`][] if this connection's activities are shown in the user's presence."""
 
-    visibility: ConnectionVisibility | int = attrs.field(eq=False, hash=False, repr=True)
+    visibility: ConnectionVisibility = attrs.field(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
 
 
@@ -363,7 +363,7 @@ class OwnConnection:
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
-    features: typing.Sequence[str | guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     is_owner: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -419,7 +419,7 @@ class TeamMembershipState(int, enums.Enum):
 class TeamMember(users.User):
     """Represents a member of a Team."""
 
-    membership_state: TeamMembershipState | int = attrs.field(repr=False)
+    membership_state: TeamMembershipState = attrs.field(repr=False)
     """The state of this user's membership."""
 
     permissions: typing.Sequence[str] = attrs.field(repr=False)
@@ -716,7 +716,7 @@ class ActivityLocation:
     id: str = attrs.field(hash=True, repr=True)
     """The unique identifier for the location."""
 
-    kind: ActivityLocationKind | str = attrs.field(eq=False, hash=False, repr=True)
+    kind: ActivityLocationKind = attrs.field(eq=False, hash=False, repr=True)
     """The kind of location the activity instance is running in."""
 
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -828,12 +828,10 @@ class Application(guilds.PartialApplication):
     event_webhooks_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL this application receives webhook events on, if set."""
 
-    event_webhooks_status: ApplicationEventWebhookStatus | int = attrs.field(eq=False, hash=False, repr=False)
+    event_webhooks_status: ApplicationEventWebhookStatus = attrs.field(eq=False, hash=False, repr=False)
     """The status of this application's event webhooks."""
 
-    event_webhooks_types: typing.Sequence[ApplicationEventWebhookType | str] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    event_webhooks_types: typing.Sequence[ApplicationEventWebhookType] = attrs.field(eq=False, hash=False, repr=False)
     """The webhook event types this application subscribes to."""
 
     def make_cover_image_url(
@@ -948,7 +946,7 @@ class PartialOAuth2Token:
     access_token: str = attrs.field(hash=True, repr=False)
     """Access token issued by the authorization server."""
 
-    token_type: TokenType | str = attrs.field(eq=False, hash=False, repr=True)
+    token_type: TokenType = attrs.field(eq=False, hash=False, repr=True)
     """Type of token issued by the authorization server."""
 
     expires_in: datetime.timedelta = attrs.field(eq=False, hash=False, repr=True)
@@ -1041,7 +1039,7 @@ class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
 class ApplicationRoleConnectionMetadataRecord:
     """Represents a role connection metadata record."""
 
-    type: ApplicationRoleConnectionMetadataRecordType | int = attrs.field(eq=False, hash=False, repr=False)
+    type: ApplicationRoleConnectionMetadataRecordType = attrs.field(eq=False, hash=False, repr=False)
     """The type of metadata value record."""
 
     key: str = attrs.field(eq=True, hash=True, repr=False)
@@ -1053,12 +1051,12 @@ class ApplicationRoleConnectionMetadataRecord:
     description: str = attrs.field(eq=False, hash=False, repr=True)
     """The metadata's field description."""
 
-    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of name localizations for this metadata field."""
 
-    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    description_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of description localizations for this metadata field."""

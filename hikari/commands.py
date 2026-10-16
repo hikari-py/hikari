@@ -118,7 +118,7 @@ class CommandChoice:
     name: str = attrs.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
-    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         eq=False, factory=dict, hash=False, repr=False
     )
     """A mapping of name localizations for this command choice."""
@@ -132,7 +132,7 @@ class CommandChoice:
 class CommandOption:
     """Represents an application command's argument."""
 
-    type: OptionType | int = attrs.field(repr=True)
+    type: OptionType = attrs.field(repr=True)
     """The type of command option this is."""
 
     name: str = attrs.field(repr=True)
@@ -164,7 +164,7 @@ class CommandOption:
     options: typing.Sequence[CommandOption] | None = attrs.field(default=None, repr=False)
     """Sequence of up to (and including) 25 of the options for this command option."""
 
-    channel_types: typing.Sequence[channels.ChannelType | int] | None = attrs.field(default=None, repr=False)
+    channel_types: typing.Sequence[channels.ChannelType] | None = attrs.field(default=None, repr=False)
     """The channel types that this option will accept.
 
     If [`None`][], then all channel types will be accepted.
@@ -187,12 +187,12 @@ class CommandOption:
     and [`float`][] if the type is [`hikari.commands.OptionType.FLOAT`][].
     """
 
-    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         eq=False, factory=dict, hash=False, repr=False
     )
     """A mapping of name localizations for this option."""
 
-    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    description_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         eq=False, factory=dict, hash=False, repr=False
     )
     """A mapping of description localizations for this option."""
@@ -255,7 +255,7 @@ class PartialCommand(snowflakes.Unique):
     version: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(eq=False, hash=False, repr=False)
+    name_localizations: typing.Mapping[locales.Locale, str] = attrs.field(eq=False, hash=False, repr=False)
     """A mapping of name localizations for this command."""
 
     integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
@@ -450,7 +450,7 @@ class SlashCommand(PartialCommand):
         This will be inclusively between 1-100 characters in length.
     """
 
-    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(eq=False, hash=False, repr=False)
+    description_localizations: typing.Mapping[locales.Locale, str] = attrs.field(eq=False, hash=False, repr=False)
     """A set of description localizations for this command."""
 
     options: typing.Sequence[CommandOption] | None = attrs.field(eq=False, hash=False, repr=False)
@@ -490,7 +490,7 @@ class CommandPermission:
     * If equals to (`guild_id` - 1), then it applies to all channels in a guild.
     """
 
-    type: CommandPermissionType | int = attrs.field(converter=CommandPermissionType)
+    type: CommandPermissionType = attrs.field(converter=CommandPermissionType)
     """The entity this permission overrides the command's state for."""
 
     has_access: bool = attrs.field()
