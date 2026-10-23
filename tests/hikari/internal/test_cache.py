@@ -24,8 +24,11 @@ import copy
 
 import mock
 
+from hikari import emojis
 from hikari import snowflakes
+from hikari import soundboard
 from hikari import stickers
+from hikari import users
 from hikari.internal import cache
 from hikari.internal import collections
 
@@ -89,3 +92,29 @@ class TestStickerData:
         assert data.user is refcell.return_value
         mock_copy.assert_called_once_with(mock_user)
         refcell.assert_called_once_with(mock_copy.return_value)
+
+
+class TestSoundboardSoundData:
+    def test_build_from_entity_and_back(self) -> None:
+        user = mock.MagicMock(users.User)
+        sound = soundboard.SoundboardSound(
+            id=snowflakes.Snowflake(1),
+            name="yay",
+            volume=0.5,
+            emoji=emojis.UnicodeEmoji("🦆"),
+            guild_id=snowflakes.Snowflake(2),
+            is_available=True,
+            user=user,
+        )
+
+        data = cache.SoundboardSoundData.build_from_entity(sound)
+        result = data.build_entity(mock.Mock())
+
+        assert result == sound
+        assert result.name == "yay"
+        assert result.volume == 0.5
+        assert result.emoji == emojis.UnicodeEmoji("🦆")
+        assert result.guild_id == 2
+        assert result.is_available is True
+        assert result.user == user
+        assert result.user is not user

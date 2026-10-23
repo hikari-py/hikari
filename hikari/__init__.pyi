@@ -74,6 +74,7 @@ from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
 from hikari.events.shard_events import *
+from hikari.events.soundboard_events import *
 from hikari.events.typing_events import *
 from hikari.events.user_events import *
 from hikari.events.voice_events import *
@@ -111,6 +112,7 @@ from hikari.snowflakes import Snowflakeish as Snowflakeish
 from hikari.snowflakes import SnowflakeishOr as SnowflakeishOr
 from hikari.snowflakes import SnowflakeishSequence as SnowflakeishSequence
 from hikari.snowflakes import Unique as Unique
+from hikari.soundboard import *
 from hikari.stage_instances import *
 from hikari.stickers import *
 from hikari.templates import *

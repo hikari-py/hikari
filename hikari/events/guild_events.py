@@ -62,6 +62,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import presences as presences_
     from hikari import snowflakes
+    from hikari import soundboard as soundboard_
     from hikari import stickers as stickers_
     from hikari import users
     from hikari import voices
@@ -159,6 +160,9 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attrs.field(repr=False)
     """Mapping of sticker IDs to the stickers in the guild."""
 
+    soundboard_sounds: typing.Mapping[snowflakes.Snowflake, soundboard_.SoundboardSound] = attrs.field(repr=False)
+    """Mapping of sound IDs to the soundboard sounds in the guild."""
+
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of role IDs to the roles in the guild."""
 
@@ -222,6 +226,9 @@ class GuildJoinEvent(GuildVisibilityEvent):
 
     stickers: typing.Mapping[snowflakes.Snowflake, stickers_.GuildSticker] = attrs.field(repr=False)
     """Mapping of sticker IDs to the stickers in the guild."""
+
+    soundboard_sounds: typing.Mapping[snowflakes.Snowflake, soundboard_.SoundboardSound] = attrs.field(repr=False)
+    """Mapping of sound IDs to the soundboard sounds in the guild."""
 
     roles: typing.Mapping[snowflakes.Snowflake, guilds.Role] = attrs.field(repr=False)
     """Mapping of role IDs to the roles in the guild."""
