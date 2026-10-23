@@ -7344,7 +7344,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.KICK_MEMBERS`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] and
+            [`hikari.permissions.Permissions.KICK_MEMBERS`][] permissions, or the
+            [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission if the guild
+            has the [`hikari.guilds.GuildFeature.PRUNE_REQUIRES_ADMIN`][] feature.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError
@@ -7398,7 +7401,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.KICK_MEMBERS`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] and
+            [`hikari.permissions.Permissions.KICK_MEMBERS`][] permissions, or the
+            [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission if the guild
+            has the [`hikari.guilds.GuildFeature.PRUNE_REQUIRES_ADMIN`][] feature.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError
