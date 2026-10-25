@@ -109,7 +109,7 @@ pyright = ["pyright==1.1.414", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==9.1.1",
-    "pytest-asyncio==1.4.0",
+    "pytest-asyncio==1.4.1",
     "pytest-cov==7.1.0",
     "pytest-randomly==5.0.0",
     { include-group = "coverage" },
