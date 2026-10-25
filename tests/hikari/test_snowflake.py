@@ -42,9 +42,7 @@ def neko_snowflake(raw_id):
 
 class TestSnowflake:
     def test_created_at(self, neko_snowflake):
-        assert neko_snowflake.created_at == datetime.datetime(
-            2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc
-        )
+        assert neko_snowflake.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.UTC)
 
     def test_increment(self, neko_snowflake):
         assert neko_snowflake.increment == 40
@@ -83,7 +81,7 @@ class TestSnowflake:
 
     def test_from_datetime(self):
         result = snowflakes.Snowflake.from_datetime(
-            datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc)
+            datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.UTC)
         )
         assert result == 537340989807788032
         assert isinstance(result, snowflakes.Snowflake)
@@ -104,9 +102,7 @@ class TestUnique:
         return NekoUnique()
 
     def test_created_at(self, neko_unique):
-        assert neko_unique.created_at == datetime.datetime(
-            2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.timezone.utc
-        )
+        assert neko_unique.created_at == datetime.datetime(2019, 1, 22, 18, 41, 15, 283_000, tzinfo=datetime.UTC)
 
     def test_index(self, neko_unique, raw_id):
         assert operator.index(neko_unique) == raw_id

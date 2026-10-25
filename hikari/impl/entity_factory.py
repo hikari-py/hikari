@@ -1058,7 +1058,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             try:
                 entry = self.deserialize_audit_log_entry(entry_payload, guild_id=guild_id)
 
-            except errors.UnrecognisedEntityError as exc:  # noqa: PERF203 - try-except inside a loop
+            except errors.UnrecognisedEntityError as exc:
                 _LOGGER.debug(exc.reason)
 
             else:
@@ -4153,6 +4153,29 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             mentions_everyone=payload.get("mention_everyone", False),
             thread=thread,
             interaction_metadata=interaction_metadata,
+        )
+
+    @typing_extensions.override
+    def deserialize_message_search_result(self, payload: data_binding.JSONObject) -> message_models.MessageSearchResult:
+        messages = [self.deserialize_message(message) for group in payload["messages"] for message in group]
+
+        threads: list[channel_models.GuildThreadChannel] = []
+        for thread_payload in payload.get("threads", ()):
+            try:
+                threads.append(self.deserialize_guild_thread(thread_payload))
+            except errors.UnrecognisedEntityError:
+                # Ignore the thread, this has already been logged
+                continue
+
+        members = [self.deserialize_thread_member(member) for member in payload.get("members", ())]
+
+        return message_models.MessageSearchResult(
+            doing_deep_historical_index=payload["doing_deep_historical_index"],
+            documents_indexed=payload.get("documents_indexed"),
+            total_results=int(payload["total_results"]),
+            messages=messages,
+            threads=threads,
+            members=members,
         )
 
     ###################

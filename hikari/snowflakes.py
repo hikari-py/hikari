@@ -152,7 +152,7 @@ def calculate_shard_id(app_or_count: traits.ShardAware | int, guild: Snowflakeis
     return (int(guild) >> 22) % shard_count
 
 
-Snowflakeish = typing.Union[Snowflake, int]
+Snowflakeish = Snowflake | int
 """Type hint for a value that resembles a [`hikari.snowflakes.Snowflake`][] object functionally.
 
 This is a value that is [`hikari.snowflakes.Snowflake`][]-ish.
@@ -182,7 +182,7 @@ The valid types for this type hint are:
 
 T_co = typing.TypeVar("T_co", covariant=True, bound=Unique)
 
-SnowflakeishOr = typing.Union[T_co, Snowflakeish]
+SnowflakeishOr: typing.TypeAlias = T_co | Snowflakeish
 """Type hint representing a unique object entity.
 
 This is a value that is [`hikari.snowflakes.Snowflake`][]-ish or a specific type covariant.
@@ -202,7 +202,7 @@ The valid types for this type hint are:
 - [`hikari.snowflakes.Snowflake`][]
 """
 
-SearchableSnowflakeishOr = typing.Union[T_co, SearchableSnowflakeish]
+SearchableSnowflakeishOr: typing.TypeAlias = T_co | SearchableSnowflakeish
 """Type hint for a unique object entity that can be searched for.
 
 This is a variant of [`hikari.snowflakes.SnowflakeishOr`][] that also allows an alternative value

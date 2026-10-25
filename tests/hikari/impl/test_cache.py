@@ -1311,7 +1311,7 @@ class TestCacheImpl:
             max_uses=999,
             max_age=datetime.timedelta(days=7),
             is_temporary=True,
-            created_at=datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.timezone.utc),
+            created_at=datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.UTC),
         )
 
         invite = cache_impl._build_invite(invite_data)
@@ -1339,7 +1339,7 @@ class TestCacheImpl:
         assert invite.max_uses == 999
         assert invite.max_age == datetime.timedelta(days=7)
         assert invite.is_temporary is True
-        assert invite.created_at == datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.timezone.utc)
+        assert invite.created_at == datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.UTC)
 
     def test__build_invite_without_users(self, cache_impl):
         invite_data = cache_utilities.InviteData(
@@ -1359,7 +1359,7 @@ class TestCacheImpl:
             max_uses=999,
             max_age=datetime.timedelta(days=7),
             is_temporary=True,
-            created_at=datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.timezone.utc),
+            created_at=datetime.datetime(2020, 7, 30, 7, 22, 9, 550233, tzinfo=datetime.UTC),
         )
 
         invite = cache_impl._build_invite(invite_data)
@@ -1900,14 +1900,12 @@ class TestCacheImpl:
             guild_avatar_hash="only slightly gay",
             guild_banner_hash="ok maybe alotta gay",
             role_ids=(snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123)),
-            joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
-            premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
+            joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.UTC),
+            premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.UTC),
             is_deaf=False,
             is_mute=True,
             is_pending=False,
-            raw_communication_disabled_until=datetime.datetime(
-                2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
-            ),
+            raw_communication_disabled_until=datetime.datetime(2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.UTC),
             guild_flags=guilds.GuildMemberFlags(1),
         )
 
@@ -1920,13 +1918,13 @@ class TestCacheImpl:
         assert member.guild_avatar_hash == "only slightly gay"
         assert member.guild_banner_hash == "ok maybe alotta gay"
         assert member.role_ids == (snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123))
-        assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
-        assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
+        assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.UTC)
+        assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.UTC)
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
         assert member.raw_communication_disabled_until == datetime.datetime(
-            2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
+            2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.UTC
         )
         assert member.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
@@ -2252,17 +2250,15 @@ class TestCacheImpl:
             user=mock_user,
             nickname="A NICK LOL",
             role_ids=[snowflakes.Snowflake(65345234), snowflakes.Snowflake(123123)],
-            joined_at=datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc),
-            premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc),
+            joined_at=datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.UTC),
+            premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.UTC),
             is_deaf=True,
             guild_avatar_decoration=None,
             guild_avatar_hash="gay",
             guild_banner_hash="gayge",
             is_mute=False,
             is_pending=True,
-            raw_communication_disabled_until=datetime.datetime(
-                2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
-            ),
+            raw_communication_disabled_until=datetime.datetime(2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.UTC),
             guild_flags=guilds.GuildMemberFlags(1),
         )
         cache_impl._set_user = mock.Mock(return_value=mock_user_ref)
@@ -2285,17 +2281,13 @@ class TestCacheImpl:
         assert member_entry.object.guild_avatar_hash == "gay"
         assert member_entry.object.guild_banner_hash == "gayge"
         assert isinstance(member_entry.object.role_ids, tuple)
-        assert member_entry.object.joined_at == datetime.datetime(
-            2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc
-        )
-        assert member_entry.object.premium_since == datetime.datetime(
-            2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc
-        )
+        assert member_entry.object.joined_at == datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.UTC)
+        assert member_entry.object.premium_since == datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.UTC)
         assert member_entry.object.is_deaf is True
         assert member_entry.object.is_mute is False
         assert member_entry.object.is_pending is True
         assert member_entry.object.raw_communication_disabled_until == datetime.datetime(
-            2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
+            2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.UTC
         )
         assert member_entry.object.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
@@ -2508,7 +2500,7 @@ class TestCacheImpl:
             is_video_enabled=False,
             member=cache_utilities.RefCell(mock_member_data),
             session_id="lkmdfslkmfdskjlfsdkjlsfdkjldsf",
-            requested_to_speak_at=datetime.datetime(2021, 4, 17, 10, 13, 18, 887306, tzinfo=datetime.timezone.utc),
+            requested_to_speak_at=datetime.datetime(2021, 4, 17, 10, 13, 18, 887306, tzinfo=datetime.UTC),
         )
 
         current_voice_state = cache_impl._build_voice_state(voice_state_data)
@@ -2527,7 +2519,7 @@ class TestCacheImpl:
         assert current_voice_state.session_id == "lkmdfslkmfdskjlfsdkjlsfdkjldsf"
         assert current_voice_state.member is mock_member
         assert current_voice_state.requested_to_speak_at == datetime.datetime(
-            2021, 4, 17, 10, 13, 18, 887306, tzinfo=datetime.timezone.utc
+            2021, 4, 17, 10, 13, 18, 887306, tzinfo=datetime.UTC
         )
 
     @pytest.mark.skip(reason="TODO")
@@ -2748,7 +2740,7 @@ class TestCacheImpl:
             user_id=snowflakes.Snowflake(4531231),
             member=mock_member,
             session_id="kodfsoijkased9i8uos9i8uawe",
-            requested_to_speak_at=datetime.datetime(2021, 4, 17, 10, 13, 56, 939273, tzinfo=datetime.timezone.utc),
+            requested_to_speak_at=datetime.datetime(2021, 4, 17, 10, 13, 56, 939273, tzinfo=datetime.UTC),
         )
         cache_impl._set_member = mock.Mock(return_value=mock_reffed_member)
         cache_impl._increment_ref_count = mock.Mock()
@@ -2767,7 +2759,7 @@ class TestCacheImpl:
         assert voice_state_data.member is mock_reffed_member
         assert voice_state_data.session_id == "kodfsoijkased9i8uos9i8uawe"
         assert voice_state_data.requested_to_speak_at == datetime.datetime(
-            2021, 4, 17, 10, 13, 56, 939273, tzinfo=datetime.timezone.utc
+            2021, 4, 17, 10, 13, 56, 939273, tzinfo=datetime.UTC
         )
 
     def test_update_voice_state(self, cache_impl):
@@ -2824,8 +2816,8 @@ class TestCacheImpl:
             author=cache_utilities.RefCell(mock_author),
             member=cache_utilities.RefCell(member_data),
             content="OKOKOK",
-            timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
-            edited_timestamp=datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
+            timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.UTC),
+            edited_timestamp=datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.UTC),
             is_tts=True,
             user_mentions=mock_user_mentions,
             role_mention_ids=mock_role_mention_ids,
@@ -2861,8 +2853,8 @@ class TestCacheImpl:
         assert result.author is not mock_author
         assert result.member is mock_member
         assert result.content == "OKOKOK"
-        assert result.timestamp == datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc)
-        assert result.edited_timestamp == datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc)
+        assert result.timestamp == datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.UTC)
+        assert result.edited_timestamp == datetime.datetime(2020, 8, 30, 7, 10, 9, 550233, tzinfo=datetime.UTC)
         assert result.is_tts is True
         assert result.user_mentions == {4231: mock_mention_user}
         assert result.role_mention_ids == (snowflakes.Snowflake(21323123),)
@@ -2915,7 +2907,7 @@ class TestCacheImpl:
             author=cache_utilities.RefCell(object()),
             member=None,
             content=None,
-            timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
+            timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.UTC),
             edited_timestamp=None,
             is_tts=True,
             user_mentions=undefined.UNDEFINED,

@@ -69,7 +69,7 @@ This includes:
 * [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 """
 
-ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
+ComponentResponseTypesT = _ImmediateTypesT | _DeferredTypesT
 """Type-hint of the response types which are valid for a component interaction.
 
 The following types are valid for this:

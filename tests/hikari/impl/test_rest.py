@@ -560,7 +560,7 @@ class TestTransformEmojiToUrlFormat:
 class TestSerializeRecurrenceRule:
     def test_with_all_settable_fields(self):
         rule = scheduled_events.ScheduledEventRecurrenceRule(
-            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
             frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
             interval=2,
             by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
@@ -585,7 +585,7 @@ class TestSerializeRecurrenceRule:
 
     def test_with_minimal_fields(self):
         rule = scheduled_events.ScheduledEventRecurrenceRule(
-            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
             frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
         )
 
@@ -601,9 +601,9 @@ class TestSerializeRecurrenceRule:
 
     def test_ignores_fields_which_can_not_be_set_externally(self):
         rule = scheduled_events.ScheduledEventRecurrenceRule(
-            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
             frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
-            end=datetime.datetime(2002, 1, 1, tzinfo=datetime.timezone.utc),
+            end=datetime.datetime(2002, 1, 1, tzinfo=datetime.UTC),
             by_year_day=[180],
             count=10,
         )
@@ -854,10 +854,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize(
         "before",
-        [
-            datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc),
-            StubModel(735757641938108416),
-        ],
+        [datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC), StubModel(735757641938108416)],
     )
     def test_fetch_messages_with_before(self, rest_client, before):
         channel = StubModel(123)
@@ -875,11 +872,7 @@ class TestRESTClientImpl:
             )
 
     @pytest.mark.parametrize(
-        "after",
-        [
-            datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc),
-            StubModel(735757641938108416),
-        ],
+        "after", [datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC), StubModel(735757641938108416)]
     )
     def test_fetch_messages_with_after(self, rest_client, after):
         channel = StubModel(123)
@@ -898,10 +891,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize(
         "around",
-        [
-            datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc),
-            StubModel(735757641938108416),
-        ],
+        [datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC), StubModel(735757641938108416)],
     )
     def test_fetch_messages_with_around(self, rest_client, around):
         channel = StubModel(123)
@@ -989,7 +979,7 @@ class TestRESTClientImpl:
 
     def test_fetch_pins_with_before(self, rest_client):
         channel = StubModel(123)
-        time = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        time = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
         stub_iterator = mock.Mock()
 
         with mock.patch.object(special_endpoints, "PinnedMessageIterator", return_value=stub_iterator) as iterator:
@@ -1017,7 +1007,7 @@ class TestRESTClientImpl:
 
     def test_fetch_my_guilds_when_start_at_is_datetime(self, rest_client):
         stub_iterator = mock.Mock()
-        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         with mock.patch.object(special_endpoints, "OwnGuildIterator", return_value=stub_iterator) as iterator:
             assert rest_client.fetch_my_guilds(start_at=datetime_obj) == stub_iterator
@@ -1063,7 +1053,7 @@ class TestRESTClientImpl:
         guild = StubModel(123)
         user = StubModel(456)
         stub_iterator = mock.Mock()
-        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
             returned = rest_client.fetch_audit_log(
@@ -1101,7 +1091,7 @@ class TestRESTClientImpl:
     def test_fetch_audit_log_when_after_datetime(self, rest_client):
         guild = StubModel(123)
         stub_iterator = mock.Mock()
-        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
             assert rest_client.fetch_audit_log(guild, after=datetime_obj) == stub_iterator
@@ -1196,7 +1186,7 @@ class TestRESTClientImpl:
         )
 
     @pytest.mark.parametrize(
-        "before", [datetime.datetime(2022, 2, 28, 10, 58, 30, 987193, tzinfo=datetime.timezone.utc), 947809989634818048]
+        "before", [datetime.datetime(2022, 2, 28, 10, 58, 30, 987193, tzinfo=datetime.UTC), 947809989634818048]
     )
     def test_fetch_joined_private_archived_threads(
         self, rest_client: rest.RESTClientImpl, before: typing.Union[datetime.datetime, snowflakes.Snowflake]
@@ -1258,7 +1248,7 @@ class TestRESTClientImpl:
 
     def test_fetch_members_when_datetime_for_start_at(self, rest_client):
         guild = StubModel(123)
-        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
 
         with mock.patch.object(special_endpoints, "MemberIterator") as iterator_cls:
             iterator = rest_client.fetch_members(guild, start_at=start_at)
@@ -1308,7 +1298,7 @@ class TestRESTClientImpl:
         assert iterator is iterator_cls.return_value
 
     def test_fetch_bans_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
-        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
         with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
             iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
 
@@ -2038,7 +2028,7 @@ class TestRESTClientImpl:
         assert iterator is iterator_cls.return_value
 
     def test_fetch_scheduled_event_users_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
-        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
         with mock.patch.object(special_endpoints, "ScheduledEventUserIterator") as iterator_cls:
             iterator = rest_client.fetch_scheduled_event_users(54123, 656324, newest_first=True, start_at=start_at)
 
@@ -5132,7 +5122,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"testing": "data"})
 
         result = await rest_client.set_guild_incident_actions(
-            123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.timezone.utc)
+            123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.UTC)
         )
         assert result is rest_client._entity_factory.deserialize_guild_incidents.return_value
 
@@ -5920,6 +5910,160 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "764435"}, guild_id=645234123)
         rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
 
+    async def test_search_messages(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 1})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        result = await rest_client.search_messages(
+            StubModel(645234123),
+            content="some words",
+            limit=10,
+            offset=25,
+            max_id=StubModel(1002000000000000000),
+            min_id=StubModel(1001000000000000000),
+            slop=5,
+            channels=[StubModel(123), 456],
+            author_types=[
+                message_models.MessageSearchAuthorType.BOT,
+                message_models.MessageSearchAuthorType.NOT_WEBHOOK,
+            ],
+            authors=[StubModel(111)],
+            mentioned_users=[StubModel(222)],
+            mentioned_roles=[StubModel(333)],
+            mentions_everyone=False,
+            replied_to_users=[StubModel(444)],
+            replied_to_messages=[StubModel(555)],
+            pinned=True,
+            has=[message_models.MessageSearchHasType.IMAGE, message_models.MessageSearchHasType.NOT_POLL],
+            embed_types=[message_models.MessageSearchEmbedType.GIF],
+            embed_providers=["Tenor"],
+            link_hostnames=["discordapp.com"],
+            attachment_filenames=["foo"],
+            attachment_extensions=["txt"],
+            sort_by=message_models.MessageSearchSortMode.RELEVANCE,
+            sort_order=message_models.MessageSearchSortOrder.ASCENDING,
+            include_nsfw=True,
+        )
+
+        assert result is rest_client._entity_factory.deserialize_message_search_result.return_value
+        rest_client._entity_factory.deserialize_message_search_result.assert_called_once_with({"total_results": 1})
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert sorted(kwargs["query"].items()) == sorted(
+            [
+                ("content", "some words"),
+                ("limit", "10"),
+                ("offset", "25"),
+                ("slop", "5"),
+                ("mention_everyone", "false"),
+                ("pinned", "true"),
+                ("sort_by", "relevance"),
+                ("sort_order", "asc"),
+                ("include_nsfw", "true"),
+                ("max_id", "1002000000000000000"),
+                ("min_id", "1001000000000000000"),
+                ("channel_id", "123"),
+                ("channel_id", "456"),
+                ("author_id", "111"),
+                ("mentions", "222"),
+                ("mentions_role_id", "333"),
+                ("replied_to_user_id", "444"),
+                ("replied_to_message_id", "555"),
+                ("author_type", "bot"),
+                ("author_type", "-webhook"),
+                ("has", "image"),
+                ("has", "-poll"),
+                ("embed_type", "gif"),
+                ("embed_provider", "Tenor"),
+                ("link_hostname", "discordapp.com"),
+                ("attachment_filename", "foo"),
+                ("attachment_extension", "txt"),
+            ]
+        )
+
+    async def test_search_messages_when_datetimes(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 0})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+        date = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
+
+        await rest_client.search_messages(StubModel(645234123), max_id=date, min_id=date)
+
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert sorted(kwargs["query"].items()) == sorted(
+            [("max_id", "950000286338908160"), ("min_id", "950000286338908160")]
+        )
+
+    async def test_search_messages_without_optionals(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 0})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        await rest_client.search_messages(StubModel(645234123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert dict(kwargs["query"]) == {}
+
+    @staticmethod
+    def _not_indexed_payload(retry_after):
+        return {
+            "message": "Index not yet available. Try again later",
+            "code": 110000,
+            "documents_indexed": 100,
+            "retry_after": retry_after,
+        }
+
+    async def test_search_messages_when_not_indexed_waits_and_retries(self, rest_client):
+        rest_client._request = mock.AsyncMock(side_effect=[self._not_indexed_payload(2), {"total_results": 0}])
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            result = await rest_client.search_messages(StubModel(645234123))
+
+        assert result is rest_client._entity_factory.deserialize_message_search_result.return_value
+        sleep.assert_awaited_once_with(2.0)
+        assert rest_client._request.await_count == 2
+        rest_client._entity_factory.deserialize_message_search_result.assert_called_once_with({"total_results": 0})
+
+    async def test_search_messages_when_not_indexed_and_retry_after_is_zero(self, rest_client):
+        rest_client._request = mock.AsyncMock(side_effect=[self._not_indexed_payload(0), {"total_results": 0}])
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            await rest_client.search_messages(StubModel(645234123))
+
+        sleep.assert_awaited_once_with(1.0)
+
+    async def test_search_messages_when_still_not_indexed_after_retry(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+                await rest_client.search_messages(StubModel(645234123))
+
+        assert exc_info.value.documents_indexed == 100
+        assert exc_info.value.retry_after == 2.0
+        sleep.assert_awaited_once_with(2.0)
+        assert rest_client._request.await_count == 2
+        rest_client._entity_factory.deserialize_message_search_result.assert_not_called()
+
+    async def test_search_messages_when_not_indexed_and_not_waiting_for_index(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+                await rest_client.search_messages(StubModel(645234123), wait_for_index=False)
+
+        assert exc_info.value.documents_indexed == 100
+        assert exc_info.value.retry_after == 2.0
+        sleep.assert_not_called()
+        rest_client._request.assert_awaited_once()
+
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {
@@ -5931,7 +6075,7 @@ class TestRESTClientImplAsync:
             "communication_disabled_until": "2021-10-18T07:18:11.554023+00:00",
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         result = await rest_client.edit_member(
             StubModel(123),
@@ -7477,13 +7621,13 @@ class TestRESTClientImplAsync:
             StubModel(123321),
             StubModel(7654345),
             "boob man",
-            datetime.datetime(2001, 1, 1, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2001, 1, 1, 17, 42, 41, 891222, tzinfo=datetime.UTC),
             description="o",
-            end_time=datetime.datetime(2002, 2, 2, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2002, 2, 2, 17, 42, 41, 891222, tzinfo=datetime.UTC),
             image="tksksk.txt",
             privacy_level=654134,
             recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
-                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
                 frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
                 by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
             ),
@@ -7526,7 +7670,7 @@ class TestRESTClientImplAsync:
             StubModel(234432234),
             StubModel(654234432),
             "boob man",
-            datetime.datetime(2021, 3, 11, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 11, 17, 42, 41, 891222, tzinfo=datetime.UTC),
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_stage_event.return_value
@@ -7553,13 +7697,13 @@ class TestRESTClientImplAsync:
             StubModel(76234123),
             StubModel(65243123),
             "boom man",
-            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.UTC),
             description="hhhhh",
-            end_time=datetime.datetime(2069, 3, 9, 13, 1, 41, 891222, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2069, 3, 9, 13, 1, 41, 891222, tzinfo=datetime.UTC),
             image="meow.txt",
             privacy_level=6523123,
             recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
-                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
                 frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
                 by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
             ),
@@ -7602,7 +7746,7 @@ class TestRESTClientImplAsync:
             StubModel(76234123),
             StubModel(65243123),
             "boom man",
-            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.UTC),
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_voice_event.return_value
@@ -7629,13 +7773,13 @@ class TestRESTClientImplAsync:
             StubModel(34232412),
             "hi",
             "Outside",
-            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.timezone.utc),
-            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.UTC),
+            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.UTC),
             description="This is a description",
             image="icon.png",
             privacy_level=6454,
             recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
-                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
                 frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
                 by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
             ),
@@ -7678,8 +7822,8 @@ class TestRESTClientImplAsync:
             StubModel(34232412),
             "hi",
             "Outside",
-            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.timezone.utc),
-            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.UTC),
+            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.UTC),
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_external_event.return_value
@@ -7713,10 +7857,10 @@ class TestRESTClientImplAsync:
             location="Trans-land",
             name="Nihongo",
             privacy_level=69,
-            start_time=datetime.datetime(2022, 3, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
-            end_time=datetime.datetime(2022, 5, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            start_time=datetime.datetime(2022, 3, 6, 12, 42, 41, 891222, tzinfo=datetime.UTC),
+            end_time=datetime.datetime(2022, 5, 6, 12, 42, 41, 891222, tzinfo=datetime.UTC),
             recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
-                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
                 frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
                 by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
             ),

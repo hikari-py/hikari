@@ -560,15 +560,15 @@ class Color(int):
         return int(self).to_bytes(length, byteorder, signed=signed)
 
 
-Colorish = typing.Union[
-    Color,
-    typing.SupportsInt,
-    tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
-    tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
-    typing.Sequence[typing.SupportsInt],
-    typing.Sequence[typing.SupportsFloat],
-    str,
-]
+Colorish = (
+    Color
+    | typing.SupportsInt
+    | tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt]
+    | tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat]
+    | typing.Sequence[typing.SupportsInt]
+    | typing.Sequence[typing.SupportsFloat]
+    | str
+)
 """Type hint representing types of value compatible with a colour type.
 
 This may be:

@@ -183,7 +183,7 @@ class _GatewayTransport(abc.ABC):
         try:
             await asyncio.wait_for(self._ws.close(code=code, message=message), timeout=5)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._logger.debug("failed to send close frame in time, probably connection issues")
 
         finally:
@@ -311,7 +311,7 @@ class _GatewayTransport(abc.ABC):
                     dumps=dumps,
                 )
 
-            except (aiohttp.ClientConnectionError, aiohttp.ClientResponseError, asyncio.TimeoutError) as ex:
+            except (TimeoutError, aiohttp.ClientConnectionError, aiohttp.ClientResponseError) as ex:
                 # If we cannot do DNS lookup, this will fail with an aiohttp.ClientConnectionError
                 # usually, but it might also fail with asyncio.TimeoutError if its gets stuck in a weird way
                 #

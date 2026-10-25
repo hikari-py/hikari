@@ -29,6 +29,12 @@ __all__: typing.Sequence[str] = (
     "MessageActivityType",
     "MessageFlag",
     "MessageReference",
+    "MessageSearchAuthorType",
+    "MessageSearchEmbedType",
+    "MessageSearchHasType",
+    "MessageSearchResult",
+    "MessageSearchSortMode",
+    "MessageSearchSortOrder",
     "MessageType",
     "PartialMessage",
     "PinnedMessage",
@@ -1621,3 +1627,191 @@ class Message(PartialMessage):
 
     Will be [`None`][] if the message was not used to start a thread.
     """
+
+
+@typing.final
+class MessageSearchAuthorType(str, enums.Enum):
+    """The type of message author to filter a message search by.
+
+    The negated variants exclude messages matching the author type instead.
+    """
+
+    USER = "user"
+    """Match messages sent by user accounts."""
+
+    BOT = "bot"
+    """Match messages sent by bot accounts."""
+
+    WEBHOOK = "webhook"
+    """Match messages sent by webhooks."""
+
+    NOT_USER = "-user"
+    """Exclude messages sent by user accounts."""
+
+    NOT_BOT = "-bot"
+    """Exclude messages sent by bot accounts."""
+
+    NOT_WEBHOOK = "-webhook"
+    """Exclude messages sent by webhooks."""
+
+
+@typing.final
+class MessageSearchHasType(str, enums.Enum):
+    """The type of content to filter a message search by.
+
+    The negated variants exclude messages matching the content type instead.
+    """
+
+    IMAGE = "image"
+    """Match messages that have an image."""
+
+    SOUND = "sound"
+    """Match messages that have a sound attachment."""
+
+    VIDEO = "video"
+    """Match messages that have a video."""
+
+    FILE = "file"
+    """Match messages that have an attachment."""
+
+    STICKER = "sticker"
+    """Match messages that have a sent sticker."""
+
+    EMBED = "embed"
+    """Match messages that have an embed."""
+
+    LINK = "link"
+    """Match messages that have a link."""
+
+    POLL = "poll"
+    """Match messages that have a poll."""
+
+    SNAPSHOT = "snapshot"
+    """Match messages that have a forwarded message."""
+
+    NOT_IMAGE = "-image"
+    """Exclude messages that have an image."""
+
+    NOT_SOUND = "-sound"
+    """Exclude messages that have a sound attachment."""
+
+    NOT_VIDEO = "-video"
+    """Exclude messages that have a video."""
+
+    NOT_FILE = "-file"
+    """Exclude messages that have an attachment."""
+
+    NOT_STICKER = "-sticker"
+    """Exclude messages that have a sent sticker."""
+
+    NOT_EMBED = "-embed"
+    """Exclude messages that have an embed."""
+
+    NOT_LINK = "-link"
+    """Exclude messages that have a link."""
+
+    NOT_POLL = "-poll"
+    """Exclude messages that have a poll."""
+
+    NOT_SNAPSHOT = "-snapshot"
+    """Exclude messages that have a forwarded message."""
+
+
+@typing.final
+class MessageSearchEmbedType(str, enums.Enum):
+    """The type of embed to filter a message search by.
+
+    These do not correspond 1:1 to actual embed types and encompass a wider
+    range of actual types.
+    """
+
+    IMAGE = "image"
+    """Match messages that have an image embed."""
+
+    VIDEO = "video"
+    """Match messages that have a video embed."""
+
+    GIF = "gif"
+    """Match messages that have a gifv embed.
+
+    !!! note
+        Messages sent before February 24, 2026 may not be properly indexed
+        under this embed type.
+    """
+
+    SOUND = "sound"
+    """Match messages that have a sound embed."""
+
+    ARTICLE = "article"
+    """Match messages that have an article embed."""
+
+
+@typing.final
+class MessageSearchSortMode(str, enums.Enum):
+    """The sorting algorithm to use for a message search."""
+
+    TIMESTAMP = "timestamp"
+    """Sort by the message creation time. This is the default."""
+
+    RELEVANCE = "relevance"
+    """Sort by the relevance of the message to the search query."""
+
+
+@typing.final
+class MessageSearchSortOrder(str, enums.Enum):
+    """The direction to sort the messages of a message search in.
+
+    The sort order is not respected when sorting by
+    [`hikari.messages.MessageSearchSortMode.RELEVANCE`][].
+    """
+
+    ASCENDING = "asc"
+    """Sort the messages in ascending order."""
+
+    DESCENDING = "desc"
+    """Sort the messages in descending order. This is the default."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageSearchResult:
+    """The result of a guild message search."""
+
+    doing_deep_historical_index: bool = attrs.field(repr=True)
+    """Whether the guild is undergoing a deep historical indexing operation."""
+
+    documents_indexed: int | None = attrs.field(repr=False)
+    """The number of documents indexed during the current index operation.
+
+    This will be [`None`][] if no index operation is ongoing.
+    """
+
+    total_results: int = attrs.field(repr=True)
+    """The total number of results that match the query.
+
+    !!! note
+        When messages are actively being created or deleted, this may
+        not be accurate.
+    """
+
+    messages: typing.Sequence[Message] = attrs.field(repr=False)
+    """The messages that match the query.
+
+    !!! note
+        Due to speed optimizations, this may contain slightly fewer messages
+        than requested. Do not rely on its length to paginate the results;
+        use the requested offset and
+        [`hikari.messages.MessageSearchResult.total_results`][] instead.
+
+    !!! note
+        Discord omits the reaction data from search results, so
+        [`hikari.messages.Message.reactions`][] will always be empty for
+        these messages. Fetch the message individually if the reactions
+        are needed.
+    """
+
+    threads: typing.Sequence[channels_.GuildThreadChannel] = attrs.field(repr=False)
+    """The threads that contain the returned messages."""
+
+    members: typing.Sequence[channels_.ThreadMember] = attrs.field(repr=False)
+    """A thread member object for each returned thread the current user has joined."""
