@@ -289,7 +289,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         provider: EmbedProvider | None,
         footer: EmbedFooter | None,
         fields: typing.MutableSequence[EmbedField] | None,
-    ) -> Self:
+    ) -> Embed:
         """Generate an embed from the given attributes.
 
         !!! warning
@@ -297,7 +297,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         """
         # Create an empty instance without the overhead of invoking the regular
         # constructor.
-        embed: Self = super().__new__(cls)
+        embed: Embed = super().__new__(cls)
         embed._title = title
         embed._description = description
         embed._url = url
