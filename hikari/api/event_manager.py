@@ -511,7 +511,7 @@ class EventManager(abc.ABC):
             If left as [`None`][] (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
         timeout
-            The amount of time to wait before raising an [`asyncio.TimeoutError`][]
+            The amount of time to wait before raising a [`TimeoutError`][]
             and giving up instead. This is measured in seconds. If
             [`None`][], then no timeout will be waited for (no timeout can
             result in "leaking" of coroutines that never complete if called in
@@ -524,7 +524,7 @@ class EventManager(abc.ABC):
 
         Raises
         ------
-        asyncio.TimeoutError
+        TimeoutError
             If the timeout is not [`None`][] and is reached before an
             event is received that the predicate returns [`True`][] for.
 

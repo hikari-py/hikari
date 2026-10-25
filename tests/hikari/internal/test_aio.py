@@ -122,8 +122,9 @@ class TestFirstCompleted:
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
 
-        with pytest.raises(asyncio.TimeoutError):
-            await aio.first_completed(f1, f2, f3, timeout=0.01)
+        with pytest.raises(TimeoutError):
+            async with asyncio.timeout(0.01):
+                await aio.first_completed(f1, f2, f3)
 
         assert f1.cancelled()
         assert f2.cancelled()
@@ -217,7 +218,7 @@ class TestAllOf:
         async def quickly_run_task(task):
             try:
                 await asyncio.wait_for(asyncio.shield(task), timeout=0.01)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
         waiter = event_loop.create_task(aio.all_of(f1, f2, f3))
@@ -260,22 +261,6 @@ class TestAllOf:
 
         assert f1.cancelled()
         assert f3.cancelled()
-
-    # If the CI runners are slow, this may be flaky.
-    @hikari_test_helpers.retry(3)
-    @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_timeout(self):
-        event_loop = asyncio.get_running_loop()
-
-        f1 = event_loop.create_future()
-        f2 = event_loop.create_future()
-        f3 = event_loop.create_future()
-
-        waiter = event_loop.create_task(aio.all_of(f1, f2, f3, timeout=0.001))
-        with pytest.raises(asyncio.TimeoutError):
-            await waiter
-        assert not waiter.cancelled(), "future was forcefully cancelled?"
-        assert waiter.done(), "asyncio.TimeoutError not raised?"
 
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)

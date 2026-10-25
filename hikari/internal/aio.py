@@ -61,7 +61,7 @@ def completed_future(result: T_inv | None = None, /) -> asyncio.Future[T_inv | N
     return future
 
 
-async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: float | None = None) -> None:  # noqa: ASYNC109
+async def first_completed(*aws: typing.Awaitable[typing.Any]) -> None:
     """Wait for the first awaitable to complete.
 
     The awaitables that don't complete first will be cancelled.
@@ -81,21 +81,15 @@ async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: float | N
     ----------
     *aws
         Awaitables to wait for.
-    timeout
-        Optional timeout to wait for, or [`None`][] to not use one.
-        If the timeout is reached, all awaitables are cancelled immediately.
     """
     fs = tuple(map(asyncio.ensure_future, aws))
-    iterator = asyncio.as_completed(fs, timeout=timeout)
+    iterator = asyncio.as_completed(fs)
 
     try:
         await next(iterator)
     except asyncio.CancelledError:
         msg = "first_completed gatherer cancelled"
         raise asyncio.CancelledError(msg) from None
-    except TimeoutError:
-        msg = "first_completed gatherer timed out"
-        raise TimeoutError(msg) from None
     finally:
         for f in fs:
             if not f.done() and not f.cancelled():
@@ -107,18 +101,15 @@ async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: float | N
                     pass
 
 
-async def all_of(*aws: typing.Awaitable[T_co], timeout: float | None = None) -> typing.Sequence[T_co]:  # noqa: ASYNC109
+async def all_of(*aws: typing.Awaitable[T_co]) -> typing.Sequence[T_co]:
     """Await the completion of all the given awaitable items.
 
-    If any fail or time out, then they are all cancelled.
+    If any fail, then they are all cancelled.
 
     Parameters
     ----------
     *aws
         Awaitables to wait for.
-    timeout
-        Optional timeout to wait for, or [`None`][] to not use one.
-        If the timeout is reached, all awaitables are cancelled immediately.
 
     Returns
     -------
@@ -129,10 +120,7 @@ async def all_of(*aws: typing.Awaitable[T_co], timeout: float | None = None) -> 
     gatherer = asyncio.gather(*fs)
 
     try:
-        return await asyncio.wait_for(gatherer, timeout=timeout)
-    except TimeoutError:
-        msg = "all_of gatherer timed out"
-        raise TimeoutError(msg) from None
+        return await gatherer
     except asyncio.CancelledError:
         msg = "all_of gatherer cancelled"
         raise asyncio.CancelledError(msg) from None

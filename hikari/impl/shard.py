@@ -177,7 +177,8 @@ class _GatewayTransport(abc.ABC):
         self._sent_close = True
         self._logger.debug("sending close frame with code %s and message %s", code, message)
         try:
-            await asyncio.wait_for(self._ws.close(code=code, message=message), timeout=5)
+            async with asyncio.timeout(5):
+                await self._ws.close(code=code, message=message)
 
         except TimeoutError:
             self._logger.debug("failed to send close frame in time, probably connection issues")
@@ -309,12 +310,12 @@ class _GatewayTransport(abc.ABC):
 
             except (TimeoutError, aiohttp.ClientConnectionError, aiohttp.ClientResponseError) as ex:
                 # If we cannot do DNS lookup, this will fail with an aiohttp.ClientConnectionError
-                # usually, but it might also fail with asyncio.TimeoutError if its gets stuck in a weird way
+                # usually, but it might also fail with TimeoutError if its gets stuck in a weird way
                 #
                 # aiohttp.ClientResponseError has a really bad str, so we use the repr instead
                 if isinstance(ex, aiohttp.ClientResponseError):
                     reason = repr(ex)
-                elif isinstance(ex, asyncio.TimeoutError):
+                elif isinstance(ex, TimeoutError):
                     reason = "Timeout exceeded"
                 else:
                     reason = str(ex)
@@ -687,7 +688,7 @@ class GatewayShardImpl(shard.GatewayShard):
             msg = "Cannot join an inactive shard"
             raise errors.ComponentStateConflictError(msg)
 
-        await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
+        await asyncio.shield(self._keep_alive_task)
 
     async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
         if not priority:
