@@ -1239,8 +1239,7 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.move_window.assert_called_once_with(123456)
         client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
-        client._total_rate_limit.close.assert_not_called()
-        client._non_priority_rate_limit.close.assert_not_called()
+        self._assert_dropped_queues(client, 1)
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {
@@ -1333,8 +1332,7 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.move_window.assert_called_once_with(123456)
         client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
-        client._total_rate_limit.close.assert_not_called()
-        client._non_priority_rate_limit.close.assert_not_called()
+        self._assert_dropped_queues(client, 1)
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
@@ -1345,6 +1343,38 @@ class TestGatewayShardImplAsync:
         first_completed.assert_called_once_with(
             client._handshake_event.wait.return_value, shielded_heartbeat_task, shielded_poll_events_task
         )
+
+    async def test__connect_when_payload_queued_after_disconnect_cleanup(self, client):
+        ws = mock.AsyncMock()
+        ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
+        client._handshake_event = mock.Mock()
+        client._seq = 1234
+        client._session_id = "some session id"
+        client._total_rate_limit.move_window(time.time())
+        client._total_rate_limit.remaining = 0
+        # Leaves a sleeping throttle task behind, as if queued after `_keep_alive` drained the rate limits
+        leftover = asyncio.create_task(client._total_rate_limit.acquire())
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(asyncio, "create_task", side_effect=[object(), object()]))
+        stack.enter_context(mock.patch.object(asyncio, "shield"))
+        stack.enter_context(mock.patch.object(aio, "first_completed"))
+        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(shard._GatewayTransport, "connect", return_value=ws))
+
+        with stack:
+            await asyncio.wait_for(client._connect(), timeout=1)
+
+        ws.send_json.assert_awaited_once_with(
+            {"op": 6, "d": {"token": "lol", "seq": 1234, "session_id": "some session id"}}
+        )
+        with pytest.raises(shard._DisconnectedError):
+            await leftover
+
+        assert client._total_rate_limit.throttle_task is None
 
     async def test__connect_when_op_received_is_not_HELLO(self, client):
         ws = mock.AsyncMock()
@@ -1373,7 +1403,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.Mock()
         client._non_priority_rate_limit = mock.Mock()
 
-    def _assert_keep_alive_dropped_queues(self, client, times):
+    def _assert_dropped_queues(self, client, times):
         for rate_limit in (client._total_rate_limit, client._non_priority_rate_limit):
             assert rate_limit.close.call_count == times
             assert all(isinstance(call.args[0], shard._DisconnectedError) for call in rate_limit.close.call_args_list)
@@ -1408,7 +1438,7 @@ class TestGatewayShardImplAsync:
         assert client._ws is None
         client._handshake_event.clear.assert_called_once_with()
         assert running_task.cancelled()
-        self._assert_keep_alive_dropped_queues(client, 1)
+        self._assert_dropped_queues(client, 1)
         ws.send_close.assert_awaited_once_with(
             code=errors.ShardCloseCode.GOING_AWAY, message=b"shard disconnecting permanently"
         )
@@ -1448,7 +1478,7 @@ class TestGatewayShardImplAsync:
             ]
         )
         assert client._event_manager.dispatch.await_count == 4
-        self._assert_keep_alive_dropped_queues(client, 2)
+        self._assert_dropped_queues(client, 2)
 
     async def test__keep_alive_when_handshake_not_completed(self, client):
         ws = mock.AsyncMock()
@@ -1478,7 +1508,7 @@ class TestGatewayShardImplAsync:
         first_completed.assert_not_called()
         client._event_manager.dispatch.assert_not_called()
         ws.send_close.assert_awaited_once_with(code=3000, message=b"shard disconnecting temporarily")
-        self._assert_keep_alive_dropped_queues(client, 2)
+        self._assert_dropped_queues(client, 2)
 
     @pytest.mark.parametrize(
         ("exception", "backoff_resets"),
@@ -1516,7 +1546,7 @@ class TestGatewayShardImplAsync:
             ]
         )
         assert client._event_factory.deserialize_disconnected_event.call_count == 2
-        self._assert_keep_alive_dropped_queues(client, 2)
+        self._assert_dropped_queues(client, 2)
 
     async def test__keep_alive_when_server_closed_connection_permanently(self, client):
         ws = mock.AsyncMock()
@@ -1544,7 +1574,7 @@ class TestGatewayShardImplAsync:
         assert client._ws is None
         ws.send_close.assert_awaited_once_with(code=3000, message=b"shard disconnecting temporarily")
         client._event_factory.deserialize_disconnected_event.assert_called_once_with(client)
-        self._assert_keep_alive_dropped_queues(client, 1)
+        self._assert_dropped_queues(client, 1)
 
     @pytest.mark.parametrize(
         ("exception", "log_message"),
@@ -1570,7 +1600,7 @@ class TestGatewayShardImplAsync:
         first_completed.assert_not_called()
         # Never connected, so there is nothing to close or dispatch
         client._event_manager.dispatch.assert_not_called()
-        self._assert_keep_alive_dropped_queues(client, 1)
+        self._assert_dropped_queues(client, 1)
 
     async def test__keep_alive_backs_off_when_reconnecting_too_quickly(self, client):
         self._prepare_keep_alive(client)

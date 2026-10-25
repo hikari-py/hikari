@@ -700,11 +700,13 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
         if priority:
             await self._total_rate_limit.acquire()
+        else:
+            await self._acquire_non_priority()
 
-            assert self._ws is not None
-            await self._ws.send_json(data)
-            return
+        assert self._ws is not None
+        await self._ws.send_json(data)
 
+    async def _acquire_non_priority(self) -> None:
         session_id = self._session_id
 
         while True:
@@ -712,17 +714,13 @@ class GatewayShardImpl(shard.GatewayShard):
                 await self._non_priority_rate_limit.acquire()
                 await self._total_rate_limit.acquire()
             except _DisconnectedError:
-                await self._wait_for_reconnect(session_id)
-                continue
+                pass
+            else:
+                # The connection can also drop between the rate limit letting us through and us resuming
+                if self.is_connected:
+                    return
 
-            # The connection can also drop between the rate limit letting us through and us resuming
-            if not self.is_connected:
-                await self._wait_for_reconnect(session_id)
-                continue
-
-            assert self._ws is not None
-            await self._ws.send_json(data)
-            return
+            await self._wait_for_reconnect(session_id)
 
     async def _wait_for_reconnect(self, session_id: str | None) -> None:
         # Not using `aio.first_completed` as it would propagate the keep alive task's exception
@@ -1034,7 +1032,9 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
-        # Rate-limits are per connection. Queues were drained on disconnect, so a fresh window is enough
+        # Rate-limits are per connection. A payload let through right before the drain on disconnect can queue up again
+        self._total_rate_limit.close(_DisconnectedError())
+        self._non_priority_rate_limit.close(_DisconnectedError())
         now = time.time()
         self._total_rate_limit.move_window(now)
         self._non_priority_rate_limit.move_window(now)
@@ -1160,7 +1160,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         except asyncio.CancelledError:
                             pass
 
-                # Rate-limits are per connection. Wake queued payloads so they wait for the next one (see `_send_json`)
+                # Wake queued payloads so they wait for the next connection (see `_acquire_non_priority`)
                 self._total_rate_limit.close(_DisconnectedError())
                 self._non_priority_rate_limit.close(_DisconnectedError())
 

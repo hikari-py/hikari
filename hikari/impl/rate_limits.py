@@ -127,11 +127,14 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             failed_tasks += 1
             future = self.queue.pop(0)
 
+            # The waiter may have been cancelled while queued
+            if future.done():
+                continue
+
             if exception is None:
                 # Make the future complete with an exception
                 future.cancel()
-            # The waiter may have been cancelled while queued
-            elif not future.done():
+            else:
                 future.set_exception(exception)
 
         if failed_tasks:
