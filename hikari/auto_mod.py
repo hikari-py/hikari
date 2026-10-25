@@ -190,7 +190,7 @@ class KeywordPresetTrigger(PartialAutoModTrigger):
     allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger."""
 
-    presets: typing.Sequence[AutoModKeywordPresetType | int] = attrs.field(eq=False, hash=False, repr=False)
+    presets: typing.Sequence[AutoModKeywordPresetType] = attrs.field(eq=False, hash=False, repr=False)
     """The predefined presets provided by Discord to match against."""
 
 

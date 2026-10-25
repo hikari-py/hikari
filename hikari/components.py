@@ -264,7 +264,7 @@ class MediaLoadingType(int, enums.Enum):
 class PartialComponent:
     """Base class for all component entities."""
 
-    type: ComponentType | int = attrs.field()
+    type: ComponentType = attrs.field()
     """The type of component this is."""
 
     id: int = attrs.field()
@@ -301,7 +301,7 @@ class ActionRowComponent(PartialComponent, typing.Generic[AllowedComponentsT]):
 class ButtonComponent(PartialComponent):
     """Represents a button component."""
 
-    style: ButtonStyle | int = attrs.field(eq=False)
+    style: ButtonStyle = attrs.field(eq=False)
     """The button's style."""
 
     label: str | None = attrs.field(eq=False)
@@ -389,7 +389,7 @@ class TextSelectMenuComponent(SelectMenuComponent):
 class ChannelSelectMenuComponent(SelectMenuComponent):
     """Represents a channel select menu component."""
 
-    channel_types: typing.Sequence[int | channels.ChannelType] = attrs.field(eq=False)
+    channel_types: typing.Sequence[channels.ChannelType] = attrs.field(eq=False)
     """The valid channel types for this menu."""
 
 
@@ -626,25 +626,20 @@ The following values are valid for this:
 
 SelectMenuTypesT = typing.Literal[
     ComponentType.TEXT_SELECT_MENU,
-    3,
     ComponentType.USER_SELECT_MENU,
-    5,
     ComponentType.ROLE_SELECT_MENU,
-    6,
     ComponentType.MENTIONABLE_SELECT_MENU,
-    7,
     ComponentType.CHANNEL_SELECT_MENU,
-    8,
 ]
 """Type hints of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
 The following values are valid for this:
 
-* [`hikari.components.ComponentType.TEXT_SELECT_MENU`][]/`3`
-* [`hikari.components.ComponentType.USER_SELECT_MENU`][]/`5`
-* [`hikari.components.ComponentType.ROLE_SELECT_MENU`][]/`6`
-* [`hikari.components.ComponentType.MENTIONABLE_SELECT_MENU`][]`/`7`
-* [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]`/`8`
+* [`hikari.components.ComponentType.TEXT_SELECT_MENU`][]
+* [`hikari.components.ComponentType.USER_SELECT_MENU`][]
+* [`hikari.components.ComponentType.ROLE_SELECT_MENU`][]
+* [`hikari.components.ComponentType.MENTIONABLE_SELECT_MENU`][]
+* [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]
 """
 
 SelectMenuTypes: typing.AbstractSet[SelectMenuTypesT] = frozenset(
@@ -668,7 +663,7 @@ The following values are included in this:
 """
 
 InteractiveButtonTypesT = typing.Literal[
-    ButtonStyle.PRIMARY, 1, ButtonStyle.SECONDARY, 2, ButtonStyle.SUCCESS, 3, ButtonStyle.DANGER, 4
+    ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER
 ]
 """Type hints of the [`hikari.components.ButtonStyle`][] values which are valid for interactive buttons.
 
