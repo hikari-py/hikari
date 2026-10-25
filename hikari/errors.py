@@ -43,6 +43,7 @@ __all__: typing.Sequence[str] = (
     "NotFoundError",
     "RateLimitTooLongError",
     "SearchNotIndexedError",
+    "SessionInvalidatedError",
     "ShardCloseCode",
     "UnauthorizedError",
     "UnrecognisedEntityError",
@@ -263,6 +264,16 @@ class GatewayServerClosedConnectionError(GatewayError):
     @typing_extensions.override
     def __str__(self) -> str:
         return f"Server closed connection with code {self.code} ({self.reason})"
+
+
+@attrs.define(auto_exc=True, repr=False, slots=False)
+class SessionInvalidatedError(GatewayError):
+    """Exception thrown when a payload could not be sent because the shard started a new session.
+
+    This happens when the shard could not resume its previous session after
+    reconnecting. Anything still waiting to be sent is discarded, as every
+    guild is sent again through `GUILD_CREATE` on the new session.
+    """
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)

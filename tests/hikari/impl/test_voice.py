@@ -235,6 +235,42 @@ class TestVoiceComponentImpl:
             await voice_client.connect_to(123, 4532, mock_connection_type)
 
     @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
+    async def test_connect_to_fails_when_update_voice_state_timeout(self, voice_client, mock_app):
+        async def never_sent(*args, **kwargs):
+            await asyncio.Event().wait()
+
+        mock_shard = mock.Mock(is_alive=True, update_voice_state=mock.AsyncMock(side_effect=never_sent))
+        mock_app.event_manager.wait_for = mock.AsyncMock()
+        mock_app.shard_count = 42
+        mock_app.shards = {0: mock_shard}
+        mock_connection_type = mock.AsyncMock()
+
+        with pytest.raises(errors.VoiceError, match="Could not connect to voice channel 4532 in guild 123."):
+            await voice_client.connect_to(123, 4532, mock_connection_type, timeout=0.01)
+
+        mock_app.event_manager.wait_for.assert_not_called()
+
+    @pytest.mark.asyncio
+    @hikari_test_helpers.timeout()
+    async def test_connect_to_waits_for_voice_events_within_the_same_timeout(self, voice_client, mock_app):
+        async def never_received(*args, **kwargs):
+            await asyncio.Event().wait()
+
+        mock_shard = mock.AsyncMock(is_alive=True)
+        mock_app.event_manager.wait_for = mock.AsyncMock(side_effect=never_received)
+        mock_app.shard_count = 42
+        mock_app.shards = {0: mock_shard}
+        mock_connection_type = mock.AsyncMock()
+
+        with pytest.raises(errors.VoiceError, match="Could not connect to voice channel 4532 in guild 123."):
+            await voice_client.connect_to(123, 4532, mock_connection_type, timeout=0.01)
+
+        assert mock_app.event_manager.wait_for.await_count == 2
+        for call in mock_app.event_manager.wait_for.await_args_list:
+            assert call.kwargs["timeout"] is None
+
+    @pytest.mark.asyncio
     async def test_connect_to_falls_back_to_rest_to_get_own_user(self, voice_client, mock_app):
         voice_client._init_state_update_predicate = mock.Mock()
         voice_client._init_server_update_predicate = mock.Mock()
