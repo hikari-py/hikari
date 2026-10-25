@@ -108,49 +108,36 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         being rate limited.
         """
 
-    def _cancel_throttle_task(self) -> None:
+    @typing_extensions.override
+    def close(self, exception: Exception | None = None) -> None:
+        """Close the rate limiter, and shut down any pending tasks.
+
+        Parameters
+        ----------
+        exception
+            If provided, the exception to fail the pending tasks with instead
+            of cancelling them.
+        """
         if self.throttle_task is not None:
             self.throttle_task.cancel()
             self.throttle_task = None
-
-    @typing_extensions.override
-    def close(self) -> None:
-        """Close the rate limiter, and shut down any pending tasks."""
-        self._cancel_throttle_task()
 
         failed_tasks = 0
         while self.queue:
             failed_tasks += 1
             future = self.queue.pop(0)
-            # Make the future complete with an exception
-            future.cancel()
+
+            if exception is None:
+                # Make the future complete with an exception
+                future.cancel()
+            # The waiter may have been cancelled while queued
+            elif not future.done():
+                future.set_exception(exception)
 
         if failed_tasks:
             _LOGGER.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
             _LOGGER.debug("%s rate limiter closed", self.name)
-
-    def drop(self, exception: Exception) -> None:
-        """Drop all queued futures, failing them with the given exception.
-
-        Parameters
-        ----------
-        exception
-            The exception to fail the queued futures with.
-        """
-        self._cancel_throttle_task()
-
-        dropped = 0
-        while self.queue:
-            future = self.queue.pop(0)
-
-            # The waiter may have been cancelled while queued
-            if not future.done():
-                future.set_exception(exception)
-                dropped += 1
-
-        if dropped:
-            _LOGGER.debug("%s rate limiter dropped %s pending tasks: %s", self.name, dropped, exception)
 
     @property
     def is_empty(self) -> bool:

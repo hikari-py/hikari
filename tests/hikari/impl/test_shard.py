@@ -890,8 +890,8 @@ class TestGatewayShardImplAsync:
             await asyncio.sleep(0)
             # Mimic `_keep_alive` cleanup on shutdown
             client._handshake_event.clear()
-            client._total_rate_limit.drop(shard._DisconnectedError())
-            client._non_priority_rate_limit.drop(shard._DisconnectedError())
+            client._total_rate_limit.close(shard._DisconnectedError())
+            client._non_priority_rate_limit.close(shard._DisconnectedError())
 
         client._keep_alive_task = event_loop.create_task(keep_alive())
 
@@ -914,8 +914,8 @@ class TestGatewayShardImplAsync:
         async def keep_alive():
             await asyncio.sleep(0)
             # Mimic a disconnect, then a resume
-            client._total_rate_limit.drop(shard._DisconnectedError())
-            client._non_priority_rate_limit.drop(shard._DisconnectedError())
+            client._total_rate_limit.close(shard._DisconnectedError())
+            client._non_priority_rate_limit.close(shard._DisconnectedError())
             await asyncio.sleep(0)
             client._total_rate_limit.move_window(time.time())
             client._non_priority_rate_limit.move_window(time.time())
@@ -1239,8 +1239,8 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.move_window.assert_called_once_with(123456)
         client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
-        client._total_rate_limit.drop.assert_not_called()
-        client._non_priority_rate_limit.drop.assert_not_called()
+        client._total_rate_limit.close.assert_not_called()
+        client._non_priority_rate_limit.close.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {
@@ -1333,8 +1333,8 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.move_window.assert_called_once_with(123456)
         client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
-        client._total_rate_limit.drop.assert_not_called()
-        client._non_priority_rate_limit.drop.assert_not_called()
+        client._total_rate_limit.close.assert_not_called()
+        client._non_priority_rate_limit.close.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
@@ -1375,8 +1375,8 @@ class TestGatewayShardImplAsync:
 
     def _assert_keep_alive_dropped_queues(self, client, times):
         for rate_limit in (client._total_rate_limit, client._non_priority_rate_limit):
-            assert rate_limit.drop.call_count == times
-            assert all(isinstance(call.args[0], shard._DisconnectedError) for call in rate_limit.drop.call_args_list)
+            assert rate_limit.close.call_count == times
+            assert all(isinstance(call.args[0], shard._DisconnectedError) for call in rate_limit.close.call_args_list)
 
     async def test__keep_alive(self, client):
         event_loop = asyncio.get_running_loop()

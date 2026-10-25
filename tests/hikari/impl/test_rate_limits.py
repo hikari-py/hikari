@@ -102,7 +102,7 @@ class TestBurstRateLimiter:
         assert task.cancelled(), "throttle_task is not cancelled"
 
     @pytest.mark.asyncio
-    async def test_drop_fails_all_futures_pending(self, mock_burst_limiter):
+    async def test_close_with_exception_fails_all_futures_pending(self, mock_burst_limiter):
         event_loop = asyncio.get_running_loop()
         mock_burst_limiter.throttle_task = None
         futures = [event_loop.create_future() for _ in range(10)]
@@ -110,14 +110,14 @@ class TestBurstRateLimiter:
 
         exception = RuntimeError("some reason")
 
-        mock_burst_limiter.drop(exception)
+        mock_burst_limiter.close(exception)
 
         assert mock_burst_limiter.queue == []
         for future in futures:
             assert future.exception() is exception
 
     @pytest.mark.asyncio
-    async def test_drop_skips_done_futures(self, mock_burst_limiter):
+    async def test_close_with_exception_skips_done_futures(self, mock_burst_limiter):
         event_loop = asyncio.get_running_loop()
         mock_burst_limiter.throttle_task = None
         cancelled_future = event_loop.create_future()
@@ -126,23 +126,11 @@ class TestBurstRateLimiter:
         mock_burst_limiter.queue = [cancelled_future, pending_future]
         exception = RuntimeError("some reason")
 
-        mock_burst_limiter.drop(exception)
+        mock_burst_limiter.close(exception)
 
         assert mock_burst_limiter.queue == []
         assert cancelled_future.cancelled()
         assert pending_future.exception() is exception
-
-    @pytest.mark.asyncio
-    async def test_drop_cancels_throttle_task_if_running(self, mock_burst_limiter):
-        event_loop = asyncio.get_running_loop()
-        task = event_loop.create_future()
-        mock_burst_limiter.throttle_task = task
-        mock_burst_limiter.queue = []
-
-        mock_burst_limiter.drop(RuntimeError("some reason"))
-
-        assert mock_burst_limiter.throttle_task is None
-        assert task.cancelled()
 
     @pytest.mark.asyncio
     async def test_close_when_closed(self, mock_burst_limiter):

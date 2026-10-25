@@ -712,30 +712,35 @@ class GatewayShardImpl(shard.GatewayShard):
                 await self._non_priority_rate_limit.acquire()
                 await self._total_rate_limit.acquire()
             except _DisconnectedError:
-                pass
-            else:
-                if self.is_connected:
-                    assert self._ws is not None
-                    await self._ws.send_json(data)
-                    return
+                await self._wait_for_reconnect(session_id)
+                continue
 
-            # Disconnected while waiting, retry once reconnected (or bail out if the shard shut down).
-            # Not using `aio.first_completed` as it would propagate the keep alive task's exception
-            assert self._handshake_event is not None
-            if self._keep_alive_task is None or self._keep_alive_task.done():
-                raise self._shut_down_error()
+            # The connection can also drop between the rate limit letting us through and us resuming
+            if not self.is_connected:
+                await self._wait_for_reconnect(session_id)
+                continue
 
-            handshake = asyncio.ensure_future(self._handshake_event.wait())
-            try:
-                await asyncio.wait((handshake, self._keep_alive_task), return_when=asyncio.FIRST_COMPLETED)
-            finally:
-                handshake.cancel()
+            assert self._ws is not None
+            await self._ws.send_json(data)
+            return
 
-            if self._keep_alive_task.done():
-                raise self._shut_down_error()
+    async def _wait_for_reconnect(self, session_id: str | None) -> None:
+        # Not using `aio.first_completed` as it would propagate the keep alive task's exception
+        assert self._handshake_event is not None
+        if self._keep_alive_task is None or self._keep_alive_task.done():
+            raise self._shut_down_error()
 
-            if self._session_id != session_id:
-                raise self._new_session_error()
+        handshake = asyncio.ensure_future(self._handshake_event.wait())
+        try:
+            await asyncio.wait((handshake, self._keep_alive_task), return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            handshake.cancel()
+
+        if self._keep_alive_task.done():
+            raise self._shut_down_error()
+
+        if self._session_id != session_id:
+            raise self._new_session_error()
 
     def _check_if_connected(self) -> None:
         if not self.is_connected:
@@ -1156,8 +1161,8 @@ class GatewayShardImpl(shard.GatewayShard):
                             pass
 
                 # Rate-limits are per connection. Wake queued payloads so they wait for the next one (see `_send_json`)
-                self._total_rate_limit.drop(_DisconnectedError())
-                self._non_priority_rate_limit.drop(_DisconnectedError())
+                self._total_rate_limit.close(_DisconnectedError())
+                self._non_priority_rate_limit.close(_DisconnectedError())
 
                 # Close the ws
                 if ws:
