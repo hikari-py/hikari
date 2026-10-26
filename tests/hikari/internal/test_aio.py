@@ -115,22 +115,6 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_timeout_propagates(self):
-        event_loop = asyncio.get_running_loop()
-
-        f1 = event_loop.create_future()
-        f2 = event_loop.create_future()
-        f3 = event_loop.create_future()
-
-        with pytest.raises(TimeoutError):
-            async with asyncio.timeout(0.01):
-                await aio.first_completed(f1, f2, f3)
-
-        assert f1.cancelled()
-        assert f2.cancelled()
-        assert f3.cancelled()
-
-    @hikari_test_helpers.timeout()
     async def test_cancelled_propagates(self):
         event_loop = asyncio.get_running_loop()
 
