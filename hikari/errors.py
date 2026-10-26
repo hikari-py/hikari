@@ -420,7 +420,7 @@ class NotFoundError(ClientHTTPResponseError):
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
 
-    This is similar to [`asyncio.TimeoutError`][] in the way that it is used,
+    This is similar to [`TimeoutError`][] in the way that it is used,
     but this will be raised preemptively and immediately if the period
     of time needed to wait is greater than a user-defined limit.
 

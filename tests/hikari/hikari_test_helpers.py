@@ -111,9 +111,9 @@ def timeout(time_period=REASONABLE_TIMEOUT_AFTER):
                 async with asyncio.timeout(time_period):
                     try:
                         await func(*args, **kwargs)
-                    except asyncio.TimeoutError as ex:
+                    except TimeoutError as ex:
                         thrown_timeout_error = ex
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 raise AssertionError(f"Test took too long (> {time_period}s) and thus failed.") from ex
 
             if thrown_timeout_error is not None:

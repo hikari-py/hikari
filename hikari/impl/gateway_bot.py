@@ -1044,11 +1044,10 @@ class GatewayBot(traits.GatewayBotAware):
                 _LOGGER.info("the next startup window is in %d seconds, please wait...", startup_window_delay)
 
                 try:
-                    await aio.first_completed(
-                        self._closing_event.wait(),
-                        *(shard.join() for shard in self._shards.values()),
-                        timeout=startup_window_delay,
-                    )
+                    async with asyncio.timeout(startup_window_delay):
+                        await aio.first_completed(
+                            self._closing_event.wait(), *(shard.join() for shard in self._shards.values())
+                        )
 
                     if self._closing_event.is_set():
                         return
@@ -1254,7 +1253,7 @@ class GatewayBot(traits.GatewayBotAware):
             If left as [`None`][] (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
         timeout
-            The amount of time to wait before raising an [`asyncio.TimeoutError`][]
+            The amount of time to wait before raising a [`TimeoutError`][]
             and giving up instead. This is measured in seconds. If
             [`None`][], then no timeout will be waited for (no timeout can
             result in "leaking" of coroutines that never complete if called in
@@ -1267,7 +1266,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Raises
         ------
-        asyncio.TimeoutError
+        TimeoutError
             If the timeout is not [`None`][] and is reached before an
             event is received that the predicate returns [`True`][] for.
 
