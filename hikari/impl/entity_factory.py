@@ -749,6 +749,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 oauth2_install_parameters=oauth2_install_parameters
             )
 
+        guild: guild_models.PartialGuild | None = None
+        guild_id: snowflakes.Snowflake | None = None
+        if (guild_payload := payload.get("guild")) is not None:
+            guild = guild_models.PartialGuild(
+                app=self._app,
+                id=snowflakes.Snowflake(guild_payload["id"]),
+                name=guild_payload["name"],
+                icon_hash=guild_payload.get("icon"),
+            )
+            guild_id = guild.id
+        elif (raw_guild_id := payload.get("guild_id")) is not None:
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -762,6 +775,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
+            guild_id=guild_id,
+            guild=guild,
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
