@@ -18,12 +18,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Models and enums used for Discord's Components used in interactions."""
+"""Models for the components Discord sends back when a modal is submitted."""
 
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ButtonInteractionComponent",
     "ChannelSelectMenuInteractionComponent",
     "FileUploadInteractionComponent",
     "InteractionComponentTypesT",
@@ -55,25 +54,14 @@ class PartialInteractionComponent:
     """The type of component this is."""
 
     id: int = attrs.field()
-    """The ID of the interaction."""
+    """The ID of the component, unique within the modal it was submitted from."""
 
 
-AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialInteractionComponent")
-
-
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ButtonInteractionComponent(PartialInteractionComponent):
-    """Represents a button interaction component."""
-
-    custom_id: str = attrs.field(hash=True)
-    """Developer defined identifier for this button (will be <= 100 characters)."""
-
-
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class SelectMenuInteractionComponent(PartialInteractionComponent):
     """Represents a select menu interaction component."""
 
-    custom_id: str = attrs.field(hash=True)
+    custom_id: str = attrs.field()
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
 
@@ -81,7 +69,7 @@ class SelectMenuInteractionComponent(PartialInteractionComponent):
 class TextSelectMenuInteractionComponent(SelectMenuInteractionComponent):
     """Represents a text select menu interaction component."""
 
-    values: typing.Sequence[str] = attrs.field(eq=True)
+    values: typing.Sequence[str] = attrs.field()
     """The values that have been selected."""
 
 
@@ -89,7 +77,7 @@ class TextSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 class UserSelectMenuInteractionComponent(SelectMenuInteractionComponent):
     """Represents a user select menu interaction component."""
 
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
@@ -97,7 +85,7 @@ class UserSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 class RoleSelectMenuInteractionComponent(SelectMenuInteractionComponent):
     """Represents a role select menu interaction component."""
 
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
@@ -105,7 +93,7 @@ class RoleSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 class MentionableSelectMenuInteractionComponent(SelectMenuInteractionComponent):
     """Represents a mentionable select menu interaction component."""
 
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
@@ -113,7 +101,7 @@ class MentionableSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 class ChannelSelectMenuInteractionComponent(SelectMenuInteractionComponent):
     """Represents a channel select menu interaction component."""
 
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
@@ -121,10 +109,10 @@ class ChannelSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 class TextInputInteractionComponent(PartialInteractionComponent):
     """Represents a text input component."""
 
-    custom_id: str = attrs.field(repr=True)
-    """Developer set custom ID used for identifying interactions with this modal."""
+    custom_id: str = attrs.field()
+    """Developer set custom ID used for identifying this text input."""
 
-    value: str = attrs.field(repr=True)
+    value: str = attrs.field()
     """Value provided for this text input."""
 
 
@@ -152,7 +140,7 @@ InteractionComponentTypesT = LabelInteractionComponent
 
 The following values are valid for this:
 
-* [`hikari.interaction.interaction_components.LabelInteractionComponent`][]
+* [`hikari.interactions.interaction_components.LabelInteractionComponent`][]
 """
 
 InteractionLabelTypesT = (
@@ -168,11 +156,11 @@ InteractionLabelTypesT = (
 
 The following values are valid for this:
 
-* [`hikari.interaction.interaction_components.TextInputInteractionComponent`][]
-* [`hikari.interaction.interaction_components.TextSelectMenuInteractionComponent`][]
-* [`hikari.interaction.interaction_components.UserSelectMenuInteractionComponent`][]
-* [`hikari.interaction.interaction_components.RoleSelectMenuInteractionComponent`][]
-* [`hikari.interaction.interaction_components.MentionableSelectMenuInteractionComponent`][]
-* [`hikari.interaction.interaction_components.ChannelSelectMenuInteractionComponent`][]
-* [`hikari.interaction.interaction_components.FileUploadInteractionComponent`][]
+* [`hikari.interactions.interaction_components.TextInputInteractionComponent`][]
+* [`hikari.interactions.interaction_components.TextSelectMenuInteractionComponent`][]
+* [`hikari.interactions.interaction_components.UserSelectMenuInteractionComponent`][]
+* [`hikari.interactions.interaction_components.RoleSelectMenuInteractionComponent`][]
+* [`hikari.interactions.interaction_components.MentionableSelectMenuInteractionComponent`][]
+* [`hikari.interactions.interaction_components.ChannelSelectMenuInteractionComponent`][]
+* [`hikari.interactions.interaction_components.FileUploadInteractionComponent`][]
 """

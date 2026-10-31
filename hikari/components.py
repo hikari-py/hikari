@@ -41,9 +41,6 @@ __all__: typing.Sequence[str] = (
     "MediaResourceFlag",
     "MessageActionRowComponent",
     "MessageComponentTypesT",
-    "ModalActionRowComponent",
-    "ModalActionRowComponentTypesT",
-    "ModalComponentTypesT",
     "PartialComponent",
     "SectionComponent",
     "SelectMenuComponent",
@@ -109,7 +106,7 @@ class ComponentType(int, enums.Enum):
     """A text input component.
 
     !!! note
-        This component may only be used inside a modal action row or a label component
+        This component may only be used inside a modal action row or a label component.
 
     !!! note
         This cannot be top-level and must be within a container component such
@@ -766,26 +763,8 @@ The following values are valid for this:
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
 
-ModalComponentTypesT = ActionRowComponent[PartialComponent]
-"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
-
-The following values are valid for this:
-
-* [`hikari.components.ActionRowComponent`][]
-"""  # noqa: E501
-
-ModalActionRowComponentTypesT = TextInputComponent
-"""Type hint of the [`hikari.components.PartialComponent`][] types that can be contained in a modal action row.
-
-The following values are valid for this:
-
-* [`hikari.components.TextInputComponent`][]
-"""
-
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
-ModalActionRowComponent = ActionRowComponent[ModalActionRowComponentTypesT]
-"""A modal action row component."""
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
     (

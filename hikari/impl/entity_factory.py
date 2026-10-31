@@ -469,7 +469,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_auto_mod_action_mapping",
         "_auto_mod_trigger_mapping",
         "_command_mapping",
-        "_components_mapping",
         "_container_component_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
@@ -477,11 +476,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_interaction_label_component_mapping",
         "_interaction_metadata_mapping",
         "_interaction_type_mapping",
-        "_modal_component_type_mapping",
         "_scheduled_event_type_mapping",
         "_section_accessory_mapping",
         "_section_component_mapping",
         "_thread_channel_type_mapping",
+        "_top_level_components_mapping",
         "_webhook_type_mapping",
     )
 
@@ -575,7 +574,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
             component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
         }
-        self._components_mapping: dict[
+        self._top_level_components_mapping: dict[
             component_models.ComponentType,
             typing.Callable[[data_binding.JSONObject], component_models.TopLevelComponentTypesT],
         ] = {
@@ -599,8 +598,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_interaction_text_select_menu_component,
             component_models.ComponentType.USER_SELECT_MENU: self._deserialize_interaction_user_select_menu_component,
             component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_interaction_role_select_menu_component,
-            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_interaction_mentionable_select_menu_component,  # noqa: E501
-            component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_interaction_channel_select_menu_component,  # noqa: E501
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: (
+                self._deserialize_interaction_mentionable_select_menu_component
+            ),
+            component_models.ComponentType.CHANNEL_SELECT_MENU: (
+                self._deserialize_interaction_channel_select_menu_component
+            ),
             component_models.ComponentType.FILE_UPLOAD: self._deserialize_interaction_file_upload_component,
         }
         self._container_component_mapping: dict[
@@ -3468,7 +3471,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # COMPONENT MODELS #
     ####################
 
-    def _deserialize_components(
+    def _deserialize_top_level_components(
         self, payloads: data_binding.JSONArray
     ) -> typing.Sequence[component_models.TopLevelComponentTypesT]:
         components: list[component_models.TopLevelComponentTypesT] = []
@@ -3476,7 +3479,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for payload in payloads:
             component_type = component_models.ComponentType(payload["type"])
 
-            if deserializer := self._components_mapping.get(component_type):
+            if deserializer := self._top_level_components_mapping.get(component_type):
                 components.append(deserializer(payload))
             else:
                 _LOGGER.debug("Unknown component type %s", component_type)
@@ -3746,7 +3749,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         component = deserializer(payload["component"])
 
         return interaction_components.LabelInteractionComponent(
-            type=component_models.ComponentType(payload["type"]), id=int(payload["id"]), component=component
+            type=component_models.ComponentType(payload["type"]), id=payload["id"], component=component
         )
 
     def _deserialize_interaction_text_input_component(
@@ -3754,7 +3757,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.TextInputInteractionComponent:
         return interaction_components.TextInputInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             value=payload["value"],
         )
@@ -3764,7 +3767,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.TextSelectMenuInteractionComponent:
         return interaction_components.TextSelectMenuInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=payload["values"],
         )
@@ -3774,7 +3777,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.UserSelectMenuInteractionComponent:
         return interaction_components.UserSelectMenuInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
@@ -3784,7 +3787,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.RoleSelectMenuInteractionComponent:
         return interaction_components.RoleSelectMenuInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
@@ -3794,7 +3797,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.MentionableSelectMenuInteractionComponent:
         return interaction_components.MentionableSelectMenuInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
@@ -3804,7 +3807,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.ChannelSelectMenuInteractionComponent:
         return interaction_components.ChannelSelectMenuInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
@@ -3814,7 +3817,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> interaction_components.FileUploadInteractionComponent:
         return interaction_components.FileUploadInteractionComponent(
             type=component_models.ComponentType(payload["type"]),
-            id=int(payload["id"]),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
@@ -4001,7 +4004,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         content = payload.get("content") or None  # Default to None if content is an empty string
 
-        components: typing.Sequence[component_models.TopLevelComponentTypesT] = self._deserialize_components(
+        components: typing.Sequence[component_models.TopLevelComponentTypesT] = self._deserialize_top_level_components(
             payload.get("components", [])
         )
 
@@ -4123,7 +4126,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             undefined.UNDEFINED
         )
         if component_payloads := payload.get("components"):
-            components = self._deserialize_components(component_payloads)
+            components = self._deserialize_top_level_components(component_payloads)
 
         channel_mentions: undefined.UndefinedOr[dict[snowflakes.Snowflake, channel_models.PartialChannel]] = (
             undefined.UNDEFINED
@@ -4240,7 +4243,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         components: typing.Sequence[component_models.TopLevelComponentTypesT]
         if component_payloads := payload.get("components"):
-            components = self._deserialize_components(component_payloads)
+            components = self._deserialize_top_level_components(component_payloads)
         else:
             components = []
 
