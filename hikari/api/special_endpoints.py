@@ -3329,7 +3329,7 @@ if typing.TYPE_CHECKING:
     SectionBuilderAccessoriesT = ButtonBuilder | ThumbnailComponentBuilder
     SectionBuilderComponentsT = TextDisplayComponentBuilder
 
-    LabelBuilderComponentsT = typing.Union[SelectMenuBuilder, TextInputBuilder, FileUploadComponentBuilder]
+    LabelBuilderComponentsT = SelectMenuBuilder | TextInputBuilder | FileUploadComponentBuilder
 
 
 class AutoModActionBuilder(abc.ABC):

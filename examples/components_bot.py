@@ -39,6 +39,7 @@ GALLERY_URLS = (
 
 @bot.listen()
 async def register_commands(_: hikari.StartingEvent) -> None:
+    """Register the example's slash commands."""
     application = await bot.rest.fetch_application()
     commands = [
         bot.rest.slash_command_builder("modal-text", "Open a single text input modal."),
@@ -167,6 +168,7 @@ def _build_v2_message() -> list[hikari.api.ComponentBuilder]:
 
 @bot.listen()
 async def on_command(event: hikari.CommandInteractionCreateEvent) -> None:
+    """Open a modal or send message components for each slash command."""
     name = event.interaction.command_name
     if name == "modal-text":
         await event.interaction.create_modal_response(
@@ -187,31 +189,30 @@ async def on_command(event: hikari.CommandInteractionCreateEvent) -> None:
 def _format_modal_submission(interaction: hikari.ModalInteraction) -> str:
     lines: list[str] = [f"**Custom ID:** `{interaction.custom_id}`"]
     for top in interaction.components:
-        if isinstance(top, hikari.LabelComponent):
+        if isinstance(top, hikari.LabelInteractionComponent):
             child = top.component
-            if isinstance(child, hikari.TextInputComponent):
+            if isinstance(child, hikari.TextInputInteractionComponent):
                 lines.append(f"- text `{child.custom_id}`: `{child.value!r}`")
-            elif isinstance(child, hikari.FileUploadComponent):
+            elif isinstance(child, hikari.FileUploadInteractionComponent):
                 ids = ", ".join(str(s) for s in child.values) or "(none)"
                 lines.append(f"- file_upload `{child.custom_id}`: {ids}")
             else:
                 # Select menu - values land in resolved or are inlined depending on Discord behaviour.
                 lines.append(f"- select `{child.custom_id}` (type {child.type})")
-        elif isinstance(top, hikari.ActionRowComponent):
-            for sub in top.components:
-                if isinstance(sub, hikari.TextInputComponent):
-                    lines.append(f"- legacy text `{sub.custom_id}`: `{sub.value!r}`")
 
     if interaction.resolved and interaction.resolved.attachments:
         lines.append("**Resolved attachments:**")
-        for attachment in interaction.resolved.attachments.values():
-            lines.append(f"- {attachment.filename} ({attachment.size} B) {attachment.url}")
+        lines.extend(
+            f"- {attachment.filename} ({attachment.size} B) {attachment.url}"
+            for attachment in interaction.resolved.attachments.values()
+        )
 
     return "\n".join(lines)
 
 
 @bot.listen()
 async def on_modal(event: hikari.InteractionCreateEvent) -> None:
+    """Echo back what was submitted through a modal."""
     if not isinstance(event.interaction, hikari.ModalInteraction):
         return
     await event.interaction.create_initial_response(
@@ -244,6 +245,7 @@ def _format_component_interaction(interaction: hikari.ComponentInteraction) -> s
 
 @bot.listen()
 async def on_component(event: hikari.InteractionCreateEvent) -> None:
+    """Respond to the message components sent by this example."""
     if not isinstance(event.interaction, hikari.ComponentInteraction):
         return
     if not event.interaction.custom_id.startswith("v2:"):

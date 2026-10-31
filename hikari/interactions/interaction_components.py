@@ -29,10 +29,13 @@ __all__: typing.Sequence[str] = (
     "InteractionComponentTypesT",
     "InteractionLabelTypesT",
     "LabelInteractionComponent",
+    "MentionableSelectMenuInteractionComponent",
     "PartialInteractionComponent",
+    "RoleSelectMenuInteractionComponent",
     "SelectMenuInteractionComponent",
     "TextInputInteractionComponent",
     "TextSelectMenuInteractionComponent",
+    "UserSelectMenuInteractionComponent",
 )
 
 import typing
@@ -144,7 +147,7 @@ class FileUploadInteractionComponent(PartialInteractionComponent):
     """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
 
 
-InteractionComponentTypesT = typing.Union[LabelInteractionComponent]
+InteractionComponentTypesT = LabelInteractionComponent
 """Type hints of the values which are valid for interaction components.
 
 The following values are valid for this:
@@ -152,15 +155,15 @@ The following values are valid for this:
 * [`hikari.interaction.interaction_components.LabelInteractionComponent`][]
 """
 
-InteractionLabelTypesT = typing.Union[
-    TextInputInteractionComponent,
-    TextSelectMenuInteractionComponent,
-    UserSelectMenuInteractionComponent,
-    RoleSelectMenuInteractionComponent,
-    MentionableSelectMenuInteractionComponent,
-    ChannelSelectMenuInteractionComponent,
-    FileUploadInteractionComponent,
-]
+InteractionLabelTypesT = (
+    TextInputInteractionComponent
+    | TextSelectMenuInteractionComponent
+    | UserSelectMenuInteractionComponent
+    | RoleSelectMenuInteractionComponent
+    | MentionableSelectMenuInteractionComponent
+    | ChannelSelectMenuInteractionComponent
+    | FileUploadInteractionComponent
+)
 """Type hints of the values which are valid for interaction label components.
 
 The following values are valid for this:
