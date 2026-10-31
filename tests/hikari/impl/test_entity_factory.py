@@ -6438,7 +6438,7 @@ class TestEntityFactoryImpl:
         separator_payload,
         file_payload,
     ):
-        message_components = entity_factory_impl._deserialize_components(
+        message_components = entity_factory_impl._deserialize_top_level_components(
             [
                 action_row_payload,
                 text_display_payload,
@@ -6464,7 +6464,7 @@ class TestEntityFactoryImpl:
         assert message_components[5] == entity_factory_impl._deserialize_file_component(file_payload)
 
     def test__deserialize_message_components_handles_unknown_top_component_type(self, entity_factory_impl):
-        message_components = entity_factory_impl._deserialize_components([{"type": 9999}, {"type": -9999}])
+        message_components = entity_factory_impl._deserialize_top_level_components([{"type": 9999}, {"type": -9999}])
 
         assert len(message_components) == 0
 
@@ -6489,7 +6489,9 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            components = entity_factory_impl._deserialize_components(payload, getattr(entity_factory_impl, mapping))
+            components = entity_factory_impl._deserialize_top_level_components(
+                payload, getattr(entity_factory_impl, mapping)
+            )
 
         expected_fn.assert_called_once_with(component_payload)
         action_row = components[0]
@@ -6498,7 +6500,7 @@ class TestEntityFactoryImpl:
 
     @pytest.mark.skip("Pending removal.")
     def test__deserialize_components_handles_unknown_top_component_type(self, entity_factory_impl):
-        components = entity_factory_impl._deserialize_components(
+        components = entity_factory_impl._deserialize_top_level_components(
             [
                 # Unknown top-level component
                 {"type": -9434994},
@@ -7058,7 +7060,7 @@ class TestEntityFactoryImpl:
         assert partial_message.application_id == 123123123123
 
         # Component
-        assert partial_message.components == entity_factory_impl._deserialize_components([action_row_payload])
+        assert partial_message.components == entity_factory_impl._deserialize_top_level_components([action_row_payload])
 
         # InteractionMetadata
         assert partial_message.interaction_metadata.interaction_id == snowflakes.Snowflake(123456)
@@ -7211,7 +7213,9 @@ class TestEntityFactoryImpl:
         assert list(message_snapshot.user_mentions.keys())[0] == entity_factory_impl.deserialize_user(user_payload).id
         assert message_snapshot.user_mentions_ids == [entity_factory_impl.deserialize_user(user_payload).id]
         assert message_snapshot.role_mention_ids == [snowflakes.Snowflake("333333")]
-        assert message_snapshot.components == entity_factory_impl._deserialize_components([action_row_payload])
+        assert message_snapshot.components == entity_factory_impl._deserialize_top_level_components(
+            [action_row_payload]
+        )
         assert message_snapshot.timestamp == datetime.datetime(2025, 6, 3, 5, 12, 59, 510000, tzinfo=datetime.UTC)
         assert message_snapshot.edited_timestamp == datetime.datetime(2025, 6, 3, 5, 14, 6, 510000, tzinfo=datetime.UTC)
 
@@ -7397,7 +7401,7 @@ class TestEntityFactoryImpl:
         assert message.application_id == 123123123123
 
         # Component
-        assert message.components == entity_factory_impl._deserialize_components([action_row_payload])
+        assert message.components == entity_factory_impl._deserialize_top_level_components([action_row_payload])
 
         # Thread
         assert isinstance(message.thread, channel_models.GuildPublicThread)

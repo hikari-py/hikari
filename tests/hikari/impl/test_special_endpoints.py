@@ -2871,7 +2871,7 @@ class TestLabelBuilder:
         assert label.component.style == components.TextInputStyle.PARAGRAPH
         assert label.component.placeholder == "a fancy placeholder"
         assert label.component.value == "no"
-        assert label.component.is_required == True
+        assert label.component.is_required is True
         assert label.component.min_length == 3
         assert label.component.max_length == 49
         assert label.component.id == 2983457
@@ -3003,10 +3003,28 @@ class TestLabelBuilder:
 
 
 class TestFileUploadBuilder:
-    def test_type_property(self):
-        file_upload = special_endpoints.FileUploadComponentBuilder(custom_id="file-upload-id")
+    @pytest.fixture
+    def file_upload(self):
+        return special_endpoints.FileUploadComponentBuilder(custom_id="file-upload-id")
 
+    def test_type_property(self, file_upload):
         assert file_upload.type is components.ComponentType.FILE_UPLOAD
+
+    def test_set_custom_id(self, file_upload):
+        assert file_upload.set_custom_id("other-id") is file_upload
+        assert file_upload.custom_id == "other-id"
+
+    def test_set_min_values(self, file_upload):
+        assert file_upload.set_min_values(3) is file_upload
+        assert file_upload.min_values == 3
+
+    def test_set_max_values(self, file_upload):
+        assert file_upload.set_max_values(7) is file_upload
+        assert file_upload.max_values == 7
+
+    def test_set_is_required(self, file_upload):
+        assert file_upload.set_is_required(False) is file_upload
+        assert file_upload.is_required is False
 
     def test_build(self):
         file_upload = special_endpoints.FileUploadComponentBuilder(

@@ -197,8 +197,8 @@ def _format_modal_submission(interaction: hikari.ModalInteraction) -> str:
                 ids = ", ".join(str(s) for s in child.values) or "(none)"
                 lines.append(f"- file_upload `{child.custom_id}`: {ids}")
             else:
-                # Select menu - values land in resolved or are inlined depending on Discord behaviour.
-                lines.append(f"- select `{child.custom_id}` (type {child.type})")
+                values = ", ".join(str(v) for v in child.values) or "(none)"
+                lines.append(f"- select `{child.custom_id}`: {values}")
 
     if interaction.resolved and interaction.resolved.attachments:
         lines.append("**Resolved attachments:**")

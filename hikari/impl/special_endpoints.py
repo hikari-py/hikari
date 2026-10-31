@@ -3294,6 +3294,26 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
         return self._is_required
 
     @typing_extensions.override
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        self._custom_id = custom_id
+        return self
+
+    @typing_extensions.override
+    def set_min_values(self, min_values: int, /) -> Self:
+        self._min_values = min_values
+        return self
+
+    @typing_extensions.override
+    def set_max_values(self, max_values: int, /) -> Self:
+        self._max_values = max_values
+        return self
+
+    @typing_extensions.override
+    def set_is_required(self, state: bool, /) -> Self:
+        self._is_required = state
+        return self
+
+    @typing_extensions.override
     def build(
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:

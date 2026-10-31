@@ -1798,12 +1798,12 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
-        """Set whether this option is required.
+        """Set whether this select menu is required.
 
         Parameters
         ----------
         state
-            Whether this option is required.
+            Whether this select menu is required.
 
         Returns
         -------
@@ -3089,11 +3089,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             options to the returned builder then
             [`hikari.api.special_endpoints.TextSelectMenuBuilder.parent`][] can be used to return to this
             label component while chaining calls.
-
-        Raises
-        ------
-        ValueError
-            If an invalid select menu type is passed.
         """
 
     @abc.abstractmethod
@@ -3138,11 +3133,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         -------
         LabelComponentBuilder
             The label component builder to enable chained calls.
-
-        Raises
-        ------
-        ValueError
-            If an invalid select menu type is passed.
         """
 
     @abc.abstractmethod
@@ -3200,12 +3190,12 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def min_values(self) -> int:
-        """Minimum number of options which must be chosen.
+        """Minimum number of files which must be uploaded.
 
         Defaults to 1.
-        Must be less than or equal to [`hikari.api.special_endpoints.FileUploadComponentBuilder.max_values`][] and greater
-        than or equal to 0.
-        """  # noqa: E501
+        Must be less than or equal to [`hikari.api.special_endpoints.FileUploadComponentBuilder.max_values`][]
+        and greater than or equal to 0.
+        """
 
     @property
     @abc.abstractmethod
@@ -3221,6 +3211,66 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def is_required(self) -> bool:
         """Whether the file upload should be marked as required."""
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the developer set custom ID used for identifying this file upload.
+
+        Parameters
+        ----------
+        custom_id
+            Developer set custom ID used for identifying this file upload.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_min_values(self, min_values: int, /) -> Self:
+        """Set the minimum number of files which must be uploaded.
+
+        Parameters
+        ----------
+        min_values
+            The minimum number of files which must be uploaded.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_max_values(self, max_values: int, /) -> Self:
+        """Set the maximum number of files which can be uploaded.
+
+        Parameters
+        ----------
+        max_values
+            The maximum number of files which can be uploaded.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set whether this file upload is required.
+
+        Parameters
+        ----------
+        state
+            Whether this file upload is required.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
 
 
 class PollBuilder(abc.ABC):
