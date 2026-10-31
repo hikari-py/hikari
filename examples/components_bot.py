@@ -189,11 +189,11 @@ async def on_command(event: hikari.CommandInteractionCreateEvent) -> None:
 def _format_modal_submission(interaction: hikari.ModalInteraction) -> str:
     lines: list[str] = [f"**Custom ID:** `{interaction.custom_id}`"]
     for top in interaction.components:
-        if isinstance(top, hikari.LabelInteractionComponent):
+        if isinstance(top, hikari.ModalLabelComponent):
             child = top.component
-            if isinstance(child, hikari.TextInputInteractionComponent):
+            if isinstance(child, hikari.ModalTextInputComponent):
                 lines.append(f"- text `{child.custom_id}`: `{child.value!r}`")
-            elif isinstance(child, hikari.FileUploadInteractionComponent):
+            elif isinstance(child, hikari.ModalFileUploadComponent):
                 ids = ", ".join(str(s) for s in child.values) or "(none)"
                 lines.append(f"- file_upload `{child.custom_id}`: {ids}")
             else:

@@ -60,7 +60,7 @@ from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
 from hikari.interactions import modal_interactions
-from hikari.interactions import interaction_components as interaction_component_models
+from hikari.interactions import modal_components as modal_component_models
 from tests.hikari import hikari_test_helpers
 
 
@@ -5433,11 +5433,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def modal_interaction_payload(
-        self,
-        interaction_member_payload,
-        message_payload,
-        guild_text_channel_payload,
-        label_interaction_component_payload,
+        self, interaction_member_payload, message_payload, guild_text_channel_payload, modal_label_component_payload
     ):
         return {
             "version": 1,
@@ -5447,7 +5443,7 @@ class TestEntityFactoryImpl:
             "member": interaction_member_payload,
             "id": "846462639134605312",
             "guild_id": "290926798626357999",
-            "data": {"id": 0, "custom_id": "modaltest", "components": [label_interaction_component_payload]},
+            "data": {"id": 0, "custom_id": "modaltest", "components": [modal_label_component_payload]},
             "channel": guild_text_channel_payload,
             "application_id": "290926444748734465",
             "locale": "en-US",
@@ -5480,7 +5476,7 @@ class TestEntityFactoryImpl:
         interaction_member_payload,
         message_payload,
         guild_text_channel_payload,
-        label_interaction_component_payload,
+        modal_label_component_payload,
     ):
         interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
         assert interaction.app is mock_app
@@ -5503,8 +5499,8 @@ class TestEntityFactoryImpl:
         assert interaction.entitlements[0].id == 696969696969696
 
         assert len(interaction.components) == 1
-        assert interaction.components[0] == entity_factory_impl._deserialize_interaction_label_component(
-            label_interaction_component_payload
+        assert interaction.components[0] == entity_factory_impl._deserialize_modal_label_component(
+            modal_label_component_payload
         )
 
     def test_deserialize_modal_interaction_with_user(
@@ -6520,15 +6516,15 @@ class TestEntityFactoryImpl:
         assert components == []
 
     @pytest.fixture
-    def label_interaction_component_payload(self, text_input_interaction_component_payload):
-        return {"type": 18, "id": 2342334, "component": text_input_interaction_component_payload}
+    def modal_label_component_payload(self, modal_text_input_component_payload):
+        return {"type": 18, "id": 2342334, "component": modal_text_input_component_payload}
 
     @pytest.fixture
-    def text_input_interaction_component_payload(self):
+    def modal_text_input_component_payload(self):
         return {"type": 4, "id": 34534857, "custom_id": "text-input-component", "value": "text input value"}
 
     @pytest.fixture
-    def text_select_menu_interaction_component_payload(self):
+    def modal_text_select_menu_component_payload(self):
         return {
             "type": 3,
             "id": 23423,
@@ -6537,15 +6533,15 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def user_select_menu_interaction_component_payload(self):
+    def modal_user_select_menu_component_payload(self):
         return {"type": 5, "id": 237458, "custom_id": "user-select-menu-component", "values": ["115590097100865541"]}
 
     @pytest.fixture
-    def role_select_menu_interaction_component_payload(self):
+    def modal_role_select_menu_component_payload(self):
         return {"type": 6, "id": 45968734, "custom_id": "role-select-menu-component", "values": ["41771983423143936"]}
 
     @pytest.fixture
-    def mentionable_select_menu_interaction_component_payload(self):
+    def modal_mentionable_select_menu_component_payload(self):
         return {
             "type": 7,
             "id": 2342344,
@@ -6554,23 +6550,21 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def channel_select_menu_interaction_component_payload(self):
+    def modal_channel_select_menu_component_payload(self):
         return {"type": 8, "id": 45675678, "custom_id": "channel-select-menu-component", "values": ["123"]}
 
     @pytest.fixture
-    def file_upload_interaction_component_payload(self):
+    def modal_file_upload_component_payload(self):
         return {"type": 19, "id": 4835973, "custom_id": "file-upload-component", "values": ["690922406474154014"]}
 
-    def test__deserialize_interaction_components(self, entity_factory_impl, label_interaction_component_payload):
-        components = entity_factory_impl._deserialize_interaction_components([label_interaction_component_payload])
+    def test__deserialize_modal_components(self, entity_factory_impl, modal_label_component_payload):
+        components = entity_factory_impl._deserialize_modal_components([modal_label_component_payload])
 
         assert len(components) == 1
-        assert components[0] == entity_factory_impl._deserialize_interaction_label_component(
-            label_interaction_component_payload
-        )
+        assert components[0] == entity_factory_impl._deserialize_modal_label_component(modal_label_component_payload)
 
-    def test__deserialize_interaction_components_unknown_top_component_type(self, entity_factory_impl):
-        components = entity_factory_impl._deserialize_interaction_components(
+    def test__deserialize_modal_components_unknown_top_component_type(self, entity_factory_impl):
+        components = entity_factory_impl._deserialize_modal_components(
             [
                 # Unknown top-level component
                 {"type": -9434994}
@@ -6579,38 +6573,34 @@ class TestEntityFactoryImpl:
 
         assert components == []
 
-    def test__deserialize_interaction_label_component(
-        self, entity_factory_impl, label_interaction_component_payload, text_input_interaction_component_payload
+    def test__deserialize_modal_label_component(
+        self, entity_factory_impl, modal_label_component_payload, modal_text_input_component_payload
     ):
-        label = entity_factory_impl._deserialize_interaction_label_component(label_interaction_component_payload)
+        label = entity_factory_impl._deserialize_modal_label_component(modal_label_component_payload)
 
         assert label.type == component_models.ComponentType.LABEL
         assert label.id == 2342334
-        assert label.component == entity_factory_impl._deserialize_interaction_text_input_component(
-            text_input_interaction_component_payload
+        assert label.component == entity_factory_impl._deserialize_modal_text_input_component(
+            modal_text_input_component_payload
         )
 
-        assert isinstance(label, interaction_component_models.LabelInteractionComponent)
+        assert isinstance(label, modal_component_models.ModalLabelComponent)
 
-    def test__deserialize_interaction_text_input_component(
-        self, entity_factory_impl, text_input_interaction_component_payload
-    ):
-        text_input = entity_factory_impl._deserialize_interaction_text_input_component(
-            text_input_interaction_component_payload
-        )
+    def test__deserialize_modal_text_input_component(self, entity_factory_impl, modal_text_input_component_payload):
+        text_input = entity_factory_impl._deserialize_modal_text_input_component(modal_text_input_component_payload)
 
         assert text_input.type == component_models.ComponentType.TEXT_INPUT
         assert text_input.id == 34534857
         assert text_input.custom_id == "text-input-component"
         assert text_input.value == "text input value"
 
-        assert isinstance(text_input, interaction_component_models.TextInputInteractionComponent)
+        assert isinstance(text_input, modal_component_models.ModalTextInputComponent)
 
-    def test__deserialize_interaction_text_select_menu_component(
-        self, entity_factory_impl, text_select_menu_interaction_component_payload
+    def test__deserialize_modal_text_select_menu_component(
+        self, entity_factory_impl, modal_text_select_menu_component_payload
     ):
-        text_select_menu = entity_factory_impl._deserialize_interaction_text_select_menu_component(
-            text_select_menu_interaction_component_payload
+        text_select_menu = entity_factory_impl._deserialize_modal_text_select_menu_component(
+            modal_text_select_menu_component_payload
         )
 
         assert text_select_menu.type == component_models.ComponentType.TEXT_SELECT_MENU
@@ -6618,13 +6608,13 @@ class TestEntityFactoryImpl:
         assert text_select_menu.custom_id == "text-select-menu-component"
         assert text_select_menu.values == ["value-1", "value-2", "value-3"]
 
-        assert isinstance(text_select_menu, interaction_component_models.TextSelectMenuInteractionComponent)
+        assert isinstance(text_select_menu, modal_component_models.ModalTextSelectMenuComponent)
 
-    def test__deserialize_interaction_user_select_menu_component(
-        self, entity_factory_impl, user_select_menu_interaction_component_payload
+    def test__deserialize_modal_user_select_menu_component(
+        self, entity_factory_impl, modal_user_select_menu_component_payload
     ):
-        user_select_menu = entity_factory_impl._deserialize_interaction_user_select_menu_component(
-            user_select_menu_interaction_component_payload
+        user_select_menu = entity_factory_impl._deserialize_modal_user_select_menu_component(
+            modal_user_select_menu_component_payload
         )
 
         assert user_select_menu.type == component_models.ComponentType.USER_SELECT_MENU
@@ -6632,13 +6622,13 @@ class TestEntityFactoryImpl:
         assert user_select_menu.custom_id == "user-select-menu-component"
         assert user_select_menu.values == [snowflakes.Snowflake(115590097100865541)]
 
-        assert isinstance(user_select_menu, interaction_component_models.UserSelectMenuInteractionComponent)
+        assert isinstance(user_select_menu, modal_component_models.ModalUserSelectMenuComponent)
 
-    def test__deserialize_interaction_role_select_menu_component(
-        self, entity_factory_impl, role_select_menu_interaction_component_payload
+    def test__deserialize_modal_role_select_menu_component(
+        self, entity_factory_impl, modal_role_select_menu_component_payload
     ):
-        role_select_menu = entity_factory_impl._deserialize_interaction_role_select_menu_component(
-            role_select_menu_interaction_component_payload
+        role_select_menu = entity_factory_impl._deserialize_modal_role_select_menu_component(
+            modal_role_select_menu_component_payload
         )
 
         assert role_select_menu.type == component_models.ComponentType.ROLE_SELECT_MENU
@@ -6646,13 +6636,13 @@ class TestEntityFactoryImpl:
         assert role_select_menu.custom_id == "role-select-menu-component"
         assert role_select_menu.values == [snowflakes.Snowflake(41771983423143936)]
 
-        assert isinstance(role_select_menu, interaction_component_models.RoleSelectMenuInteractionComponent)
+        assert isinstance(role_select_menu, modal_component_models.ModalRoleSelectMenuComponent)
 
-    def test__deserialize_interaction_mentionable_select_menu_component(
-        self, entity_factory_impl, mentionable_select_menu_interaction_component_payload
+    def test__deserialize_modal_mentionable_select_menu_component(
+        self, entity_factory_impl, modal_mentionable_select_menu_component_payload
     ):
-        mentionable_select_menu = entity_factory_impl._deserialize_interaction_mentionable_select_menu_component(
-            mentionable_select_menu_interaction_component_payload
+        mentionable_select_menu = entity_factory_impl._deserialize_modal_mentionable_select_menu_component(
+            modal_mentionable_select_menu_component_payload
         )
 
         assert mentionable_select_menu.type == component_models.ComponentType.MENTIONABLE_SELECT_MENU
@@ -6664,15 +6654,13 @@ class TestEntityFactoryImpl:
             snowflakes.Snowflake(123),
         ]
 
-        assert isinstance(
-            mentionable_select_menu, interaction_component_models.MentionableSelectMenuInteractionComponent
-        )
+        assert isinstance(mentionable_select_menu, modal_component_models.ModalMentionableSelectMenuComponent)
 
-    def test__deserialize_interaction_channel_select_menu_component(
-        self, entity_factory_impl, channel_select_menu_interaction_component_payload
+    def test__deserialize_modal_channel_select_menu_component(
+        self, entity_factory_impl, modal_channel_select_menu_component_payload
     ):
-        channel_select_menu = entity_factory_impl._deserialize_interaction_channel_select_menu_component(
-            channel_select_menu_interaction_component_payload
+        channel_select_menu = entity_factory_impl._deserialize_modal_channel_select_menu_component(
+            modal_channel_select_menu_component_payload
         )
 
         assert channel_select_menu.type == component_models.ComponentType.CHANNEL_SELECT_MENU
@@ -6680,21 +6668,17 @@ class TestEntityFactoryImpl:
         assert channel_select_menu.custom_id == "channel-select-menu-component"
         assert channel_select_menu.values == [snowflakes.Snowflake(123)]
 
-        assert isinstance(channel_select_menu, interaction_component_models.ChannelSelectMenuInteractionComponent)
+        assert isinstance(channel_select_menu, modal_component_models.ModalChannelSelectMenuComponent)
 
-    def test__deserialize_interaction_file_upload_component(
-        self, entity_factory_impl, file_upload_interaction_component_payload
-    ):
-        file_upload = entity_factory_impl._deserialize_interaction_file_upload_component(
-            file_upload_interaction_component_payload
-        )
+    def test__deserialize_modal_file_upload_component(self, entity_factory_impl, modal_file_upload_component_payload):
+        file_upload = entity_factory_impl._deserialize_modal_file_upload_component(modal_file_upload_component_payload)
 
         assert file_upload.type == component_models.ComponentType.FILE_UPLOAD
         assert file_upload.id == 4835973
         assert file_upload.custom_id == "file-upload-component"
         assert file_upload.values == [snowflakes.Snowflake(690922406474154014)]
 
-        assert isinstance(file_upload, interaction_component_models.FileUploadInteractionComponent)
+        assert isinstance(file_upload, modal_component_models.ModalFileUploadComponent)
 
     ##################
     # MESSAGE MODELS #
