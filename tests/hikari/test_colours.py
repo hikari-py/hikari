@@ -26,3 +26,7 @@ from hikari import colours
 
 def test_colours():
     assert colors.Color is colours.Colour
+
+
+def test_colour_gradient():
+    assert colors.ColorGradient is colours.ColourGradient

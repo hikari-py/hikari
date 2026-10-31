@@ -71,6 +71,7 @@ class TestCommandInteraction:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
@@ -78,6 +79,7 @@ class TestCommandInteraction:
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            attachment_size_limit=12345,
         )
 
     def test_channel_id_property(self, mock_command_interaction):
@@ -133,6 +135,7 @@ class TestAutocompleteInteraction:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
@@ -140,6 +143,7 @@ class TestAutocompleteInteraction:
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            attachment_size_limit=12345,
         )
 
     @pytest.fixture

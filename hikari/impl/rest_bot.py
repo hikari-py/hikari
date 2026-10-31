@@ -57,10 +57,10 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
-    _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
-    ]
-    _ModalOrMessageResponseBuilderT = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
+    _MessageResponseBuilderT = (
+        special_endpoints.InteractionDeferredBuilder | special_endpoints.InteractionMessageBuilder
+    )
+    _ModalOrMessageResponseBuilderT = _MessageResponseBuilderT | special_endpoints.InteractionModalBuilder
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest_bot")
 
@@ -240,7 +240,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
         http_settings: config_impl.HTTPSettings | None = None,
-        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
+        logs: str | int | dict[str, typing.Any] | os.PathLike[str] | None = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings | None = None,
@@ -260,7 +260,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
         http_settings: config_impl.HTTPSettings | None = None,
-        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
+        logs: str | int | dict[str, typing.Any] | os.PathLike[str] | None = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings | None = None,
@@ -279,7 +279,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
         http_settings: config_impl.HTTPSettings | None = None,
-        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
+        logs: str | int | dict[str, typing.Any] | os.PathLike[str] | None = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings | None = None,
@@ -518,9 +518,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             loop will be shut down.
 
             This will wait until all hikari-owned [`aiohttp`][] connectors have
-            had time to attempt to shut down correctly (around 250ms), and on
-            Python 3.9 and newer, will also shut down the default event loop
-            executor too.
+            had time to attempt to shut down correctly (around 250ms), and will also
+            shut down the default event loop executor.
         close_passed_executor
             If [`True`][], any custom [`concurrent.futures.Executor`][] passed
             to the constructor will be shut down when the application

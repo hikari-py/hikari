@@ -34,8 +34,7 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import asyncio
     import types
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
@@ -492,7 +491,7 @@ class EventManager(abc.ABC):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: float | None,
+        timeout: float | None,  # noqa: ASYNC109
         predicate: PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.

@@ -37,7 +37,7 @@ import typing
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 
 class UndefinedType:
@@ -87,7 +87,7 @@ UndefinedType.__new__ = _forbidden_new
 del _forbidden_new
 
 T_co = typing.TypeVar("T_co", covariant=True)
-UndefinedOr = typing.Union[T_co, UndefinedType]
+UndefinedOr = T_co | UndefinedType
 """Type hint to mark a type as being semantically optional.
 
 !!! warning "**THIS IS NOT THE SAME AS [`typing.Optional`][] BY DEFINITION!**"
@@ -121,7 +121,7 @@ UndefinedOr = typing.Union[T_co, UndefinedType]
         is made between a [`None`][] value, and one that has been omitted.
 """
 
-UndefinedNoneOr = typing.Union[UndefinedOr[T_co], None]
+UndefinedNoneOr = UndefinedOr[T_co] | None
 """Type hint for a value that may be [hikari.undefined.UNDEFINED], or [`None`][].
 
 `UndefinedNoneOr[T]` is simply an alias for

@@ -179,6 +179,21 @@ class TestStringMapBuilder:
         mapping.put("im hungry", "yo", conversion=convert)
         assert dict(mapping) == {"im hungry": "true"}
 
+    def test_put_array_undefined(self):
+        mapping = data_binding.StringMapBuilder()
+        mapping.put_array("foo", undefined.UNDEFINED)
+        assert dict(mapping) == {}
+
+    def test_put_array_puts_each_value_under_the_same_key(self):
+        mapping = data_binding.StringMapBuilder()
+        mapping.put_array("foo", [MyUnique(123), 456, True])
+        assert mapping.getall("foo") == ["123", "456", "true"]
+
+    def test_put_array_with_conversion(self):
+        mapping = data_binding.StringMapBuilder()
+        mapping.put_array("foo", ["a", "b"], conversion=str.upper)
+        assert mapping.getall("foo") == ["A", "B"]
+
 
 class TestJSONObjectBuilder:
     def test_is_mapping(self):

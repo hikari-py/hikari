@@ -367,7 +367,11 @@ GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages
 PUT_CHANNEL_PINS: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/pins/{message}")
 DELETE_CHANNEL_PIN: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/pins/{message}")
 
+PUT_CHANNEL_RECIPIENT: typing.Final[Route] = Route(PUT, "/channels/{channel}/recipients/{user}")
+DELETE_CHANNEL_RECIPIENT: typing.Final[Route] = Route(DELETE, "/channels/{channel}/recipients/{user}")
+
 POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typing")
+PUT_CHANNEL_VOICE_STATUS: typing.Final[Route] = Route(PUT, "/channels/{channel}/voice-status")
 
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
@@ -396,7 +400,6 @@ DELETE_REACTION_USER: typing.Final[Route] = Route(
 
 # Guilds
 GET_GUILD: typing.Final[Route] = Route(GET, "/guilds/{guild}")
-POST_GUILDS: typing.Final[Route] = Route(POST, "/guilds")
 PATCH_GUILD: typing.Final[Route] = Route(PATCH, "/guilds/{guild}")
 DELETE_GUILD: typing.Final[Route] = Route(DELETE, "/guilds/{guild}")
 
@@ -409,6 +412,8 @@ PUT_GUILD_BAN: typing.Final[Route] = Route(PUT, "/guilds/{guild}/bans/{user}")
 DELETE_GUILD_BAN: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/bans/{user}")
 
 GET_GUILD_BANS: typing.Final[Route] = Route(GET, "/guilds/{guild}/bans")
+
+POST_GUILD_BULK_BAN: typing.Final[Route] = Route(POST, "/guilds/{guild}/bulk-ban")
 
 GET_GUILD_CHANNELS: typing.Final[Route] = Route(GET, "/guilds/{guild}/channels")
 POST_GUILD_CHANNELS: typing.Final[Route] = Route(POST, "/guilds/{guild}/channels")
@@ -471,6 +476,7 @@ GET_GUILD_MEMBERS: typing.Final[Route] = Route(GET, "/guilds/{guild}/members")
 DELETE_GUILD_MEMBER: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}")
 
 GET_GUILD_MEMBERS_SEARCH: typing.Final[Route] = Route(GET, "/guilds/{guild}/members/search")
+GET_GUILD_MESSAGES_SEARCH: typing.Final[Route] = Route(GET, "/guilds/{guild}/messages/search")
 
 PUT_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{user}/roles/{role}")
 DELETE_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}/roles/{role}")
@@ -509,6 +515,7 @@ DELETE_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(DELETE, "/guilds/
 
 # Stickers
 GET_STICKER_PACKS: typing.Final[Route] = Route(GET, "/sticker-packs")
+GET_STICKER_PACK: typing.Final[Route] = Route(GET, "/sticker-packs/{sticker_pack}")
 GET_STICKER: typing.Final[Route] = Route(GET, "/stickers/{sticker}")
 
 # Templates
@@ -602,6 +609,10 @@ PUT_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
 )
 
+GET_APPLICATION_ACTIVITY_INSTANCE: typing.Final[Route] = Route(
+    GET, "/applications/{application}/activity-instances/{instance}"
+)
+
 GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     GET, "/applications/{application}/role-connections/metadata"
 )
@@ -612,6 +623,10 @@ PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
 # Entitlements (also known as Monetization)
 GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
 GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
+GET_APPLICATION_ENTITLEMENT: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements/{entitlement}")
+POST_APPLICATION_ENTITLEMENT_CONSUME: typing.Final[Route] = Route(
+    POST, "/applications/{application}/entitlements/{entitlement}/consume"
+)
 POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")
 DELETE_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(
     DELETE, "/applications/{application}/entitlements/{entitlement}"
@@ -628,6 +643,7 @@ DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{web
 
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
+PATCH_MY_APPLICATION: typing.Final[Route] = Route(PATCH, "/applications/@me")
 GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")
 
 POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token", has_ratelimits=False)

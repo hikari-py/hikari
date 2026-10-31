@@ -63,7 +63,7 @@ start = time.perf_counter()
 
 print("Fetching emoji mapping")
 try:
-    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL, timeout=30) as request:  # noqa: S310
+    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL, timeout=30) as request:
         mapping = json.loads(request.read())["emojiDefinitions"]
 except urllib.error.URLError:
     if not IN_CI:

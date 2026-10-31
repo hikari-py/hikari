@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import copy
 import datetime
 import http
 import re
@@ -429,7 +430,7 @@ def rest_client(rest_client_class, mock_cache):
             acquire_bucket=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock()),
             acquire_authentication=mock.AsyncMock(),
         ),
-        client_session=mock.Mock(request=mock.AsyncMock()),
+        client_session=mock.Mock(request=ClientSessionRequestMock()),
     )
     obj._close_event = object()
     return obj
@@ -482,6 +483,39 @@ class StubModel(snowflakes.Unique):
         self.id = snowflakes.Snowflake(id)
 
 
+class RequestContextManagerMock:
+    def __init__(self, response):
+        self.response = response
+
+    async def __aenter__(self):
+        return self.response
+
+    async def __aexit__(self, *args):
+        return None
+
+
+class ClientSessionRequestMock(mock.Mock):
+    """Mock of `aiohttp.ClientSession.request`.
+
+    `request` returns an async context manager which yields the response,
+    so the configured return value gets wrapped into one accordingly.
+    """
+
+    __slots__ = ()
+
+    def __call__(self, *args, **kwargs):
+        return RequestContextManagerMock(super().__call__(*args, **kwargs))
+
+
+class CopyingClientSessionRequestMock(ClientSessionRequestMock):
+    __slots__ = ()
+
+    def __call__(self, *args, **kwargs):
+        args = (copy.copy(arg) for arg in args)
+        kwargs = {copy.copy(key): copy.copy(value) for key, value in kwargs.items()}
+        return super().__call__(*args, **kwargs)
+
+
 class TestStringifyHttpMessage:
     def test_when_body_is_str(self, rest_client):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
@@ -521,6 +555,64 @@ class TestTransformEmojiToUrlFormat:
     def test_when_id_passed_with_emoji_object(self, rest_client, emoji):
         with pytest.raises(ValueError, match="emoji_id shouldn't be passed when an Emoji object is passed for emoji"):
             rest._transform_emoji_to_url_format(emoji, 123)
+
+
+class TestSerializeRecurrenceRule:
+    def test_with_all_settable_fields(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+            interval=2,
+            by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            by_n_weekday=[
+                scheduled_events.ScheduledEventRecurrenceNWeekday(
+                    n=4, day=scheduled_events.ScheduledEventRecurrenceWeekday.FRIDAY
+                )
+            ],
+            by_month=[scheduled_events.ScheduledEventRecurrenceMonth.JULY],
+            by_month_day=[24],
+        )
+
+        assert rest._serialize_recurrence_rule(rule) == {
+            "start": "2001-01-01T00:00:00+00:00",
+            "frequency": 2,
+            "interval": 2,
+            "by_weekday": [2],
+            "by_n_weekday": [{"n": 4, "day": 4}],
+            "by_month": [7],
+            "by_month_day": [24],
+        }
+
+    def test_with_minimal_fields(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
+        )
+
+        assert rest._serialize_recurrence_rule(rule) == {
+            "start": "2001-01-01T00:00:00+00:00",
+            "frequency": 3,
+            "interval": 1,
+            "by_weekday": None,
+            "by_n_weekday": None,
+            "by_month": None,
+            "by_month_day": None,
+        }
+
+    def test_ignores_fields_which_can_not_be_set_externally(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
+            end=datetime.datetime(2002, 1, 1, tzinfo=datetime.UTC),
+            by_year_day=[180],
+            count=10,
+        )
+
+        result = rest._serialize_recurrence_rule(rule)
+
+        assert "end" not in result
+        assert "by_year_day" not in result
+        assert "count" not in result
 
 
 class TestRESTClientImpl:
@@ -762,10 +854,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize(
         "before",
-        [
-            datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc),
-            StubModel(735757641938108416),
-        ],
+        [datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC), StubModel(735757641938108416)],
     )
     def test_fetch_messages_with_before(self, rest_client, before):
         channel = StubModel(123)
@@ -783,11 +872,7 @@ class TestRESTClientImpl:
             )
 
     @pytest.mark.parametrize(
-        "after",
-        [
-            datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc),
-            StubModel(735757641938108416),
-        ],
+        "after", [datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC), StubModel(735757641938108416)]
     )
     def test_fetch_messages_with_after(self, rest_client, after):
         channel = StubModel(123)
@@ -806,10 +891,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize(
         "around",
-        [
-            datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc),
-            StubModel(735757641938108416),
-        ],
+        [datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC), StubModel(735757641938108416)],
     )
     def test_fetch_messages_with_around(self, rest_client, around):
         channel = StubModel(123)
@@ -869,11 +951,35 @@ class TestRESTClientImpl:
                 channel=channel,
                 message=message,
                 emoji="rooYay:123",
+                reaction_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_reactions_for_emoji_with_reaction_type(self, rest_client):
+        channel = StubModel(123)
+        message = StubModel(456)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "ReactorIterator", return_value=stub_iterator) as iterator:
+            with mock.patch.object(rest, "_transform_emoji_to_url_format", return_value="rooYay:123"):
+                assert (
+                    rest_client.fetch_reactions_for_emoji(
+                        channel, message, "<:rooYay:123>", reaction_type=message_models.ReactionType.BURST
+                    )
+                    == stub_iterator
+                )
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                channel=channel,
+                message=message,
+                emoji="rooYay:123",
+                reaction_type=message_models.ReactionType.BURST,
             )
 
     def test_fetch_pins_with_before(self, rest_client):
         channel = StubModel(123)
-        time = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        time = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
         stub_iterator = mock.Mock()
 
         with mock.patch.object(special_endpoints, "PinnedMessageIterator", return_value=stub_iterator) as iterator:
@@ -901,7 +1007,7 @@ class TestRESTClientImpl:
 
     def test_fetch_my_guilds_when_start_at_is_datetime(self, rest_client):
         stub_iterator = mock.Mock()
-        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         with mock.patch.object(special_endpoints, "OwnGuildIterator", return_value=stub_iterator) as iterator:
             assert rest_client.fetch_my_guilds(start_at=datetime_obj) == stub_iterator
@@ -938,6 +1044,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 guild=guild,
                 before=undefined.UNDEFINED,
+                after=undefined.UNDEFINED,
                 user=undefined.UNDEFINED,
                 action_type=undefined.UNDEFINED,
             )
@@ -946,7 +1053,7 @@ class TestRESTClientImpl:
         guild = StubModel(123)
         user = StubModel(456)
         stub_iterator = mock.Mock()
-        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
             returned = rest_client.fetch_audit_log(
@@ -959,6 +1066,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 guild=guild,
                 before="735757641938108416",
+                after=undefined.UNDEFINED,
                 user=user,
                 action_type=audit_logs.AuditLogEventType.GUILD_UPDATE,
             )
@@ -975,9 +1083,49 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 guild=guild,
                 before="456",
+                after=undefined.UNDEFINED,
                 user=undefined.UNDEFINED,
                 action_type=undefined.UNDEFINED,
             )
+
+    def test_fetch_audit_log_when_after_datetime(self, rest_client):
+        guild = StubModel(123)
+        stub_iterator = mock.Mock()
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.UTC)
+
+        with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_audit_log(guild, after=datetime_obj) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                before=undefined.UNDEFINED,
+                after="735757641938108416",
+                user=undefined.UNDEFINED,
+                action_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_audit_log_when_after_is_else(self, rest_client):
+        guild = StubModel(123)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_audit_log(guild, after=StubModel(456)) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                before=undefined.UNDEFINED,
+                after="456",
+                user=undefined.UNDEFINED,
+                action_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_audit_log_when_before_and_after_specified(self, rest_client):
+        with pytest.raises(ValueError, match=r"Can not specify 'before' and 'after' together."):
+            rest_client.fetch_audit_log(StubModel(123), before=StubModel(456), after=StubModel(789))
 
     def test_fetch_public_archived_threads(self, rest_client: rest.RESTClientImpl):
         mock_datetime = time.utc_datetime()
@@ -1038,7 +1186,7 @@ class TestRESTClientImpl:
         )
 
     @pytest.mark.parametrize(
-        "before", [datetime.datetime(2022, 2, 28, 10, 58, 30, 987193, tzinfo=datetime.timezone.utc), 947809989634818048]
+        "before", [datetime.datetime(2022, 2, 28, 10, 58, 30, 987193, tzinfo=datetime.UTC), 947809989634818048]
     )
     def test_fetch_joined_private_archived_threads(
         self, rest_client: rest.RESTClientImpl, before: typing.Union[datetime.datetime, snowflakes.Snowflake]
@@ -1078,8 +1226,40 @@ class TestRESTClientImpl:
             assert rest_client.fetch_members(guild) == stub_iterator
 
             iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory, request_call=rest_client._request, guild=guild
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                first_id=undefined.UNDEFINED,
             )
+
+    def test_fetch_members_when_start_at(self, rest_client):
+        guild = StubModel(123)
+
+        with mock.patch.object(special_endpoints, "MemberIterator") as iterator_cls:
+            iterator = rest_client.fetch_members(guild, start_at=StubModel(65652342134))
+
+        iterator_cls.assert_called_once_with(
+            entity_factory=rest_client._entity_factory,
+            request_call=rest_client._request,
+            guild=guild,
+            first_id="65652342134",
+        )
+        assert iterator is iterator_cls.return_value
+
+    def test_fetch_members_when_datetime_for_start_at(self, rest_client):
+        guild = StubModel(123)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
+
+        with mock.patch.object(special_endpoints, "MemberIterator") as iterator_cls:
+            iterator = rest_client.fetch_members(guild, start_at=start_at)
+
+        iterator_cls.assert_called_once_with(
+            entity_factory=rest_client._entity_factory,
+            request_call=rest_client._request,
+            guild=guild,
+            first_id="950000286338908160",
+        )
+        assert iterator is iterator_cls.return_value
 
     def test_kick_member(self, rest_client):
         mock_kick_user = mock.Mock()
@@ -1118,7 +1298,7 @@ class TestRESTClientImpl:
         assert iterator is iterator_cls.return_value
 
     def test_fetch_bans_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
-        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
         with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
             iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
 
@@ -1848,7 +2028,7 @@ class TestRESTClientImpl:
         assert iterator is iterator_cls.return_value
 
     def test_fetch_scheduled_event_users_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
-        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
         with mock.patch.object(special_endpoints, "ScheduledEventUserIterator") as iterator_cls:
             iterator = rest_client.fetch_scheduled_event_users(54123, 656324, newest_first=True, start_at=start_at)
 
@@ -1934,6 +2114,34 @@ class TestRESTClientImplAsync:
         assert kwargs["data"] is json_payload.return_value
 
     @hikari_test_helpers.timeout()
+    async def test_request_when_redirects_are_disabled(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+        rest_client._http_settings.max_redirects = None
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["allow_redirects"] is False
+        assert isinstance(kwargs["max_redirects"], int)
+
+    @hikari_test_helpers.timeout()
+    async def test_request_when_redirects_are_enabled(self, rest_client, exit_exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.side_effect = exit_exception
+        rest_client._token = None
+        rest_client._http_settings.max_redirects = 5
+
+        with pytest.raises(exit_exception):
+            await rest_client._request(route)
+
+        _, kwargs = rest_client._client_session.request.call_args_list[0]
+        assert kwargs["allow_redirects"] is True
+        assert kwargs["max_redirects"] == 5
+
+    @hikari_test_helpers.timeout()
     async def test_request_builds_form_when_passed(self, rest_client, exit_exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         rest_client._client_session.request.side_effect = exit_exception
@@ -1988,7 +2196,7 @@ class TestRESTClientImplAsync:
                 return '{"something": null}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        rest_client._client_session.request = hikari_test_helpers.CopyingAsyncMock(
+        rest_client._client_session.request = CopyingClientSessionRequestMock(
             side_effect=[StubResponse(), exit_exception]
         )
         rest_client._token = mock.Mock(
@@ -2019,7 +2227,7 @@ class TestRESTClientImplAsync:
                 return {"something": None}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        rest_client._client_session.request = hikari_test_helpers.CopyingAsyncMock(
+        rest_client._client_session.request = CopyingClientSessionRequestMock(
             side_effect=[StubResponse(), StubResponse(), StubResponse()]
         )
         rest_client._token = mock.Mock(
@@ -2182,7 +2390,7 @@ class TestRESTClientImplAsync:
     @pytest.mark.parametrize("exception", [asyncio.TimeoutError, aiohttp.ClientConnectionError])
     async def test_request_when_connection_error_will_retry_until_exhausted(self, rest_client, exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exception))
+        mock_session = mock.AsyncMock(request=ClientSessionRequestMock(side_effect=exception))
         rest_client._max_retries = 3
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._client_session = mock_session
@@ -2493,6 +2701,48 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
+    async def test_edit_channel_with_icon(self, rest_client, file_resource_patch):
+        expected_route = routes.PATCH_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock()
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "yes"})
+
+        assert await rest_client.edit_channel(StubModel(123), icon="somefile.png") == mock_object
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"icon": "some data"}, reason=undefined.UNDEFINED
+        )
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_edit_channel_with_null_icon(self, rest_client):
+        expected_route = routes.PATCH_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock()
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "yes"})
+
+        assert await rest_client.edit_channel(StubModel(123), icon=None) == mock_object
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"icon": None}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_set_voice_channel_status(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.set_voice_channel_status(StubModel(123), "very cool status", reason="because")
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"status": "very cool status"}, reason="because"
+        )
+
+    async def test_set_voice_channel_status_with_null_status(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.set_voice_channel_status(StubModel(123), None)
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"status": None}, reason=undefined.UNDEFINED)
+
     async def test_delete_channel(self, rest_client):
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
@@ -2737,6 +2987,7 @@ class TestRESTClientImplAsync:
             "target_type": invites.TargetType.STREAM,
             "target_user_id": "456",
             "target_application_id": "789",
+            "role_ids": ["135", "246"],
         }
 
         result = await rest_client.create_invite(
@@ -2748,6 +2999,7 @@ class TestRESTClientImplAsync:
             target_type=invites.TargetType.STREAM,
             target_user=StubModel(456),
             target_application=StubModel(789),
+            role_ids=[StubModel(135), StubModel(246)],
             reason="cause why not :)",
         )
 
@@ -2812,6 +3064,7 @@ class TestRESTClientImplAsync:
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
+            nonce="noncing",
             reply=StubModel(987654321),
             reply_must_exist=False,
             flags=54123,
@@ -2820,6 +3073,7 @@ class TestRESTClientImplAsync:
 
         rest_client._build_message_payload.assert_called_once_with(
             content="new content",
+            nonce="noncing",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
             component=component_obj,
@@ -2872,6 +3126,7 @@ class TestRESTClientImplAsync:
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
+            nonce="noncing",
             reply=StubModel(987654321),
             reply_must_exist=False,
             flags=6643,
@@ -2880,6 +3135,7 @@ class TestRESTClientImplAsync:
 
         rest_client._build_message_payload.assert_called_once_with(
             content="new content",
+            nonce="noncing",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
             component=component_obj,
@@ -3949,6 +4205,17 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, query={"with_counts": "true"})
         rest_client._entity_factory.deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
 
+    async def test_fetch_invite_with_scheduled_event(self, rest_client):
+        expected_route = routes.GET_INVITE.compile(invite_code="Jx4cNGG")
+        rest_client._request = mock.AsyncMock(return_value={"code": "Jx4cNGG"})
+
+        result = await rest_client.fetch_invite("Jx4cNGG", with_counts=False, scheduled_event=StubModel(9494949))
+
+        assert result is rest_client._entity_factory.deserialize_invite.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route, query={"with_counts": "false", "guild_scheduled_event_id": "9494949"}
+        )
+
     async def test_delete_invite(self, rest_client):
         input_invite = StubModel()
         input_invite.code = "Jx4cNGG"
@@ -4084,6 +4351,62 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
         mock_cache.set_dm_channel_id.assert_not_called()
 
+    async def test_create_group_dm_channel(self, rest_client):
+        group_dm = StubModel(4444)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"access_tokens": ["token1", "token2"], "nicks": {"123": "nick1", "456": "nick2"}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "4444"})
+        rest_client._entity_factory.deserialize_group_dm = mock.Mock(return_value=group_dm)
+
+        result = await rest_client.create_group_dm_channel(
+            ["token1", "token2"], nicknames={StubModel(123): "nick1", 456: "nick2"}
+        )
+
+        assert result == group_dm
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_group_dm.assert_called_once_with({"id": "4444"})
+
+    async def test_create_group_dm_channel_without_nicknames(self, rest_client):
+        group_dm = StubModel(4444)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"access_tokens": ["token1"]}
+        rest_client._request = mock.AsyncMock(return_value={"id": "4444"})
+        rest_client._entity_factory.deserialize_group_dm = mock.Mock(return_value=group_dm)
+
+        result = await rest_client.create_group_dm_channel(["token1"])
+
+        assert result == group_dm
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_group_dm.assert_called_once_with({"id": "4444"})
+
+    async def test_add_recipient_to_group_dm(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        expected_json = {"access_token": "token", "nick": "cool nickname"}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_recipient_to_group_dm(
+            StubModel(45411), StubModel(123), access_token="token", nickname="cool nickname"
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    async def test_add_recipient_to_group_dm_without_nickname(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        expected_json = {"access_token": "token"}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_recipient_to_group_dm(StubModel(45411), StubModel(123), access_token="token")
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    async def test_remove_recipient_from_group_dm(self, rest_client):
+        expected_route = routes.DELETE_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.remove_recipient_from_group_dm(StubModel(45411), StubModel(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_fetch_application(self, rest_client):
         application = StubModel(123)
         expected_route = routes.GET_MY_APPLICATION.compile()
@@ -4093,6 +4416,85 @@ class TestRESTClientImplAsync:
         assert await rest_client.fetch_application() is application
 
         rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application(self, rest_client, file_resource_patch):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        expected_json = {
+            "description": "new description",
+            "custom_install_url": "https://example.com/install",
+            "role_connections_verification_url": "https://example.com/verify",
+            "flags": applications.ApplicationFlags.GUILD_MEMBERS_INTENT,
+            "interactions_endpoint_url": "https://example.com/interactions",
+            "tags": ["shiny", "tags"],
+            "event_webhooks_url": "https://example.com/events",
+            "event_webhooks_status": applications.ApplicationEventWebhookStatus.ENABLED,
+            "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
+            "install_params": {"scopes": ["applications.commands", "bot"], "permissions": 8},
+            "integration_types_config": {
+                "0": {"oauth2_install_params": {"scopes": ["bot"], "permissions": 8}},
+                "1": {},
+            },
+            "icon": "some data",
+            "cover_image": "some data",
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        result = await rest_client.edit_application(
+            description="new description",
+            custom_install_url="https://example.com/install",
+            role_connections_verification_url="https://example.com/verify",
+            install_params=applications.ApplicationInstallParameters(
+                scopes=[applications.OAuth2Scope.APPLICATIONS_COMMANDS, applications.OAuth2Scope.BOT],
+                permissions=permissions.Permissions.ADMINISTRATOR,
+            ),
+            integration_types_config={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: applications.ApplicationIntegrationConfiguration(
+                    oauth2_install_parameters=applications.OAuth2InstallParameters(
+                        scopes=[applications.OAuth2Scope.BOT], permissions=permissions.Permissions.ADMINISTRATOR
+                    )
+                ),
+                applications.ApplicationIntegrationType.USER_INSTALL: applications.ApplicationIntegrationConfiguration(
+                    oauth2_install_parameters=None
+                ),
+            },
+            flags=applications.ApplicationFlags.GUILD_MEMBERS_INTENT,
+            icon="someicon.png",
+            cover_image="somecover.png",
+            interactions_endpoint_url="https://example.com/interactions",
+            tags=["shiny", "tags"],
+            event_webhooks_url="https://example.com/events",
+            event_webhooks_status=applications.ApplicationEventWebhookStatus.ENABLED,
+            event_webhooks_types=[applications.ApplicationEventWebhookType.APPLICATION_AUTHORIZED],
+        )
+
+        assert result is application
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application_when_images_are_None(self, rest_client):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        expected_json = {"icon": None, "cover_image": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        assert await rest_client.edit_application(icon=None, cover_image=None) is application
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application_without_optionals(self, rest_client):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        assert await rest_client.edit_application() is application
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
         rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
 
     async def test_fetch_authorization(self, rest_client):
@@ -4107,6 +4509,21 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_activity_instance(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ACTIVITY_INSTANCE.compile(
+            application=123, instance="i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        )
+        mock_payload = {"instance_id": "i-1276580072400224306-gc-912952092627435520-912954213460484116"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_activity_instance(
+            StubModel(123), "i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        )
+
+        assert result is rest_client._entity_factory.deserialize_activity_instance.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_activity_instance.assert_called_once_with(mock_payload)
 
     async def test_authorize_client_credentials_token(self, rest_client):
         expected_route = routes.POST_TOKEN.compile()
@@ -4436,6 +4853,17 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "123"}), mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
+    async def test_fetch_sticker_pack(self, rest_client):
+        expected_route = routes.GET_STICKER_PACK.compile(sticker_pack=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_sticker_pack = mock.Mock()
+
+        returned = await rest_client.fetch_sticker_pack(StubModel(123))
+        assert returned is rest_client._entity_factory.deserialize_sticker_pack.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_sticker_pack.assert_called_once_with({"id": "123"})
+
     async def test_fetch_sticker_when_guild_sticker(self, rest_client):
         expected_route = routes.GET_STICKER.compile(sticker=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "123", "guild_id": "456"})
@@ -4565,6 +4993,7 @@ class TestRESTClientImplAsync:
     async def test_edit_guild(self, rest_client, file_resource):
         icon_resource = file_resource("icon data")
         splash_resource = file_resource("splash data")
+        discovery_splash_resource = file_resource("discovery splash data")
         banner_resource = file_resource("banner data")
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
@@ -4574,19 +5003,28 @@ class TestRESTClientImplAsync:
             "explicit_content_filter": 1,
             "afk_timeout": 60,
             "preferred_locale": "en-UK",
+            "system_channel_flags": 1,
+            "description": "a cool guild",
+            "premium_progress_bar_enabled": True,
             "afk_channel_id": "456",
             "owner_id": "789",
             "system_channel_id": "789",
             "rules_channel_id": "987",
             "public_updates_channel_id": "654",
+            "safety_alerts_channel_id": "321",
             "icon": "icon data",
             "splash": "splash data",
+            "discovery_splash": "discovery splash data",
             "banner": "banner data",
             "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
 
-        with mock.patch.object(files, "ensure_resource", side_effect=[icon_resource, splash_resource, banner_resource]):
+        with mock.patch.object(
+            files,
+            "ensure_resource",
+            side_effect=[icon_resource, splash_resource, discovery_splash_resource, banner_resource],
+        ):
             result = await rest_client.edit_guild(
                 StubModel(123),
                 name="hikari",
@@ -4598,12 +5036,17 @@ class TestRESTClientImplAsync:
                 icon="icon.png",
                 owner=StubModel(789),
                 splash="splash.png",
+                discovery_splash="discovery_splash.png",
                 banner="banner.png",
                 system_channel=StubModel(789),
+                system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_USER_JOIN,
                 rules_channel=StubModel(987),
                 public_updates_channel=(654),
+                safety_alerts_channel=StubModel(321),
                 preferred_locale="en-UK",
                 features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
+                description="a cool guild",
+                premium_progress_bar_enabled=True,
                 reason="hikari best",
             )
             assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4625,8 +5068,11 @@ class TestRESTClientImplAsync:
             "system_channel_id": "789",
             "rules_channel_id": "987",
             "public_updates_channel_id": "654",
+            "safety_alerts_channel_id": None,
+            "description": None,
             "icon": None,
             "splash": None,
+            "discovery_splash": None,
             "banner": None,
             "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
@@ -4643,12 +5089,15 @@ class TestRESTClientImplAsync:
             icon=None,
             owner=StubModel(789),
             splash=None,
+            discovery_splash=None,
             banner=None,
             system_channel=StubModel(789),
             rules_channel=StubModel(987),
             public_updates_channel=(654),
+            safety_alerts_channel=None,
             preferred_locale="en-UK",
             features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
+            description=None,
             reason="hikari best",
         )
         assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4673,7 +5122,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"testing": "data"})
 
         result = await rest_client.set_guild_incident_actions(
-            123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.timezone.utc)
+            123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.UTC)
         )
         assert result is rest_client._entity_factory.deserialize_guild_incidents.return_value
 
@@ -5461,6 +5910,160 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "764435"}, guild_id=645234123)
         rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
 
+    async def test_search_messages(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 1})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        result = await rest_client.search_messages(
+            StubModel(645234123),
+            content="some words",
+            limit=10,
+            offset=25,
+            max_id=StubModel(1002000000000000000),
+            min_id=StubModel(1001000000000000000),
+            slop=5,
+            channels=[StubModel(123), 456],
+            author_types=[
+                message_models.MessageSearchAuthorType.BOT,
+                message_models.MessageSearchAuthorType.NOT_WEBHOOK,
+            ],
+            authors=[StubModel(111)],
+            mentioned_users=[StubModel(222)],
+            mentioned_roles=[StubModel(333)],
+            mentions_everyone=False,
+            replied_to_users=[StubModel(444)],
+            replied_to_messages=[StubModel(555)],
+            pinned=True,
+            has=[message_models.MessageSearchHasType.IMAGE, message_models.MessageSearchHasType.NOT_POLL],
+            embed_types=[message_models.MessageSearchEmbedType.GIF],
+            embed_providers=["Tenor"],
+            link_hostnames=["discordapp.com"],
+            attachment_filenames=["foo"],
+            attachment_extensions=["txt"],
+            sort_by=message_models.MessageSearchSortMode.RELEVANCE,
+            sort_order=message_models.MessageSearchSortOrder.ASCENDING,
+            include_nsfw=True,
+        )
+
+        assert result is rest_client._entity_factory.deserialize_message_search_result.return_value
+        rest_client._entity_factory.deserialize_message_search_result.assert_called_once_with({"total_results": 1})
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert sorted(kwargs["query"].items()) == sorted(
+            [
+                ("content", "some words"),
+                ("limit", "10"),
+                ("offset", "25"),
+                ("slop", "5"),
+                ("mention_everyone", "false"),
+                ("pinned", "true"),
+                ("sort_by", "relevance"),
+                ("sort_order", "asc"),
+                ("include_nsfw", "true"),
+                ("max_id", "1002000000000000000"),
+                ("min_id", "1001000000000000000"),
+                ("channel_id", "123"),
+                ("channel_id", "456"),
+                ("author_id", "111"),
+                ("mentions", "222"),
+                ("mentions_role_id", "333"),
+                ("replied_to_user_id", "444"),
+                ("replied_to_message_id", "555"),
+                ("author_type", "bot"),
+                ("author_type", "-webhook"),
+                ("has", "image"),
+                ("has", "-poll"),
+                ("embed_type", "gif"),
+                ("embed_provider", "Tenor"),
+                ("link_hostname", "discordapp.com"),
+                ("attachment_filename", "foo"),
+                ("attachment_extension", "txt"),
+            ]
+        )
+
+    async def test_search_messages_when_datetimes(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 0})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+        date = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.UTC)
+
+        await rest_client.search_messages(StubModel(645234123), max_id=date, min_id=date)
+
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert sorted(kwargs["query"].items()) == sorted(
+            [("max_id", "950000286338908160"), ("min_id", "950000286338908160")]
+        )
+
+    async def test_search_messages_without_optionals(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 0})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        await rest_client.search_messages(StubModel(645234123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert dict(kwargs["query"]) == {}
+
+    @staticmethod
+    def _not_indexed_payload(retry_after):
+        return {
+            "message": "Index not yet available. Try again later",
+            "code": 110000,
+            "documents_indexed": 100,
+            "retry_after": retry_after,
+        }
+
+    async def test_search_messages_when_not_indexed_waits_and_retries(self, rest_client):
+        rest_client._request = mock.AsyncMock(side_effect=[self._not_indexed_payload(2), {"total_results": 0}])
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            result = await rest_client.search_messages(StubModel(645234123))
+
+        assert result is rest_client._entity_factory.deserialize_message_search_result.return_value
+        sleep.assert_awaited_once_with(2.0)
+        assert rest_client._request.await_count == 2
+        rest_client._entity_factory.deserialize_message_search_result.assert_called_once_with({"total_results": 0})
+
+    async def test_search_messages_when_not_indexed_and_retry_after_is_zero(self, rest_client):
+        rest_client._request = mock.AsyncMock(side_effect=[self._not_indexed_payload(0), {"total_results": 0}])
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            await rest_client.search_messages(StubModel(645234123))
+
+        sleep.assert_awaited_once_with(1.0)
+
+    async def test_search_messages_when_still_not_indexed_after_retry(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+                await rest_client.search_messages(StubModel(645234123))
+
+        assert exc_info.value.documents_indexed == 100
+        assert exc_info.value.retry_after == 2.0
+        sleep.assert_awaited_once_with(2.0)
+        assert rest_client._request.await_count == 2
+        rest_client._entity_factory.deserialize_message_search_result.assert_not_called()
+
+    async def test_search_messages_when_not_indexed_and_not_waiting_for_index(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value=self._not_indexed_payload(2))
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with mock.patch.object(asyncio, "sleep", new=mock.AsyncMock()) as sleep:
+            with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+                await rest_client.search_messages(StubModel(645234123), wait_for_index=False)
+
+        assert exc_info.value.documents_indexed == 100
+        assert exc_info.value.retry_after == 2.0
+        sleep.assert_not_called()
+        rest_client._request.assert_awaited_once()
+
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {
@@ -5472,7 +6075,7 @@ class TestRESTClientImplAsync:
             "communication_disabled_until": "2021-10-18T07:18:11.554023+00:00",
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
-        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        mock_timestamp = datetime.datetime(2021, 10, 18, 7, 18, 11, 554023, tzinfo=datetime.UTC)
 
         result = await rest_client.edit_member(
             StubModel(123),
@@ -5628,6 +6231,41 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
 
+    async def test_bulk_ban_users(self, rest_client):
+        expected_route = routes.POST_GUILD_BULK_BAN.compile(guild=123)
+        expected_json = {"user_ids": ["456", "789"], "delete_message_seconds": 604800}
+        rest_client._request = mock.AsyncMock(return_value={"banned_users": ["456"], "failed_users": ["789"]})
+
+        result = await rest_client.bulk_ban_users(
+            StubModel(123), [StubModel(456), StubModel(789)], delete_message_seconds=604800, reason="because i can"
+        )
+
+        assert result is rest_client._entity_factory.deserialize_bulk_ban_response.return_value
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because i can")
+        rest_client._entity_factory.deserialize_bulk_ban_response.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
+    async def test_bulk_ban_users_with_timedelta(self, rest_client):
+        expected_route = routes.POST_GUILD_BULK_BAN.compile(guild=123)
+        expected_json = {"user_ids": ["456"], "delete_message_seconds": 3600.0}
+        rest_client._request = mock.AsyncMock(return_value={"banned_users": ["456"], "failed_users": []})
+
+        await rest_client.bulk_ban_users(
+            StubModel(123), [StubModel(456)], delete_message_seconds=datetime.timedelta(hours=1)
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
+
+    async def test_bulk_ban_users_without_optionals(self, rest_client):
+        expected_route = routes.POST_GUILD_BULK_BAN.compile(guild=123)
+        expected_json = {"user_ids": ["456"]}
+        rest_client._request = mock.AsyncMock(return_value={"banned_users": [], "failed_users": ["456"]})
+
+        await rest_client.bulk_ban_users(StubModel(123), [StubModel(456)])
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
+
     async def test_unban_user(self, rest_client):
         expected_route = routes.DELETE_GUILD_BAN.compile(guild=123, user=456)
         rest_client._request = mock.AsyncMock()
@@ -5732,6 +6370,49 @@ class TestRESTClientImplAsync:
                 StubModel(123), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
 
+    async def test_create_role_with_color_gradient(self, rest_client):
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None},
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            color=colors.ColorGradient.of(123, 456),
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_create_role_with_colour_gradient(self, rest_client):
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "colors": {"primary_color": 11127295, "secondary_color": 16759788, "tertiary_color": 16761760},
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            colour=colors.ColorGradient.of(11127295, 16759788, 16761760),
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+
     async def test_create_role_when_icon_unicode_emoji_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
             await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
@@ -5780,6 +6461,28 @@ class TestRESTClientImplAsync:
             await rest_client.edit_role(
                 StubModel(123), StubModel(456), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
+
+    async def test_edit_role_with_color_gradient(self, rest_client):
+        expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.edit_role(
+            StubModel(123), StubModel(789), color=colors.ColorGradient.of(123, 456), reason="roles are cool"
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_edit_role_when_removing_gradient_colors(self, rest_client):
+        expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": None, "tertiary_color": None}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        await rest_client.edit_role(StubModel(123), StubModel(789), colour=colors.ColorGradient.of(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_edit_role_when_icon_and_unicode_emoji_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
@@ -6918,11 +7621,16 @@ class TestRESTClientImplAsync:
             StubModel(123321),
             StubModel(7654345),
             "boob man",
-            datetime.datetime(2001, 1, 1, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2001, 1, 1, 17, 42, 41, 891222, tzinfo=datetime.UTC),
             description="o",
-            end_time=datetime.datetime(2002, 2, 2, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2002, 2, 2, 17, 42, 41, 891222, tzinfo=datetime.UTC),
             image="tksksk.txt",
             privacy_level=654134,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="bye bye",
         )
 
@@ -6940,6 +7648,15 @@ class TestRESTClientImplAsync:
                 "privacy_level": 654134,
                 "scheduled_start_time": "2001-01-01T17:42:41.891222+00:00",
                 "scheduled_end_time": "2002-02-02T17:42:41.891222+00:00",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="bye bye",
@@ -6953,7 +7670,7 @@ class TestRESTClientImplAsync:
             StubModel(234432234),
             StubModel(654234432),
             "boob man",
-            datetime.datetime(2021, 3, 11, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 11, 17, 42, 41, 891222, tzinfo=datetime.UTC),
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_stage_event.return_value
@@ -6980,11 +7697,16 @@ class TestRESTClientImplAsync:
             StubModel(76234123),
             StubModel(65243123),
             "boom man",
-            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.UTC),
             description="hhhhh",
-            end_time=datetime.datetime(2069, 3, 9, 13, 1, 41, 891222, tzinfo=datetime.timezone.utc),
+            end_time=datetime.datetime(2069, 3, 9, 13, 1, 41, 891222, tzinfo=datetime.UTC),
             image="meow.txt",
             privacy_level=6523123,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="it was the {insert political part here}",
         )
 
@@ -7002,6 +7724,15 @@ class TestRESTClientImplAsync:
                 "scheduled_start_time": "2021-03-09T13:42:41.891222+00:00",
                 "scheduled_end_time": "2069-03-09T13:01:41.891222+00:00",
                 "description": "hhhhh",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="it was the {insert political part here}",
@@ -7015,7 +7746,7 @@ class TestRESTClientImplAsync:
             StubModel(76234123),
             StubModel(65243123),
             "boom man",
-            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 9, 13, 42, 41, 891222, tzinfo=datetime.UTC),
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_voice_event.return_value
@@ -7042,11 +7773,16 @@ class TestRESTClientImplAsync:
             StubModel(34232412),
             "hi",
             "Outside",
-            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.timezone.utc),
-            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.UTC),
+            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.UTC),
             description="This is a description",
             image="icon.png",
             privacy_level=6454,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="chairman meow",
         )
 
@@ -7064,6 +7800,15 @@ class TestRESTClientImplAsync:
                 "scheduled_start_time": "2021-03-06T02:42:41.891222+00:00",
                 "scheduled_end_time": "2023-05-06T16:42:41.891222+00:00",
                 "description": "This is a description",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="chairman meow",
@@ -7077,8 +7822,8 @@ class TestRESTClientImplAsync:
             StubModel(34232412),
             "hi",
             "Outside",
-            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.timezone.utc),
-            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            datetime.datetime(2021, 3, 6, 2, 42, 41, 891222, tzinfo=datetime.UTC),
+            datetime.datetime(2023, 5, 6, 16, 42, 41, 891222, tzinfo=datetime.UTC),
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_external_event.return_value
@@ -7112,8 +7857,13 @@ class TestRESTClientImplAsync:
             location="Trans-land",
             name="Nihongo",
             privacy_level=69,
-            start_time=datetime.datetime(2022, 3, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
-            end_time=datetime.datetime(2022, 5, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            start_time=datetime.datetime(2022, 3, 6, 12, 42, 41, 891222, tzinfo=datetime.UTC),
+            end_time=datetime.datetime(2022, 5, 6, 12, 42, 41, 891222, tzinfo=datetime.UTC),
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.UTC),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             status=64,
             reason="go home",
         )
@@ -7134,6 +7884,15 @@ class TestRESTClientImplAsync:
                 "description": "hihihi",
                 "entity_type": scheduled_events.ScheduledEventType.VOICE,
                 "status": 64,
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="go home",
@@ -7144,7 +7903,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "494949", "name": "ME222222OW"})
 
         result = await rest_client.edit_scheduled_event(
-            StubModel(345543), StubModel(123321123), channel=None, description=None, end_time=None
+            StubModel(345543), StubModel(123321123), channel=None, description=None, end_time=None, recurrence_rule=None
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_event.return_value
@@ -7153,7 +7912,7 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"channel_id": None, "description": None, "scheduled_end_time": None},
+            json={"channel_id": None, "description": None, "scheduled_end_time": None, "recurrence_rule": None},
             reason=undefined.UNDEFINED,
         )
 
@@ -7215,6 +7974,72 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock()
 
         await rest_client.delete_scheduled_event(StubModel(54531123), StubModel(123321123321))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_entitlements(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=123)
+        expected_query = {
+            "user_id": "456",
+            "guild_id": "789",
+            "sku_ids": "135,246",
+            "limit": "42",
+            "exclude_ended": "true",
+            "exclude_deleted": "false",
+            "before": "912",
+            "after": "911",
+        }
+        mock_payload_1 = {"id": "696969696969696"}
+        mock_payload_2 = {"id": "420420420420420"}
+        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2])
+
+        result = await rest_client.fetch_entitlements(
+            StubModel(123),
+            user=StubModel(456),
+            guild=StubModel(789),
+            skus=[StubModel(135), StubModel(246)],
+            before=912,
+            after=911,
+            limit=42,
+            exclude_ended=True,
+            exclude_deleted=False,
+        )
+
+        assert result == [
+            rest_client._entity_factory.deserialize_entitlement.return_value,
+            rest_client._entity_factory.deserialize_entitlement.return_value,
+        ]
+        rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
+        rest_client._entity_factory.deserialize_entitlement.assert_has_calls(
+            [mock.call(mock_payload_1), mock.call(mock_payload_2)]
+        )
+
+    async def test_fetch_entitlements_without_optional_params(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=123)
+        rest_client._request = mock.AsyncMock(return_value=[])
+
+        result = await rest_client.fetch_entitlements(StubModel(123))
+
+        assert result == []
+        rest_client._request.assert_awaited_once_with(expected_route, query={})
+        rest_client._entity_factory.deserialize_entitlement.assert_not_called()
+
+    async def test_fetch_entitlement(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENT.compile(application=123, entitlement=456)
+        mock_payload = {"id": "456"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_entitlement(StubModel(123), StubModel(456))
+
+        assert result is rest_client._entity_factory.deserialize_entitlement.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_entitlement.assert_called_once_with(mock_payload)
+
+    async def test_consume_entitlement(self, rest_client):
+        expected_route = routes.POST_APPLICATION_ENTITLEMENT_CONSUME.compile(application=123, entitlement=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.consume_entitlement(StubModel(123), StubModel(456))
 
         rest_client._request.assert_awaited_once_with(expected_route)
 

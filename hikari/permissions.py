@@ -302,6 +302,9 @@ class Permissions(enums.Flag):
     SEND_VOICE_MESSAGES = 1 << 46
     """Allows sending voice messages."""
 
+    SET_VOICE_CHANNEL_STATUS = 1 << 48
+    """Allows setting voice channel status."""
+
     SEND_POLLS = 1 << 49
     """Allows sending polls."""
 

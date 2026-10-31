@@ -192,6 +192,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_activity_instance(self, payload: data_binding.JSONObject) -> application_models.ActivityInstance:
+        """Parse a raw payload from Discord into an activity instance object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.applications.ActivityInstance
+            The deserialized activity instance object.
+        """
+
+    @abc.abstractmethod
     def deserialize_authorization_information(
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:
@@ -1219,6 +1234,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_bulk_ban_response(self, payload: data_binding.JSONObject) -> guild_models.BulkBanResponse:
+        """Parse a raw payload from Discord into a bulk ban response object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.BulkBanResponse
+            The deserialized bulk ban response object.
+        """
+
+    @abc.abstractmethod
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
         """Parse a raw payload from Discord into a guild preview object.
 
@@ -1717,6 +1747,21 @@ class EntityFactory(abc.ABC):
         -------
         hikari.messages.Message
             The deserialized message object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_message_search_result(self, payload: data_binding.JSONObject) -> message_models.MessageSearchResult:
+        """Parse a raw payload from Discord into a message search result object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.MessageSearchResult
+            The deserialized message search result object.
         """
 
     ###################

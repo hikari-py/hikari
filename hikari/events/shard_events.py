@@ -23,11 +23,15 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "ChannelInfo",
+    "ChannelInfoEvent",
     "MemberChunkEvent",
+    "RequestGuildMembersRateLimitedEvent",
     "ShardConnectedEvent",
     "ShardDisconnectedEvent",
     "ShardEvent",
     "ShardPayloadEvent",
+    "ShardRateLimitedEvent",
     "ShardReadyEvent",
     "ShardResumedEvent",
     "ShardStateEvent",
@@ -44,6 +48,8 @@ from hikari.internal import collections
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import applications
     from hikari import guilds
     from hikari import presences as presences_
@@ -174,6 +180,39 @@ class ShardResumedEvent(ShardStateEvent):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+class ShardRateLimitedEvent(ShardEvent):
+    """Event fired when a gateway operation is rate limited on a shard."""
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    opcode: int = attrs.field(repr=True)
+    """Opcode of the gateway operation that was rate limited."""
+
+    retry_after: float = attrs.field(repr=True)
+    """How many seconds to wait before the operation can be retried."""
+
+    meta: typing.Mapping[str, typing.Any] = attrs.field(repr=True)
+    """The raw metadata for the operation that was rate limited."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class RequestGuildMembersRateLimitedEvent(ShardRateLimitedEvent):
+    """Event fired when requesting guild members is rate limited on a shard."""
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the guild members were requested for."""
+
+    nonce: str | None = attrs.field(repr=True)
+    """The nonce sent in the request that was rate limited, if any."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     """Event fired when a member chunk payload is received on a gateway shard."""
 
@@ -234,3 +273,51 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     @typing_extensions.override
     def __len__(self) -> int:
         return len(self.members)
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ChannelInfo:
+    """Ephemeral information for a channel in a guild.
+
+    This is sent as part of a [`hikari.events.shard_events.ChannelInfoEvent`][].
+    """
+
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the channel this information is for."""
+
+    status: str | None = attrs.field(repr=True)
+    """The voice channel status.
+
+    This will be [`None`][] if no status is set or the field was not
+    requested.
+    """
+
+    voice_start_time: datetime.datetime | None = attrs.field(repr=True)
+    """When the ongoing voice session started.
+
+    This will be [`None`][] if there is no ongoing voice session or the
+    field was not requested.
+    """
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ChannelInfoEvent(ShardEvent):
+    """Event fired when a channel info payload is received on a gateway shard.
+
+    This is sent in response to
+    [`hikari.api.shard.GatewayShard.request_channel_info`][].
+    """
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<docstring inherited from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the guild this event is for."""
+
+    channels: typing.Mapping[snowflakes.Snowflake, ChannelInfo] = attrs.field(repr=False)
+    """Mapping of channel IDs to the ephemeral information of the guild's channels."""

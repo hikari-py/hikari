@@ -41,7 +41,7 @@ import time as time_
 import typing
 import uuid as uuid_
 
-Intervalish = typing.Union[int, float, datetime.timedelta]
+Intervalish = int | float | datetime.timedelta
 """Type hint representing a naive time period or time span.
 
 This is a type that is like an interval of some sort.
@@ -116,7 +116,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
     datetime.datetime
         Number of seconds since [1/1/1970 00:00:00 UTC][].
     """
-    return datetime.datetime.fromtimestamp(epoch / 1_000, datetime.timezone.utc) + DISCORD_EPOCH
+    return datetime.datetime.fromtimestamp(epoch / 1_000, datetime.UTC) + DISCORD_EPOCH
 
 
 def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
@@ -156,15 +156,14 @@ def unix_epoch_to_datetime(epoch: float, /, *, is_millis: bool = True) -> dateti
     datetime.datetime
         Number of seconds since [1/1/1970 00:00:00 UTC][].
     """
-    # Datetime seems to raise an OSError when you try to convert an out of range timestamp on Windows and a ValueError
-    # if you try on a UNIX system so we want to catch both.
+    # Which of these an out of range timestamp raises depends on the platform and Python version
     try:
         epoch /= (is_millis * 1_000) or 1
-        return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
-    except (OSError, ValueError):
+        return datetime.datetime.fromtimestamp(epoch, datetime.UTC)
+    except (OSError, OverflowError, ValueError):
         if epoch > 0:
-            return datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
-        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+            return datetime.datetime.max.replace(tzinfo=datetime.UTC)
+        return datetime.datetime.min.replace(tzinfo=datetime.UTC)
 
 
 def timespan_to_int(value: Intervalish, /) -> int:
@@ -193,7 +192,7 @@ def local_datetime() -> datetime.datetime:
 
 def utc_datetime() -> datetime.datetime:
     """Return the current date/time for UTC (GMT+0)."""
-    return datetime.datetime.now(tz=datetime.timezone.utc)
+    return datetime.datetime.now(tz=datetime.UTC)
 
 
 if typing.TYPE_CHECKING:

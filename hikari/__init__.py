@@ -48,8 +48,13 @@ from hikari._about import __license__
 from hikari._about import __maintainer__
 from hikari._about import __url__
 from hikari._about import __version__
+from hikari.applications import ActivityInstance
+from hikari.applications import ActivityLocation
+from hikari.applications import ActivityLocationKind
 from hikari.applications import Application
 from hikari.applications import ApplicationContextType
+from hikari.applications import ApplicationEventWebhookStatus
+from hikari.applications import ApplicationEventWebhookType
 from hikari.applications import ApplicationFlags
 from hikari.applications import ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord
@@ -70,6 +75,7 @@ from hikari.applications import TeamMembershipState
 from hikari.applications import TokenType
 from hikari.audit_logs import *
 from hikari.auto_mod import *
+from hikari.capabilities import *
 from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *

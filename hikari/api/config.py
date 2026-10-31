@@ -103,7 +103,7 @@ class ProxySettings(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def url(self) -> None | str:
+    def url(self) -> str | None:
         """Proxy URL to use.
 
         If this is [`None`][] then no explicit proxy is being used.

@@ -49,8 +49,7 @@ from hikari.internal import fast_protocol
 if typing.TYPE_CHECKING:
     import datetime
     from concurrent import futures
-
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import channels
     from hikari import guilds
@@ -397,6 +396,34 @@ class ShardAware(
         hikari.errors.MissingIntentError
             When trying to request presences without the [`hikari.intents.Intents.GUILD_MEMBERS`][] or when trying to
             request the full list of members without [`hikari.intents.Intents.GUILD_PRESENCES`][].
+        RuntimeError
+            If the guild passed isn't covered by any of the shards in this sharded
+            client.
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
+        """
+
+    @abc.abstractmethod
+    async def request_channel_info(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        fields: typing.Sequence[gateway_shard.ChannelInfoField],
+    ) -> None:
+        """Request ephemeral channel data for the channels of a guild.
+
+        The response will be dispatched as a
+        [`hikari.events.shard_events.ChannelInfoEvent`][].
+
+        Parameters
+        ----------
+        guild
+            The guild to request channel info for.
+        fields
+            The fields to request.
+
+        Raises
+        ------
         RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.

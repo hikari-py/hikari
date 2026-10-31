@@ -109,30 +109,48 @@ def test_speedup_replaces_python_version_when_available():
 
 def test_parse_discord_epoch_to_datetime():
     discord_timestamp = 37921278956
-    expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
+    expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.UTC)
     assert time.discord_epoch_to_datetime(discord_timestamp) == expected_timestamp
 
 
 def test_parse_datetime_to_discord_epoch():
     # This specific timestamp (amongst others) has given problems in the past with
     # float precision, so make sure it doesn't happen again.
-    timestamp = datetime.datetime(2022, 8, 13, 23, 10, 35, 843000, tzinfo=datetime.timezone.utc)
+    timestamp = datetime.datetime(2022, 8, 13, 23, 10, 35, 843000, tzinfo=datetime.UTC)
     expected_discord_timestamp = 240361835843
     assert time.datetime_to_discord_epoch(timestamp) == expected_discord_timestamp
 
 
 def test_parse_unix_epoch_to_datetime():
     unix_timestamp = 1457991678956
-    expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.timezone.utc)
+    expected_timestamp = datetime.datetime(2016, 3, 14, 21, 41, 18, 956000, tzinfo=datetime.UTC)
     assert time.unix_epoch_to_datetime(unix_timestamp) == expected_timestamp
 
 
 def test_unix_epoch_to_datetime_with_out_of_range_positive_timestamp():
-    assert time.unix_epoch_to_datetime(996877846784536) == datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
+    assert time.unix_epoch_to_datetime(996877846784536) == datetime.datetime.max.replace(tzinfo=datetime.UTC)
 
 
 def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
-    assert time.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+    assert time.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min.replace(tzinfo=datetime.UTC)
+
+
+@pytest.mark.parametrize("error", [OSError, OverflowError, ValueError])
+@pytest.mark.parametrize(
+    ("epoch", "expected"), [(996877846784536, datetime.datetime.max), (-996877846784536, datetime.datetime.min)]
+)
+def test_unix_epoch_to_datetime_when_platform_rejects_timestamp(error, epoch, expected):
+    fake_datetime = mock.Mock(
+        datetime=mock.Mock(
+            fromtimestamp=mock.Mock(side_effect=error), min=datetime.datetime.min, max=datetime.datetime.max
+        ),
+        UTC=datetime.UTC,
+    )
+
+    with mock.patch.object(time, "datetime", new=fake_datetime):
+        result = time.unix_epoch_to_datetime(epoch)
+
+    assert result == expected.replace(tzinfo=datetime.UTC)
 
 
 @pytest.mark.parametrize(
@@ -151,11 +169,11 @@ def test_timespan_to_int(input_value, expected_result):
 
 
 def test_utc_datetime():
-    current_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+    current_datetime = datetime.datetime.now(tz=datetime.UTC)
 
     # We can't mock datetime normally as it is a C module :(
     class datetime_module:
-        timezone = datetime.timezone
+        UTC = datetime.UTC
 
         class datetime:
             now = mock.Mock(return_value=current_datetime)
@@ -163,17 +181,17 @@ def test_utc_datetime():
     with mock.patch.object(time, "datetime", datetime_module):
         result = time.utc_datetime()
 
-    datetime_module.datetime.now.assert_called_once_with(tz=datetime.timezone.utc)
+    datetime_module.datetime.now.assert_called_once_with(tz=datetime.UTC)
 
     assert result == current_datetime
 
 
 def test_local_datetime():
-    current_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+    current_datetime = datetime.datetime.now(tz=datetime.UTC)
 
     # We can't mock datetime normally as it is a C module :(
     class datetime_module:
-        timezone = datetime.timezone
+        UTC = datetime.UTC
 
         class datetime:
             now = mock.Mock(return_value=current_datetime)
@@ -181,6 +199,6 @@ def test_local_datetime():
     with mock.patch.object(time, "datetime", datetime_module):
         result = time.local_datetime()
 
-    datetime_module.datetime.now.assert_called_once_with(tz=datetime.timezone.utc)
+    datetime_module.datetime.now.assert_called_once_with(tz=datetime.UTC)
 
     assert result == current_datetime.astimezone()

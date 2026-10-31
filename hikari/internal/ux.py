@@ -53,7 +53,7 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     from hikari.impl import config
 
-    CmpTuple = tuple[int, int, int, typing.Union[int, float]]
+    CmpTuple = tuple[int, int, int, int | float]
 
 # While this is discouraged for most purposes in libraries, this enables us to
 # filter out the vast majority of clutter that most network logger calls
@@ -69,7 +69,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: None | str | int | dict[str, typing.Any] | os.PathLike[str], *, allow_color: bool, force_color: bool
+    flavor: str | int | dict[str, typing.Any] | os.PathLike[str] | None, *, allow_color: bool, force_color: bool
 ) -> None:
     """Initialize logging for the user.
 
@@ -512,5 +512,5 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
 
         if newest_version:
             _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest_version)
-    except Exception as ex:  # noqa: BLE001 - Do not catch blind exceptions (this will run as a headless task, so we want this)
+    except Exception as ex:
         _LOGGER.warning("Failed to fetch hikari version details", exc_info=ex)

@@ -23,8 +23,13 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "ActivityInstance",
+    "ActivityLocation",
+    "ActivityLocationKind",
     "Application",
     "ApplicationContextType",
+    "ApplicationEventWebhookStatus",
+    "ApplicationEventWebhookType",
     "ApplicationFlags",
     "ApplicationIntegrationConfiguration",
     "ApplicationIntegrationType",
@@ -105,6 +110,61 @@ class ApplicationFlags(enums.Flag):
 
     APPLICATION_COMMAND_BADGE = 1 << 23
     """Denotes that the application has at least one global application command."""
+
+
+@typing.final
+class ApplicationEventWebhookStatus(int, enums.Enum):
+    """The status of an application's event webhooks."""
+
+    DISABLED = 1
+    """Webhook events are disabled by the developer."""
+
+    ENABLED = 2
+    """Webhook events are enabled by the developer."""
+
+    DISABLED_BY_DISCORD = 3
+    """Webhook events are disabled by Discord, usually due to inactivity."""
+
+
+@typing.final
+class ApplicationEventWebhookType(str, enums.Enum):
+    """The type of an application event webhook."""
+
+    APPLICATION_AUTHORIZED = "APPLICATION_AUTHORIZED"
+    """Sent when an app was authorized by a user to a server or their account."""
+
+    APPLICATION_DEAUTHORIZED = "APPLICATION_DEAUTHORIZED"
+    """Sent when an app was deauthorized by a user."""
+
+    ENTITLEMENT_CREATE = "ENTITLEMENT_CREATE"
+    """Sent when an entitlement was created."""
+
+    ENTITLEMENT_UPDATE = "ENTITLEMENT_UPDATE"
+    """Sent when an entitlement was updated."""
+
+    ENTITLEMENT_DELETE = "ENTITLEMENT_DELETE"
+    """Sent when an entitlement was deleted."""
+
+    QUEST_USER_ENROLLMENT = "QUEST_USER_ENROLLMENT"
+    """Sent when a user was added to a Quest."""
+
+    LOBBY_MESSAGE_CREATE = "LOBBY_MESSAGE_CREATE"
+    """Sent when a message is created in a lobby."""
+
+    LOBBY_MESSAGE_UPDATE = "LOBBY_MESSAGE_UPDATE"
+    """Sent when a message is updated in a lobby."""
+
+    LOBBY_MESSAGE_DELETE = "LOBBY_MESSAGE_DELETE"
+    """Sent when a message is deleted from a lobby."""
+
+    GAME_DIRECT_MESSAGE_CREATE = "GAME_DIRECT_MESSAGE_CREATE"
+    """Sent when a direct message is created during an active Social SDK session."""
+
+    GAME_DIRECT_MESSAGE_UPDATE = "GAME_DIRECT_MESSAGE_UPDATE"
+    """Sent when a direct message is updated during an active Social SDK session."""
+
+    GAME_DIRECT_MESSAGE_DELETE = "GAME_DIRECT_MESSAGE_DELETE"
+    """Sent when a direct message is deleted during an active Social SDK session."""
 
 
 @typing.final
@@ -637,6 +697,56 @@ class InviteApplication(guilds.PartialApplication):
         )
 
 
+@typing.final
+class ActivityLocationKind(str, enums.Enum):
+    """The kind of location an activity instance is running in."""
+
+    GUILD_CHANNEL = "gc"
+    """The activity is running in a guild channel."""
+
+    PRIVATE_CHANNEL = "pc"
+    """The activity is running in a private channel, such as a DM or group DM."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ActivityLocation:
+    """The location an activity instance is running in."""
+
+    id: str = attrs.field(hash=True, repr=True)
+    """The unique identifier for the location."""
+
+    kind: ActivityLocationKind | str = attrs.field(eq=False, hash=False, repr=True)
+    """The kind of location the activity instance is running in."""
+
+    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the channel the activity instance is running in."""
+
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the guild the activity instance is running in, if any."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ActivityInstance:
+    """Represents a live application activity instance."""
+
+    application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the application this activity instance belongs to."""
+
+    instance_id: str = attrs.field(hash=True, repr=True)
+    """The unique identifier for the activity instance."""
+
+    launch_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """The unique identifier for the launch."""
+
+    location: ActivityLocation = attrs.field(eq=False, hash=False, repr=True)
+    """The location this activity instance is running in."""
+
+    users: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The IDs of the users currently connected to this activity instance."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ApplicationInstallParameters:
@@ -714,6 +824,17 @@ class Application(guilds.PartialApplication):
         attrs.field(eq=False, hash=False, repr=False)
     )
     """The default scopes and permissions for each integration type."""
+
+    event_webhooks_url: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """The URL this application receives webhook events on, if set."""
+
+    event_webhooks_status: ApplicationEventWebhookStatus | int = attrs.field(eq=False, hash=False, repr=False)
+    """The status of this application's event webhooks."""
+
+    event_webhooks_types: typing.Sequence[ApplicationEventWebhookType | str] = attrs.field(
+        eq=False, hash=False, repr=False
+    )
+    """The webhook event types this application subscribes to."""
 
     def make_cover_image_url(
         self,

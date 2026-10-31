@@ -565,6 +565,8 @@ class InviteCreateEvent(InviteEvent):
     @typing_extensions.override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
+        # This will never be None for invites received over the gateway.
+        assert self.invite.channel_id is not None
         return self.invite.channel_id
 
     @property

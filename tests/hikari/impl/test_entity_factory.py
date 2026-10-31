@@ -74,6 +74,7 @@ def guild_text_channel_payload(permission_overwrite_payload):
     return {
         "id": "123",
         "guild_id": "567",
+        "application_id": "323123123",
         "name": "general",
         "type": 0,
         "position": 6,
@@ -85,6 +86,7 @@ def guild_text_channel_payload(permission_overwrite_payload):
         "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
         "parent_id": "987",
         "default_auto_archive_duration": 10080,
+        "flags": 131072,
     }
 
 
@@ -104,6 +106,7 @@ def guild_voice_channel_payload(permission_overwrite_payload):
         "parent_id": "456",
         "video_quality_mode": 1,
         "last_message_id": 1234567890,
+        "flags": 131072,
     }
 
 
@@ -122,6 +125,7 @@ def guild_news_channel_payload(permission_overwrite_payload):
         "parent_id": "654",
         "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
         "default_auto_archive_duration": 4320,
+        "flags": 131072,
     }
 
 
@@ -315,6 +319,7 @@ def guild_role_payload():
         "id": "41771983423143936",
         "name": "WE DEM BOYZZ!!!!!!",
         "color": 3_447_003,
+        "colors": {"primary_color": 3_447_003, "secondary_color": 16_759_788, "tertiary_color": 16_761_760},
         "hoist": True,
         "unicode_emoji": "\N{OK HAND SIGN}",
         "icon": "abc123hash",
@@ -535,9 +540,7 @@ class TestGatewayGuildDefinition:
         ]
         assert guild.incidents.invites_disabled_until is None
         assert guild.incidents.dms_disabled_until is None
-        assert guild.incidents.dm_spam_detected_at == datetime.datetime(
-            2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc
-        )
+        assert guild.incidents.dm_spam_detected_at == datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.UTC)
         assert guild.incidents.raid_detected_at is None
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
@@ -554,7 +557,7 @@ class TestGatewayGuildDefinition:
         assert guild.system_channel_id == 19216801
         assert guild.system_channel_flags == guild_models.GuildSystemChannelFlag(3)
         assert guild.rules_channel_id == 42042069
-        assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.UTC)
         assert guild.is_large is False
         assert guild.member_count == 14
         assert guild.max_video_channel_users == 25
@@ -1021,6 +1024,9 @@ class TestEntityFactoryImpl:
                 "0": {"oauth2_install_params": {"scopes": ["applications.commands", "bot"], "permissions": "0"}},
                 "1": {},
             },
+            "event_webhooks_url": "https://eventme.com",
+            "event_webhooks_status": 2,
+            "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
         }
 
     def test_deserialize_application(
@@ -1092,6 +1098,11 @@ class TestEntityFactoryImpl:
         assert user_integration_config.oauth2_install_parameters is None
 
         assert application.cover_image_hash == "hashmebaby"
+        assert application.event_webhooks_url == "https://eventme.com"
+        assert application.event_webhooks_status == application_models.ApplicationEventWebhookStatus.ENABLED
+        assert application.event_webhooks_types == [
+            application_models.ApplicationEventWebhookType.APPLICATION_AUTHORIZED
+        ]
         assert isinstance(application, application_models.Application)
 
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
@@ -1117,6 +1128,9 @@ class TestEntityFactoryImpl:
         assert application.privacy_policy_url is None
         assert application.terms_of_service_url is None
         assert application.role_connections_verification_url is None
+        assert application.event_webhooks_url is None
+        assert application.event_webhooks_status is application_models.ApplicationEventWebhookStatus.DISABLED
+        assert application.event_webhooks_types == []
 
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
@@ -1133,6 +1147,7 @@ class TestEntityFactoryImpl:
                 "flags": 0,
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
+                "event_webhooks_url": None,
             }
         )
 
@@ -1146,6 +1161,7 @@ class TestEntityFactoryImpl:
         assert application.team is None
         assert application.install_parameters is None
         assert application.tags == []
+        assert application.event_webhooks_url is None
 
     @pytest.fixture
     def invite_application_payload(self):
@@ -1157,6 +1173,51 @@ class TestEntityFactoryImpl:
             "cover_image": "0227b2e89ea08d666c43003fbadbc72a (but as cover)",
             "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
         }
+
+    @pytest.fixture
+    def activity_instance_payload(self):
+        return {
+            "application_id": "1215413995645968394",
+            "instance_id": "i-1276580072400224306-gc-912952092627435520-912954213460484116",
+            "launch_id": "1276580072400224306",
+            "location": {
+                "id": "gc-912952092627435520-912954213460484116",
+                "kind": "gc",
+                "channel_id": "912954213460484116",
+                "guild_id": "912952092627435520",
+            },
+            "users": ["205519959982473217", "115590097100865541"],
+        }
+
+    def test_deserialize_activity_instance(self, entity_factory_impl, activity_instance_payload):
+        activity_instance = entity_factory_impl.deserialize_activity_instance(activity_instance_payload)
+
+        assert activity_instance.application_id == 1215413995645968394
+        assert activity_instance.instance_id == "i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        assert activity_instance.launch_id == 1276580072400224306
+        assert activity_instance.location.id == "gc-912952092627435520-912954213460484116"
+        assert activity_instance.location.kind is application_models.ActivityLocationKind.GUILD_CHANNEL
+        assert activity_instance.location.channel_id == 912954213460484116
+        assert activity_instance.location.guild_id == 912952092627435520
+        assert activity_instance.users == [205519959982473217, 115590097100865541]
+        assert isinstance(activity_instance, application_models.ActivityInstance)
+        assert isinstance(activity_instance.location, application_models.ActivityLocation)
+
+    @pytest.mark.parametrize("guild_id_field", [{"guild_id": None}, {}])
+    def test_deserialize_activity_instance_when_no_guild(
+        self, entity_factory_impl, activity_instance_payload, guild_id_field
+    ):
+        activity_instance_payload["location"] = {
+            "id": "pc-912954213460484116",
+            "kind": "pc",
+            "channel_id": "912954213460484116",
+            **guild_id_field,
+        }
+
+        activity_instance = entity_factory_impl.deserialize_activity_instance(activity_instance_payload)
+
+        assert activity_instance.location.kind is application_models.ActivityLocationKind.PRIVATE_CHANNEL
+        assert activity_instance.location.guild_id is None
 
     @pytest.fixture
     def authorization_information_payload(self, user_payload):
@@ -1198,7 +1259,7 @@ class TestEntityFactoryImpl:
         assert isinstance(application, application_models.AuthorizationApplication)
 
         assert authorization_information.expires_at == datetime.datetime(
-            2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc
+            2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.UTC
         )
         assert authorization_information.scopes == ["identify", "guilds", "applications.commands.update"]
         assert authorization_information.user == entity_factory_impl.deserialize_user(user_payload)
@@ -1474,6 +1535,33 @@ class TestEntityFactoryImpl:
         member_move_entry_info = entity_factory_impl._deserialize_member_move_entry_info(member_move_info_payload)
         assert member_move_entry_info.channel_id == 22222222
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
+
+    @pytest.fixture
+    def voice_channel_status_create_info_payload(self):
+        return {"channel_id": "22222222", "status": "very cool status"}
+
+    def test__deserialize_voice_channel_status_create_entry_info(
+        self, entity_factory_impl, voice_channel_status_create_info_payload
+    ):
+        info = entity_factory_impl._deserialize_voice_channel_status_create_entry_info(
+            voice_channel_status_create_info_payload
+        )
+        assert info.channel_id == 22222222
+        assert info.status == "very cool status"
+        assert isinstance(info, audit_log_models.VoiceChannelStatusCreateEntryInfo)
+
+    @pytest.fixture
+    def voice_channel_status_delete_info_payload(self):
+        return {"channel_id": "22222222"}
+
+    def test__deserialize_voice_channel_status_delete_entry_info(
+        self, entity_factory_impl, voice_channel_status_delete_info_payload
+    ):
+        info = entity_factory_impl._deserialize_voice_channel_status_delete_entry_info(
+            voice_channel_status_delete_info_payload
+        )
+        assert info.channel_id == 22222222
+        assert isinstance(info, audit_log_models.VoiceChannelStatusDeleteEntryInfo)
 
     @pytest.fixture
     def audit_log_entry_payload(self):
@@ -1821,6 +1909,7 @@ class TestEntityFactoryImpl:
             "icon": "123asdf123adsf",
             "owner_id": "456",
             "application_id": "123789",
+            "managed": True,
             "last_message_id": "456",
             "nicks": [{"id": "115590097100865541", "nick": "nyaa"}],
             "type": 3,
@@ -1834,6 +1923,7 @@ class TestEntityFactoryImpl:
         assert group_dm.name == "Secret Developer Group"
         assert group_dm.icon_hash == "123asdf123adsf"
         assert group_dm.application_id == 123789
+        assert group_dm.is_managed is True
         assert group_dm.nicknames == {115590097100865541: "nyaa"}
         assert group_dm.last_message_id == 456
         assert group_dm.type == channel_models.ChannelType.GROUP_DM
@@ -1853,7 +1943,15 @@ class TestEntityFactoryImpl:
         )
         assert group_dm.nicknames == {}
         assert group_dm.application_id is None
+        assert group_dm.is_managed is False
         assert group_dm.last_message_id is None
+
+    def test_deserialize_group_dm_channel_with_null_application_id(self, entity_factory_impl, group_dm_channel_payload):
+        group_dm_channel_payload["application_id"] = None
+
+        group_dm = entity_factory_impl.deserialize_group_dm(group_dm_channel_payload)
+
+        assert group_dm.application_id is None
 
     @pytest.fixture
     def guild_category_payload(self, permission_overwrite_payload):
@@ -1866,6 +1964,7 @@ class TestEntityFactoryImpl:
             "position": 3,
             "guild_id": "9876",
             "type": 4,
+            "flags": 131072,
         }
 
     def test_deserialize_guild_category(
@@ -1884,6 +1983,7 @@ class TestEntityFactoryImpl:
         assert guild_category.is_nsfw is True
         # Categories cannot have parents, this field should be ignored as it is erroneous if included here.
         assert guild_category.parent_id is None
+        assert guild_category.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(guild_category, channel_models.GuildCategory)
 
     def test_deserialize_guild_category_with_unset_fields(self, entity_factory_impl, permission_overwrite_payload):
@@ -1899,6 +1999,7 @@ class TestEntityFactoryImpl:
         )
         assert guild_category.parent_id is None
         assert guild_category.is_nsfw is False
+        assert guild_category.flags == channel_models.ChannelFlag.NONE
 
     def test_deserialize_guild_category_with_null_fields(self, entity_factory_impl, permission_overwrite_payload):
         guild_category = entity_factory_impl.deserialize_guild_category(
@@ -1924,6 +2025,7 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.name == "general"
         assert guild_text_channel.type == channel_models.ChannelType.GUILD_TEXT
         assert guild_text_channel.guild_id == 567
+        assert guild_text_channel.application_id == 323123123
         assert guild_text_channel.position == 6
         assert guild_text_channel.permission_overwrites == {
             4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
@@ -1934,9 +2036,10 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.last_message_id == 123456
         assert guild_text_channel.rate_limit_per_user == datetime.timedelta(seconds=2)
         assert guild_text_channel.last_pin_timestamp == datetime.datetime(
-            2020, 5, 27, 15, 58, 51, 545252, tzinfo=datetime.timezone.utc
+            2020, 5, 27, 15, 58, 51, 545252, tzinfo=datetime.UTC
         )
         assert guild_text_channel.default_auto_archive_duration == datetime.timedelta(minutes=10080)
+        assert guild_text_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(guild_text_channel, channel_models.GuildTextChannel)
 
     def test_deserialize_guild_text_channel_with_unset_fields(self, entity_factory_impl):
@@ -1955,8 +2058,10 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.application_id is None
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
+        assert guild_text_channel.flags == channel_models.ChannelFlag.NONE
 
     def test_deserialize_guild_text_channel_with_null_fields(self, entity_factory_impl):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(
@@ -1973,12 +2078,14 @@ class TestEntityFactoryImpl:
                 "last_message_id": None,
                 "last_pin_timestamp": None,
                 "parent_id": None,
+                "application_id": None,
             }
         )
         assert guild_text_channel.topic is None
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.application_id is None
 
     def test_deserialize_guild_news_channel(
         self, entity_factory_impl, mock_app, guild_news_channel_payload, permission_overwrite_payload
@@ -1998,9 +2105,10 @@ class TestEntityFactoryImpl:
         assert news_channel.topic == "Super Important Announcements"
         assert news_channel.last_message_id == 456
         assert news_channel.last_pin_timestamp == datetime.datetime(
-            2020, 5, 27, 15, 58, 51, 545252, tzinfo=datetime.timezone.utc
+            2020, 5, 27, 15, 58, 51, 545252, tzinfo=datetime.UTC
         )
         assert news_channel.default_auto_archive_duration == datetime.timedelta(minutes=4320)
+        assert news_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(news_channel, channel_models.GuildNewsChannel)
 
     def test_deserialize_guild_news_channel_with_unset_fields(self, entity_factory_impl):
@@ -2020,6 +2128,7 @@ class TestEntityFactoryImpl:
         assert news_channel.last_pin_timestamp is None
         assert news_channel.last_message_id is None
         assert news_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
+        assert news_channel.flags == channel_models.ChannelFlag.NONE
 
     def test_deserialize_guild_news_channel_with_null_fields(self, entity_factory_impl):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(
@@ -2060,6 +2169,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.bitrate == 64000
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
         assert voice_channel.user_limit == 3
+        assert voice_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(voice_channel, channel_models.GuildVoiceChannel)
 
     def test_deserialize_guild_voice_channel_with_null_fields(self, entity_factory_impl):
@@ -2096,6 +2206,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
+        assert voice_channel.flags == channel_models.ChannelFlag.NONE
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
         assert voice_channel.region is None
@@ -2115,6 +2226,7 @@ class TestEntityFactoryImpl:
             "rtc_region": "euoo",
             "parent_id": "543",
             "last_message_id": "1000101",
+            "flags": 131072,
         }
 
     def test_deserialize_guild_stage_channel(
@@ -2135,6 +2247,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.bitrate == 64000
         assert voice_channel.user_limit == 3
         assert voice_channel.last_message_id == 1000101
+        assert voice_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(voice_channel, channel_models.GuildStageChannel)
 
     def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
@@ -2175,6 +2288,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
         assert voice_channel.last_message_id is None
+        assert voice_channel.flags == channel_models.ChannelFlag.NONE
 
     @pytest.fixture
     def guild_forum_channel_payload(self, permission_overwrite_payload):
@@ -2402,7 +2516,7 @@ class TestEntityFactoryImpl:
 
         assert thread_member.thread_id == 123321
         assert thread_member.user_id == 494949494
-        assert thread_member.joined_at == datetime.datetime(2022, 2, 28, 1, 49, 3, 599821, tzinfo=datetime.timezone.utc)
+        assert thread_member.joined_at == datetime.datetime(2022, 2, 28, 1, 49, 3, 599821, tzinfo=datetime.UTC)
         assert thread_member.flags == 696969
 
     def test_deserialize_thread_member_with_passed_fields(
@@ -2497,14 +2611,10 @@ class TestEntityFactoryImpl:
         assert thread.type is channel_models.ChannelType.GUILD_NEWS_THREAD
         assert thread.last_message_id == 947692646883803166
         assert thread.is_archived is True
-        assert thread.archive_timestamp == datetime.datetime(
-            2022, 2, 28, 3, 15, 4, 379000, tzinfo=datetime.timezone.utc
-        )
+        assert thread.archive_timestamp == datetime.datetime(2022, 2, 28, 3, 15, 4, 379000, tzinfo=datetime.UTC)
         assert thread.auto_archive_duration == datetime.timedelta(minutes=10080)
         assert thread.is_locked is False
-        assert thread.thread_created_at == datetime.datetime(
-            2022, 2, 28, 3, 12, 4, 379000, tzinfo=datetime.timezone.utc
-        )
+        assert thread.thread_created_at == datetime.datetime(2022, 2, 28, 3, 12, 4, 379000, tzinfo=datetime.UTC)
         assert thread.approximate_message_count == 1
         assert thread.approximate_member_count == 3
         assert thread.rate_limit_per_user == datetime.timedelta(seconds=53)
@@ -2579,12 +2689,10 @@ class TestEntityFactoryImpl:
         assert thread.name == "e"
         assert thread.last_message_id == 947690877000753252
         assert thread.is_archived is False
-        assert thread.archive_timestamp == datetime.datetime(
-            2022, 2, 28, 3, 5, 10, 529000, tzinfo=datetime.timezone.utc
-        )
+        assert thread.archive_timestamp == datetime.datetime(2022, 2, 28, 3, 5, 10, 529000, tzinfo=datetime.UTC)
         assert thread.auto_archive_duration == datetime.timedelta(minutes=1440)
         assert thread.is_locked is False
-        assert thread.thread_created_at == datetime.datetime(2022, 2, 28, 3, 5, 9, 529000, tzinfo=datetime.timezone.utc)
+        assert thread.thread_created_at == datetime.datetime(2022, 2, 28, 3, 5, 9, 529000, tzinfo=datetime.UTC)
         assert thread.approximate_message_count == 1
         assert thread.approximate_member_count == 3
         assert thread.rate_limit_per_user == datetime.timedelta(seconds=23)
@@ -2662,14 +2770,10 @@ class TestEntityFactoryImpl:
         assert thread.name == "ea"
         assert thread.last_message_id == 947690683144237128
         assert thread.is_archived is False
-        assert thread.archive_timestamp == datetime.datetime(
-            2022, 2, 28, 3, 4, 56, 247000, tzinfo=datetime.timezone.utc
-        )
+        assert thread.archive_timestamp == datetime.datetime(2022, 2, 28, 3, 4, 56, 247000, tzinfo=datetime.UTC)
         assert thread.auto_archive_duration == datetime.timedelta(minutes=4320)
         assert thread.is_locked is False
-        assert thread.thread_created_at == datetime.datetime(
-            2022, 2, 28, 3, 4, 15, 247000, tzinfo=datetime.timezone.utc
-        )
+        assert thread.thread_created_at == datetime.datetime(2022, 2, 28, 3, 4, 15, 247000, tzinfo=datetime.UTC)
         assert thread.is_invitable is True
         assert thread.approximate_message_count == 2
         assert thread.approximate_member_count == 3
@@ -2875,7 +2979,7 @@ class TestEntityFactoryImpl:
         assert embed.title == "embed title"
         assert embed.description == "embed description"
         assert embed.url == "https://somewhere.com"
-        assert embed.timestamp == datetime.datetime(2020, 3, 22, 16, 40, 39, 218000, tzinfo=datetime.timezone.utc)
+        assert embed.timestamp == datetime.datetime(2020, 3, 22, 16, 40, 39, 218000, tzinfo=datetime.UTC)
         assert embed.color == color_models.Color(14014915)
         assert isinstance(embed.color, color_models.Color)
         # EmbedFooter
@@ -3415,10 +3519,10 @@ class TestEntityFactoryImpl:
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
         assert member.role_ids == [11111, 22222, 33333, 44444, 76543325]
-        assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
-        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.UTC)
+        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.UTC)
         assert member.raw_communication_disabled_until == datetime.datetime(
-            2021, 10, 18, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
+            2021, 10, 18, 6, 26, 56, 936000, tzinfo=datetime.UTC
         )
         assert member.is_deaf is False
         assert member.is_mute is True
@@ -3439,8 +3543,8 @@ class TestEntityFactoryImpl:
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
         assert member.role_ids == [11111, 22222, 76543325, 33333, 44444]
-        assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
-        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert member.joined_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.UTC)
+        assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.UTC)
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.guild_flags == guild_models.GuildMemberFlags.DID_REJOIN
@@ -3511,6 +3615,11 @@ class TestEntityFactoryImpl:
         assert guild_role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
         assert isinstance(guild_role.unicode_emoji, emoji_models.UnicodeEmoji)
         assert guild_role.color == color_models.Color(3_447_003)
+        assert guild_role.colors == color_models.ColorGradient(
+            primary_color=color_models.Color(3_447_003),
+            secondary_color=color_models.Color(16_759_788),
+            tertiary_color=color_models.Color(16_761_760),
+        )
         assert guild_role.is_hoisted is True
         assert guild_role.position == 0
         assert guild_role.permissions == permission_models.Permissions(66_321_471)
@@ -3527,6 +3636,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_role_with_missing_or_unset_fields(self, entity_factory_impl, guild_role_payload):
         guild_role_payload["tags"] = {}
         guild_role_payload["unicode_emoji"] = None
+        del guild_role_payload["colors"]
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
         assert guild_role.bot_id is None
         assert guild_role.integration_id is None
@@ -3535,6 +3645,16 @@ class TestEntityFactoryImpl:
         assert guild_role.subscription_listing_id is None
         assert guild_role.is_available_for_purchase is False
         assert guild_role.unicode_emoji is None
+        assert guild_role.colors == color_models.ColorGradient(
+            primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
+        )
+
+    def test_deserialize_role_with_missing_or_unset_color_fields(self, entity_factory_impl, guild_role_payload):
+        guild_role_payload["colors"] = {"primary_color": 3_447_003, "secondary_color": None, "tertiary_color": None}
+        guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
+        assert guild_role.colors == color_models.ColorGradient(
+            primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
+        )
 
     def test_deserialize_role_with_no_tags(self, entity_factory_impl, guild_role_payload):
         del guild_role_payload["tags"]
@@ -3606,9 +3726,7 @@ class TestEntityFactoryImpl:
         assert integration.expire_behavior == guild_models.IntegrationExpireBehaviour.KICK
         assert integration.expire_grace_period == datetime.timedelta(days=7)
         assert integration.user == entity_factory_impl.deserialize_user(user_payload)
-        assert integration.last_synced_at == datetime.datetime(
-            2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
-        )
+        assert integration.last_synced_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.UTC)
         assert integration.subscriber_count == 69
         # IntegrationApplication
         assert integration.application.id == 123
@@ -3679,6 +3797,22 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_guild_member_ban_with_null_fields(self, entity_factory_impl, user_payload):
         assert entity_factory_impl.deserialize_guild_member_ban({"reason": None, "user": user_payload}).reason is None
+
+    def test_deserialize_bulk_ban_response(self, entity_factory_impl):
+        bulk_ban = entity_factory_impl.deserialize_bulk_ban_response(
+            {"banned_users": ["123", "456"], "failed_users": ["789"]}
+        )
+
+        assert bulk_ban.banned_users == [123, 456]
+        assert bulk_ban.failed_users == [789]
+        assert all(isinstance(user_id, snowflakes.Snowflake) for user_id in bulk_ban.banned_users)
+        assert isinstance(bulk_ban, guild_models.BulkBanResponse)
+
+    def test_deserialize_bulk_ban_response_with_empty_fields(self, entity_factory_impl):
+        bulk_ban = entity_factory_impl.deserialize_bulk_ban_response({"banned_users": [], "failed_users": []})
+
+        assert bulk_ban.banned_users == []
+        assert bulk_ban.failed_users == []
 
     @pytest.fixture
     def guild_preview_payload(self, known_custom_emoji_payload):
@@ -3752,9 +3886,7 @@ class TestEntityFactoryImpl:
         guild_incidents_payload: dict[str, typing.Any],
     ):
         incidents = entity_factory_impl.deserialize_guild_incidents(guild_incidents_payload)
-        assert incidents.invites_disabled_until == datetime.datetime(
-            2023, 10, 1, 0, 0, 0, 0, tzinfo=datetime.timezone.utc
-        )
+        assert incidents.invites_disabled_until == datetime.datetime(2023, 10, 1, 0, 0, 0, 0, tzinfo=datetime.UTC)
         assert incidents.dms_disabled_until is None
         assert incidents.dm_spam_detected_at is None
         assert incidents.raid_detected_at is None
@@ -3838,9 +3970,7 @@ class TestEntityFactoryImpl:
         ]
         assert guild.incidents.invites_disabled_until is None
         assert guild.incidents.dms_disabled_until is None
-        assert guild.incidents.dm_spam_detected_at == datetime.datetime(
-            2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc
-        )
+        assert guild.incidents.dm_spam_detected_at == datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.UTC)
         assert guild.incidents.raid_detected_at is None
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
@@ -4096,9 +4226,7 @@ class TestEntityFactoryImpl:
         ]
         assert guild.incidents.invites_disabled_until is None
         assert guild.incidents.dms_disabled_until is None
-        assert guild.incidents.dm_spam_detected_at == datetime.datetime(
-            2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc
-        )
+        assert guild.incidents.dm_spam_detected_at == datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.UTC)
         assert guild.incidents.raid_detected_at is None
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
@@ -4115,7 +4243,7 @@ class TestEntityFactoryImpl:
         assert guild.system_channel_id == 19216801
         assert guild.system_channel_flags == guild_models.GuildSystemChannelFlag(3)
         assert guild.rules_channel_id == 42042069
-        assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
+        assert guild.joined_at == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.UTC)
         assert guild.is_large is False
         assert guild.member_count == 14
         assert guild.max_video_channel_users == 25
@@ -4534,16 +4662,16 @@ class TestEntityFactoryImpl:
     def test__deserialize_interaction_member(self, entity_factory_impl, interaction_member_payload, user_payload):
         member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
         assert member.id == 115590097100865541
-        assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
+        assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.UTC)
         assert member.nickname == "Snab"
         assert member.guild_avatar_hash == "oestrogen"
         assert member.guild_id == 43123123
         assert member.is_deaf is undefined.UNDEFINED
         assert member.is_mute is undefined.UNDEFINED
         assert member.is_pending is False
-        assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc)
+        assert member.premium_since == datetime.datetime(2020, 10, 1, 23, 6, 10, 431000, tzinfo=datetime.UTC)
         assert member.raw_communication_disabled_until == datetime.datetime(
-            2021, 10, 18, 23, 6, 10, 431000, tzinfo=datetime.timezone.utc
+            2021, 10, 18, 23, 6, 10, 431000, tzinfo=datetime.UTC
         )
         assert member.role_ids == [
             582345963851743243,
@@ -4712,6 +4840,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_command_interaction(
@@ -4756,6 +4885,7 @@ class TestEntityFactoryImpl:
             application_models.ApplicationIntegrationType.USER_INSTALL
         ] == snowflakes.Snowflake(456)
         assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
+        assert interaction.attachment_size_limit == 12345
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4823,6 +4953,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4908,6 +5039,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4942,6 +5074,7 @@ class TestEntityFactoryImpl:
             application_models.ApplicationIntegrationType.USER_INSTALL
         ] == snowflakes.Snowflake(456)
         assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
+        assert interaction.attachment_size_limit == 12345
 
         # AutocompleteInteractionOption
         assert len(interaction.options) == 1
@@ -5200,6 +5333,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_component_interaction(
@@ -5251,6 +5385,8 @@ class TestEntityFactoryImpl:
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
 
+        assert interaction.attachment_size_limit == 12345
+
     def test_deserialize_component_interaction_with_undefined_fields(
         self, entity_factory_impl, user_payload, message_payload, guild_text_channel_payload
     ):
@@ -5284,6 +5420,7 @@ class TestEntityFactoryImpl:
                 ],
                 "authorizing_integration_owners": {"0": "123", "1": "456"},
                 "context": 0,
+                "attachment_size_limit": 12345,
             }
         )
 
@@ -5332,6 +5469,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_modal_interaction(
@@ -5358,6 +5496,7 @@ class TestEntityFactoryImpl:
             interaction_member_payload, guild_id=290926798626357999
         )
         assert interaction.user is interaction.member.user
+        assert interaction.attachment_size_limit == 12345
         assert isinstance(interaction, modal_interactions.ModalInteraction)
 
         assert len(interaction.entitlements) == 1
@@ -5546,6 +5685,18 @@ class TestEntityFactoryImpl:
         return {"id": "1231231", "username": "soad", "discriminator": "3333", "avatar": None}
 
     @pytest.fixture
+    def invite_role_payload(self):
+        return {
+            "id": "41771983423143936",
+            "name": "WE DEM BOYZZ!!!!!!",
+            "position": 1,
+            "color": 3_447_003,
+            "colors": {"primary_color": 3_447_003, "secondary_color": None, "tertiary_color": None},
+            "icon": "abc123hash",
+            "unicode_emoji": "\N{OK HAND SIGN}",
+        }
+
+    @pytest.fixture
     def invite_payload(
         self,
         partial_channel_payload,
@@ -5553,6 +5704,7 @@ class TestEntityFactoryImpl:
         alternative_user_payload,
         guild_welcome_screen_payload,
         invite_application_payload,
+        invite_role_payload,
     ):
         return {
             "code": "aCode",
@@ -5571,9 +5723,12 @@ class TestEntityFactoryImpl:
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
+            "type": 0,
             "target_type": 1,
             "target_user": alternative_user_payload,
             "target_application": invite_application_payload,
+            "flags": 1,
+            "roles": [invite_role_payload],
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
             "expires_at": "2021-05-08T00:15:24.534000+00:00",
@@ -5612,11 +5767,15 @@ class TestEntityFactoryImpl:
         assert invite.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite.channel_id == 561884984214814750
         assert invite.inviter == entity_factory_impl.deserialize_user(user_payload)
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.flags == invite_models.InviteFlags.IS_GUEST_INVITE
+        assert invite.guild_scheduled_event is None
+        assert invite.role_ids == [41771983423143936]
         assert invite.target_type == invite_models.TargetType.STREAM
         assert invite.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
         assert invite.approximate_member_count == 84
         assert invite.approximate_active_member_count == 42
-        assert invite.expires_at == datetime.datetime(2021, 5, 8, 0, 15, 24, 534000, tzinfo=datetime.timezone.utc)
+        assert invite.expires_at == datetime.datetime(2021, 5, 8, 0, 15, 24, 534000, tzinfo=datetime.UTC)
         assert isinstance(invite, invite_models.Invite)
 
         # InviteApplication
@@ -5632,6 +5791,72 @@ class TestEntityFactoryImpl:
         assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
         assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
         assert isinstance(application, application_models.InviteApplication)
+
+        # InviteRole
+        assert len(invite.roles) == 1
+        role = invite.roles[0]
+        assert role.app is mock_app
+        assert role.id == 41771983423143936
+        assert role.name == "WE DEM BOYZZ!!!!!!"
+        assert role.position == 1
+        assert role.color == color_models.Color(3_447_003)
+        assert role.colors == color_models.ColorGradient(
+            primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
+        )
+        assert role.icon_hash == "abc123hash"
+        assert role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
+        assert isinstance(role, invite_models.InviteRole)
+
+    def test_deserialize_invite_when_friend_invite(self, entity_factory_impl, user_payload):
+        invite = entity_factory_impl.deserialize_invite(
+            {
+                "code": "aCode",
+                "inviter": user_payload,
+                "channel": None,
+                "type": 2,
+                "uses": 0,
+                "max_uses": 5,
+                "max_age": 604800,
+                "created_at": "2025-03-19T11:40:31.885200+00:00",
+                "expires_at": "2025-03-26T11:40:31+00:00",
+            }
+        )
+
+        assert invite.type is invite_models.InviteType.FRIEND
+        assert invite.channel is None
+        assert invite.channel_id is None
+        assert invite.guild is None
+        assert invite.guild_id is None
+
+    def test_deserialize_invite_with_metadata_when_gateway_payload(self, entity_factory_impl, user_payload):
+        invite = entity_factory_impl.deserialize_invite_with_metadata(
+            {
+                "channel_id": "43123123",
+                "code": "aCode",
+                "created_at": "2015-04-26T06:26:56.936000+00:00",
+                "guild_id": "43123123123",
+                "inviter": user_payload,
+                "max_age": 456,
+                "max_uses": 42,
+                "role_ids": ["41771983423143936", "41771983423143937"],
+                "temporary": True,
+                "uses": 0,
+            }
+        )
+
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.roles == []
+        assert invite.role_ids == [41771983423143936, 41771983423143937]
+
+    def test_deserialize_invite_with_guild_scheduled_event(self, entity_factory_impl, invite_payload):
+        mock_scheduled_event_payload = {"id": "494949"}
+        invite_payload["guild_scheduled_event"] = mock_scheduled_event_payload
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_scheduled_event") as patched:
+            invite = entity_factory_impl.deserialize_invite(invite_payload)
+
+        patched.assert_called_once_with(mock_scheduled_event_payload)
+        assert invite.guild_scheduled_event is patched.return_value
 
     def test_deserialize_invite_with_null_fields(
         self, entity_factory_impl, partial_channel_payload, invite_application_payload
@@ -5663,6 +5888,11 @@ class TestEntityFactoryImpl:
                 "approximate_presence_count": 9,
             }
         )
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.flags == invite_models.InviteFlags.NONE
+        assert invite.roles == []
+        assert invite.role_ids == []
+        assert invite.guild_scheduled_event is None
         assert invite.channel is None
         assert invite.channel_id == 43123123
         assert invite.guild is None
@@ -5771,11 +6001,9 @@ class TestEntityFactoryImpl:
         assert invite_with_metadata.max_uses == 8
         assert invite_with_metadata.max_age == datetime.timedelta(seconds=239349393)
         assert invite_with_metadata.is_temporary is True
-        assert invite_with_metadata.created_at == datetime.datetime(
-            2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc
-        )
+        assert invite_with_metadata.created_at == datetime.datetime(2015, 4, 26, 6, 26, 56, 936000, tzinfo=datetime.UTC)
         assert invite_with_metadata.expires_at == datetime.datetime(
-            2022, 11, 25, 12, 23, 29, 936000, tzinfo=datetime.timezone.utc
+            2022, 11, 25, 12, 23, 29, 936000, tzinfo=datetime.UTC
         )
         assert isinstance(invite_with_metadata, invite_models.InviteWithMetadata)
 
@@ -6569,7 +6797,16 @@ class TestEntityFactoryImpl:
             "attachments": [attachment_payload],
             "embeds": [embed_payload],
             "poll": poll_payload,
-            "reactions": [{"emoji": custom_emoji_payload, "count": 100, "me": True}],
+            "reactions": [
+                {
+                    "emoji": custom_emoji_payload,
+                    "count": 100,
+                    "count_details": {"burst": 25, "normal": 75},
+                    "me": True,
+                    "me_burst": False,
+                    "burst_colors": ["#1E9AE0"],
+                }
+            ],
             "pinned": True,
             "webhook_id": "1234",
             "type": 0,
@@ -6759,11 +6996,9 @@ class TestEntityFactoryImpl:
             member_payload, user=partial_message.author, guild_id=snowflakes.Snowflake(678)
         )
         assert partial_message.content == "some info"
-        assert partial_message.timestamp == datetime.datetime(
-            2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
-        )
+        assert partial_message.timestamp == datetime.datetime(2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.UTC)
         assert partial_message.edited_timestamp == datetime.datetime(
-            2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
+            2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.UTC
         )
         assert partial_message.is_tts is True
         assert partial_message.mentions_everyone is True
@@ -6777,7 +7012,10 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = partial_message.reactions[0]
         assert reaction.count == 100
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=25, normal=75)
         assert reaction.is_me is True
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == [color_models.Color(0x1E9AE0)]
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -6974,12 +7212,8 @@ class TestEntityFactoryImpl:
         assert message_snapshot.user_mentions_ids == [entity_factory_impl.deserialize_user(user_payload).id]
         assert message_snapshot.role_mention_ids == [snowflakes.Snowflake("333333")]
         assert message_snapshot.components == entity_factory_impl._deserialize_components([action_row_payload])
-        assert message_snapshot.timestamp == datetime.datetime(
-            2025, 6, 3, 5, 12, 59, 510000, tzinfo=datetime.timezone.utc
-        )
-        assert message_snapshot.edited_timestamp == datetime.datetime(
-            2025, 6, 3, 5, 14, 6, 510000, tzinfo=datetime.timezone.utc
-        )
+        assert message_snapshot.timestamp == datetime.datetime(2025, 6, 3, 5, 12, 59, 510000, tzinfo=datetime.UTC)
+        assert message_snapshot.edited_timestamp == datetime.datetime(2025, 6, 3, 5, 14, 6, 510000, tzinfo=datetime.UTC)
 
     def test_deserialize_message_snapshot_sticker_items_field(
         self,
@@ -7085,10 +7319,8 @@ class TestEntityFactoryImpl:
             member_payload, user=message.author, guild_id=snowflakes.Snowflake(678)
         )
         assert message.content == "some info"
-        assert message.timestamp == datetime.datetime(2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc)
-        assert message.edited_timestamp == datetime.datetime(
-            2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.timezone.utc
-        )
+        assert message.timestamp == datetime.datetime(2020, 3, 21, 21, 20, 16, 510000, tzinfo=datetime.UTC)
+        assert message.edited_timestamp == datetime.datetime(2020, 4, 21, 21, 20, 16, 510000, tzinfo=datetime.UTC)
         assert message.is_tts is True
         assert message.mentions_everyone is True
         assert message.user_mentions_ids == [5678]
@@ -7118,7 +7350,10 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = message.reactions[0]
         assert reaction.count == 100
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=25, normal=75)
         assert reaction.is_me is True
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == [color_models.Color(0x1E9AE0)]
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -7201,10 +7436,19 @@ class TestEntityFactoryImpl:
         del message_payload["mention_channels"]
         del message_payload["thread"]
         del message_payload["poll"]
+        del message_payload["reactions"][0]["count_details"]
+        del message_payload["reactions"][0]["me_burst"]
+        del message_payload["reactions"][0]["burst_colors"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
         assert message.channel_mentions == {}
+
+        # Reaction
+        reaction = message.reactions[0]
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=0, normal=100)
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == []
 
         # Activity
         assert message.activity.party_id is None
@@ -7301,6 +7545,53 @@ class TestEntityFactoryImpl:
         assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
         assert isinstance(sticker, sticker_models.PartialSticker)
 
+    def test_deserialize_message_search_result(
+        self, entity_factory_impl, message_payload, guild_public_thread_payload, thread_member_payload
+    ):
+        payload = {
+            "doing_deep_historical_index": True,
+            "documents_indexed": 100,
+            "total_results": 2,
+            "messages": [[message_payload]],
+            "threads": [guild_public_thread_payload],
+            "members": [thread_member_payload],
+        }
+
+        result = entity_factory_impl.deserialize_message_search_result(payload)
+
+        assert result.doing_deep_historical_index is True
+        assert result.documents_indexed == 100
+        assert result.total_results == 2
+        assert result.messages == [entity_factory_impl.deserialize_message(message_payload)]
+        assert result.threads == [entity_factory_impl.deserialize_guild_thread(guild_public_thread_payload)]
+        assert result.members == [entity_factory_impl.deserialize_thread_member(thread_member_payload)]
+        assert isinstance(result, message_models.MessageSearchResult)
+
+    def test_deserialize_message_search_result_skips_unknown_thread_type(
+        self, entity_factory_impl, guild_public_thread_payload
+    ):
+        payload = {
+            "doing_deep_historical_index": False,
+            "total_results": 0,
+            "messages": [],
+            "threads": [{"type": -99999}, guild_public_thread_payload],
+        }
+
+        result = entity_factory_impl.deserialize_message_search_result(payload)
+
+        assert result.threads == [entity_factory_impl.deserialize_guild_thread(guild_public_thread_payload)]
+
+    def test_deserialize_message_search_result_without_optional_fields(self, entity_factory_impl):
+        payload = {"doing_deep_historical_index": False, "total_results": 0, "messages": []}
+
+        result = entity_factory_impl.deserialize_message_search_result(payload)
+
+        assert result.doing_deep_historical_index is False
+        assert result.documents_indexed is None
+        assert result.messages == []
+        assert result.threads == []
+        assert result.members == []
+
     ###################
     # PRESENCE MODELS #
     ###################
@@ -7319,14 +7610,10 @@ class TestEntityFactoryImpl:
         assert activity.name == "an activity"
         assert activity.type == presence_models.ActivityType.STREAMING
         assert activity.url == "https://69.420.owouwunyaa"
-        assert activity.created_at == datetime.datetime(2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.timezone.utc)
+        assert activity.created_at == datetime.datetime(2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.UTC)
         # ActivityTimestamps
-        assert activity.timestamps.start == datetime.datetime(
-            2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.timezone.utc
-        )
-        assert activity.timestamps.end == datetime.datetime(
-            2033, 5, 18, 3, 29, 52, 798000, tzinfo=datetime.timezone.utc
-        )
+        assert activity.timestamps.start == datetime.datetime(2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.UTC)
+        assert activity.timestamps.end == datetime.datetime(2033, 5, 18, 3, 29, 52, 798000, tzinfo=datetime.UTC)
 
         assert activity.application_id == 40404040404040
         assert activity.details == "They are doing stuff"
@@ -7524,6 +7811,18 @@ class TestEntityFactoryImpl:
             "sku_ids": [],
             "creator": user_payload,
             "user_count": 2,
+            "recurrence_rule": {
+                "start": "2022-03-05T21:15:00.654000+00:00",
+                "end": "2023-03-05T21:15:00.654000+00:00",
+                "frequency": 2,
+                "interval": 2,
+                "by_weekday": [2, 4],
+                "by_n_weekday": [{"n": 4, "day": 2}],
+                "by_month": [7],
+                "by_month_day": [24],
+                "by_year_day": [180],
+                "count": 10,
+            },
         }
 
     def test_deserialize_scheduled_external_event(
@@ -7539,8 +7838,8 @@ class TestEntityFactoryImpl:
         assert event.guild_id == 1525593721265219296
         assert event.name == "bleep"
         assert event.description == "bloop"
-        assert event.start_time == datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.timezone.utc)
-        assert event.end_time == datetime.datetime(2022, 3, 5, 23, 15, 0, 654000, tzinfo=datetime.timezone.utc)
+        assert event.start_time == datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.UTC)
+        assert event.end_time == datetime.datetime(2022, 3, 5, 23, 15, 0, 654000, tzinfo=datetime.UTC)
         assert event.privacy_level is scheduled_event_models.EventPrivacyLevel.GUILD_ONLY
         assert event.status is scheduled_event_models.ScheduledEventStatus.COMPLETED
         assert event.entity_type is scheduled_event_models.ScheduledEventType.EXTERNAL
@@ -7548,6 +7847,25 @@ class TestEntityFactoryImpl:
         assert event.creator == entity_factory_impl.deserialize_user(user_payload)
         assert event.user_count == 2
         assert event.image_hash == "dsaasdasd"
+        assert event.recurrence_rule == scheduled_event_models.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.UTC),
+            end=datetime.datetime(2023, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.UTC),
+            frequency=scheduled_event_models.ScheduledEventRecurrenceFrequency.WEEKLY,
+            interval=2,
+            by_weekday=[
+                scheduled_event_models.ScheduledEventRecurrenceWeekday.WEDNESDAY,
+                scheduled_event_models.ScheduledEventRecurrenceWeekday.FRIDAY,
+            ],
+            by_n_weekday=[
+                scheduled_event_models.ScheduledEventRecurrenceNWeekday(
+                    n=4, day=scheduled_event_models.ScheduledEventRecurrenceWeekday.WEDNESDAY
+                )
+            ],
+            by_month=[scheduled_event_models.ScheduledEventRecurrenceMonth.JULY],
+            by_month_day=[24],
+            by_year_day=[180],
+            count=10,
+        )
         assert isinstance(event, scheduled_event_models.ScheduledExternalEvent)
 
     def test_deserialize_scheduled_external_event_with_null_fields(
@@ -7574,6 +7892,7 @@ class TestEntityFactoryImpl:
         del scheduled_external_event_payload["description"]
         del scheduled_external_event_payload["image"]
         del scheduled_external_event_payload["user_count"]
+        del scheduled_external_event_payload["recurrence_rule"]
 
         event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
 
@@ -7581,6 +7900,33 @@ class TestEntityFactoryImpl:
         assert event.image_hash is None
         assert event.creator is None
         assert event.user_count is None
+        assert event.recurrence_rule is None
+
+    def test_deserialize_scheduled_external_event_with_minimal_recurrence_rule(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        scheduled_external_event_payload: dict[str, typing.Any],
+    ):
+        scheduled_external_event_payload["recurrence_rule"] = {
+            "start": "2022-03-05T21:15:00.654000+00:00",
+            "end": None,
+            "frequency": 3,
+            "interval": 1,
+            "by_weekday": None,
+            "by_n_weekday": None,
+            "by_month": None,
+            "by_month_day": None,
+            "by_year_day": None,
+            "count": None,
+        }
+
+        event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
+
+        assert event.recurrence_rule == scheduled_event_models.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2022, 3, 5, 21, 15, 0, 654000, tzinfo=datetime.UTC),
+            frequency=scheduled_event_models.ScheduledEventRecurrenceFrequency.DAILY,
+            interval=1,
+        )
 
     @pytest.fixture
     def scheduled_stage_event_payload(self, user_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
@@ -7619,14 +7965,15 @@ class TestEntityFactoryImpl:
         assert event.channel_id == 9492384510463386001
         assert event.name == "dasd"
         assert event.description == "weqwe"
-        assert event.start_time == datetime.datetime(2022, 3, 5, 18, 15, 0, 904000, tzinfo=datetime.timezone.utc)
-        assert event.end_time == datetime.datetime(2022, 6, 5, 18, 15, 0, 904000, tzinfo=datetime.timezone.utc)
+        assert event.start_time == datetime.datetime(2022, 3, 5, 18, 15, 0, 904000, tzinfo=datetime.UTC)
+        assert event.end_time == datetime.datetime(2022, 6, 5, 18, 15, 0, 904000, tzinfo=datetime.UTC)
         assert event.privacy_level is scheduled_event_models.EventPrivacyLevel.GUILD_ONLY
         assert event.status is scheduled_event_models.ScheduledEventStatus.ACTIVE
         assert event.entity_type is scheduled_event_models.ScheduledEventType.STAGE_INSTANCE
         assert event.creator == entity_factory_impl.deserialize_user(user_payload)
         assert event.user_count == 3
         assert event.image_hash == "ooooooooggaaaaa"
+        assert event.recurrence_rule is None
         assert isinstance(event, scheduled_event_models.ScheduledStageEvent)
 
     def test_deserialize_scheduled_stage_event_with_null_fields(
@@ -7700,14 +8047,15 @@ class TestEntityFactoryImpl:
         assert event.channel_id == 152559372126519297
         assert event.name == "meep"
         assert event.description == "beeee"
-        assert event.start_time == datetime.datetime(2022, 3, 5, 21, 0, 0, 662000, tzinfo=datetime.timezone.utc)
-        assert event.end_time == datetime.datetime(2023, 3, 5, 21, 0, 0, 662000, tzinfo=datetime.timezone.utc)
+        assert event.start_time == datetime.datetime(2022, 3, 5, 21, 0, 0, 662000, tzinfo=datetime.UTC)
+        assert event.end_time == datetime.datetime(2023, 3, 5, 21, 0, 0, 662000, tzinfo=datetime.UTC)
         assert event.privacy_level is scheduled_event_models.EventPrivacyLevel.GUILD_ONLY
         assert event.status is scheduled_event_models.ScheduledEventStatus.SCHEDULED
         assert event.entity_type is scheduled_event_models.ScheduledEventType.VOICE
         assert event.creator == entity_factory_impl.deserialize_user(user_payload)
         assert event.user_count == 1
         assert event.image_hash == "eeeeeeeeeeeeeeeeeee"
+        assert event.recurrence_rule is None
         assert isinstance(event, scheduled_event_models.ScheduledVoiceEvent)
 
     def test_deserialize_scheduled_voice_event_with_null_fields(
@@ -7855,8 +8203,8 @@ class TestEntityFactoryImpl:
         assert template.description == "eee"
         assert template.usage_count == 42
         assert template.creator == entity_factory_impl.deserialize_user(user_payload)
-        assert template.created_at == datetime.datetime(2020, 12, 15, 1, 54, 35, tzinfo=datetime.timezone.utc)
-        assert template.updated_at == datetime.datetime(2020, 12, 15, 1, 57, 35, tzinfo=datetime.timezone.utc)
+        assert template.created_at == datetime.datetime(2020, 12, 15, 1, 54, 35, tzinfo=datetime.UTC)
+        assert template.updated_at == datetime.datetime(2020, 12, 15, 1, 57, 35, tzinfo=datetime.UTC)
 
         # TemplateGuild
         assert template.source_guild.app is mock_app
@@ -7952,7 +8300,7 @@ class TestEntityFactoryImpl:
         decoration = entity_factory_impl._deserialize_avatar_decoration(avatar_decoration_payload)
         assert decoration.asset_hash == "ahhhhhhvatardecoration"
         assert decoration.sku_id == 789
-        assert decoration.expires_at == datetime.datetime(2025, 4, 4, 8, 1, 1, tzinfo=datetime.timezone.utc)
+        assert decoration.expires_at == datetime.datetime(2025, 4, 4, 8, 1, 1, tzinfo=datetime.UTC)
 
     def test_deserialize_avatar_decoration_with_no_expiry(
         self, entity_factory_impl, mock_app: mock.Mock, avatar_decoration_payload: dict[str, typing.Any]
@@ -8115,7 +8463,7 @@ class TestEntityFactoryImpl:
         assert voice_state.is_video_enabled is True
         assert voice_state.is_suppressed is False
         assert voice_state.requested_to_speak_at == datetime.datetime(
-            2021, 4, 17, 10, 11, 19, 970105, tzinfo=datetime.timezone.utc
+            2021, 4, 17, 10, 11, 19, 970105, tzinfo=datetime.UTC
         )
         assert isinstance(voice_state, voice_models.VoiceState)
 
@@ -8375,6 +8723,7 @@ class TestEntityFactoryImpl:
             "application_id": "123123123123123",
             "type": 8,
             "deleted": False,
+            "consumed": True,
             "starts_at": "2022-09-14T17:00:18.704163+00:00",
             "ends_at": "2022-10-14T17:00:18.704163+00:00",
             "guild_id": "1015034326372454400",
@@ -8416,8 +8765,9 @@ class TestEntityFactoryImpl:
         assert entitlement.application_id == 123123123123123
         assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
         assert entitlement.is_deleted is False
-        assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
-        assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
+        assert entitlement.is_consumed is True
+        assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.UTC)
+        assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.UTC)
         assert entitlement.guild_id == 1015034326372454400
         assert entitlement.user_id == 115590097100865541
         assert entitlement.subscription_id == 1019653835926409216
@@ -8431,6 +8781,7 @@ class TestEntityFactoryImpl:
         assert entitlement.application_id == 123123123123123
         assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
         assert entitlement.is_deleted is False
+        assert entitlement.is_consumed is False
         assert entitlement.starts_at is None
         assert entitlement.ends_at is None
         assert entitlement.guild_id == 1015034326372454400
@@ -8520,7 +8871,7 @@ class TestEntityFactoryImpl:
         assert answer_2_emoji.id == 88472
         assert answer_2_emoji.name == "platy"
 
-        assert poll.expiry == datetime.datetime(2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc)
+        assert poll.expiry == datetime.datetime(2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.UTC)
         assert poll.allow_multiselect is True
         assert poll.layout_type == poll_models.PollLayoutType.DEFAULT
 

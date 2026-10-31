@@ -37,6 +37,7 @@ import zlib
 import aiohttp
 
 from hikari import _about as about
+from hikari import capabilities as capabilities_
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -61,6 +62,12 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
+
+    # TODO: drop when removing backports.zstd
+    class _ZstdDecompressor(typing.Protocol):
+        def decompress(self, data: bytes, max_length: int = ...) -> bytes:
+            raise NotImplementedError
+
 
 if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
@@ -90,9 +97,11 @@ _REQUEST_GUILD_MEMBERS: typing.Final[int] = 8
 _INVALID_SESSION: typing.Final[int] = 9
 _HELLO: typing.Final[int] = 10
 _HEARTBEAT_ACK: typing.Final[int] = 11
+_REQUEST_CHANNEL_INFO: typing.Final[int] = 43
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
+_RATE_LIMITED: typing.Final[str] = sys.intern("RATE_LIMITED")
 # If we disconnect within this period of time after starting, we should
 # use an exponential backoff before restarting.
 _BACKOFF_WINDOW: typing.Final[float] = 30.0
@@ -146,7 +155,7 @@ class _GatewayTransport(abc.ABC):
     def __init__(
         self,
         *,
-        ws: aiohttp.ClientWebSocketResponse,
+        ws: aiohttp.ClientWebSocketResponse[typing.Literal[False]],
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[bytes], bytes],
@@ -170,7 +179,7 @@ class _GatewayTransport(abc.ABC):
         try:
             await asyncio.wait_for(self._ws.close(code=code, message=message), timeout=5)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._logger.debug("failed to send close frame in time, probably connection issues")
 
         finally:
@@ -264,12 +273,14 @@ class _GatewayTransport(abc.ABC):
                     )
                 )
 
+                web_socket: aiohttp.ClientWebSocketResponse[typing.Literal[False]]
                 web_socket = await exit_stack.enter_async_context(
                     client_session.ws_connect(
                         max_msg_size=0,
                         proxy=proxy_settings.url,
                         proxy_headers=proxy_settings.headers,
                         url=url,
+                        decode_text=False,
                         # We manage this ourselves
                         autoclose=False,
                     )
@@ -296,7 +307,7 @@ class _GatewayTransport(abc.ABC):
                     dumps=dumps,
                 )
 
-            except (aiohttp.ClientConnectionError, aiohttp.ClientResponseError, asyncio.TimeoutError) as ex:
+            except (TimeoutError, aiohttp.ClientConnectionError, aiohttp.ClientResponseError) as ex:
                 # If we cannot do DNS lookup, this will fail with an aiohttp.ClientConnectionError
                 # usually, but it might also fail with asyncio.TimeoutError if its gets stuck in a weird way
                 #
@@ -351,11 +362,11 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message)
+                self._handle_other_message(message)  # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -363,6 +374,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
+        self._inflator: _ZstdDecompressor
 
         if sys.version_info >= (3, 14):
             from compression import zstd  # noqa: PLC0415
@@ -383,7 +395,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -397,10 +409,10 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return zlib.decompress(message.data)
         if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
+            assert isinstance(message.data, bytes)
+            return message.data
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -411,10 +423,10 @@ class _GatewayBasicTransport(_GatewayTransport):
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
+            assert isinstance(message.data, bytes)
+            return message.data
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
@@ -485,6 +497,11 @@ class GatewayShardImpl(shard.GatewayShard):
         The initial status to set on login for the shard.
     intents
         Collection of intents to use.
+    capabilities
+        Collection of capabilities to declare.
+
+        These opt the application into gateway behaviors such as
+        [`hikari.capabilities.GatewayCapabilities.CHANNEL_OBFUSCATION`][].
     large_threshold
         The number of members to have in a guild for it to be considered large.
     shard_id
@@ -501,6 +518,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_capabilities",
         "_compression",
         "_dumps",
         "_event_factory",
@@ -544,6 +562,7 @@ class GatewayShardImpl(shard.GatewayShard):
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
         intents: intents_.Intents,
+        capabilities: capabilities_.GatewayCapabilities = capabilities_.GatewayCapabilities.NONE,
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
@@ -560,6 +579,7 @@ class GatewayShardImpl(shard.GatewayShard):
             raise NotImplementedError(msg)
 
         self._activity = initial_activity
+        self._capabilities = capabilities
         self._event_manager = event_manager
         self._event_factory = event_factory
         self._gateway_url = url
@@ -594,6 +614,11 @@ class GatewayShardImpl(shard.GatewayShard):
         self._loads = loads
         self._user_id: snowflakes.Snowflake | None = None
         self._ws: _GatewayTransport | None = None
+
+    @property
+    @typing_extensions.override
+    def capabilities(self) -> capabilities_.GatewayCapabilities:
+        return self._capabilities
 
     @property
     @typing_extensions.override
@@ -723,6 +748,18 @@ class GatewayShardImpl(shard.GatewayShard):
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
     @typing_extensions.override
+    async def request_channel_info(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[shard.ChannelInfoField]
+    ) -> None:
+        self._check_if_connected()
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("guild_id", guild)
+        payload.put("fields", [str(field) for field in fields])
+
+        await self._send_json({_OP: _REQUEST_CHANNEL_INFO, _D: payload})
+
+    @typing_extensions.override
     async def start(self) -> None:
         if self._keep_alive_task or self._handshake_event:
             msg = "Cannot run more than one instance of one shard concurrently"
@@ -801,7 +838,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             await asyncio.sleep(heartbeat_interval)
 
-    async def _poll_events(self) -> None:
+    async def _poll_events(self) -> None:  # noqa: PLR0912 - Too many branches
         assert self._ws is not None
         assert self._handshake_event is not None
 
@@ -840,6 +877,14 @@ class GatewayShardImpl(shard.GatewayShard):
                 elif name == _RESUMED:
                     self._logger.info("resumed session [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
+                elif name == _RATE_LIMITED:
+                    self._logger.warning(
+                        "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
+                        data["opcode"],
+                        data["retry_after"],
+                        self._session_id,
+                        data["meta"],
+                    )
 
                 try:
                     self._event_manager.consume_raw_event(name, self, data)
@@ -961,6 +1006,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         },
                         "shard": [self._shard_id, self._shard_count],
                         "intents": self._intents,
+                        "capabilities": self._capabilities,
                         "presence": self._serialize_and_store_presence_payload(),
                     },
                 }

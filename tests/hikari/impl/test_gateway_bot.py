@@ -33,6 +33,7 @@ from hikari import errors
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
+from hikari.api import shard as shard_api
 from hikari.impl import cache as cache_impl
 from hikari.impl import config
 from hikari.impl import entity_factory as entity_factory_impl
@@ -118,6 +119,10 @@ class TestGatewayBot:
         return mock.Mock()
 
     @pytest.fixture
+    def capabilities(self):
+        return mock.Mock()
+
+    @pytest.fixture
     def proxy_settings(self):
         return mock.Mock()
 
@@ -136,6 +141,7 @@ class TestGatewayBot:
         voice,
         executor,
         intents,
+        capabilities,
         proxy_settings,
         http_settings,
         token,
@@ -158,6 +164,7 @@ class TestGatewayBot:
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 intents=intents,
+                capabilities=capabilities,
                 max_retries=0,
             )
 
@@ -177,6 +184,7 @@ class TestGatewayBot:
         http_settings = object()
         proxy_settings = object()
         intents = object()
+        capabilities = object()
 
         with stack:
             bot = bot_impl.GatewayBot(
@@ -189,6 +197,7 @@ class TestGatewayBot:
                 cache_settings=cache_settings,
                 http_settings=http_settings,
                 intents=intents,
+                capabilities=capabilities,
                 auto_chunk_members=False,
                 logs="DEBUG",
                 max_rate_limit=200,
@@ -199,6 +208,7 @@ class TestGatewayBot:
 
         assert bot._http_settings is http_settings
         assert bot._proxy_settings is proxy_settings
+        assert bot._capabilities is capabilities
         assert bot._cache is cache.return_value
         cache.assert_called_once_with(bot, cache_settings)
         assert bot._event_manager is event_manager.return_value
@@ -323,6 +333,9 @@ class TestGatewayBot:
 
     def test_intents(self, bot, intents):
         assert bot.intents is intents
+
+    def test_capabilities(self, bot, capabilities):
+        assert bot.capabilities is capabilities
 
     def test_get_me(self, bot, cache):
         assert bot.get_me() is cache.get_me.return_value
@@ -943,6 +956,25 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
+    async def test_request_channel_info(self, bot):
+        shard = mock.Mock(shard_count=3)
+        shard.request_channel_info = mock.AsyncMock()
+
+        with mock.patch.object(bot_impl.GatewayBot, "_get_shard", return_value=shard) as get_shard:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
+                await bot.request_channel_info(
+                    115590097100865541,
+                    fields=[shard_api.ChannelInfoField.STATUS, shard_api.ChannelInfoField.VOICE_START_TIME],
+                )
+
+        check_if_alive.assert_called_once_with()
+        get_shard.assert_called_once_with(115590097100865541)
+        shard.request_channel_info.assert_awaited_once_with(
+            guild=115590097100865541,
+            fields=[shard_api.ChannelInfoField.STATUS, shard_api.ChannelInfoField.VOICE_START_TIME],
+        )
+
+    @pytest.mark.asyncio
     async def test_start_one_shard(self, bot):
         activity = object()
         status = object()
@@ -967,6 +999,7 @@ class TestGatewayBot:
             event_manager=bot._event_manager,
             event_factory=bot._event_factory,
             intents=bot._intents,
+            capabilities=bot._capabilities,
             initial_activity=activity,
             initial_is_afk=True,
             initial_idle_since=None,

@@ -46,7 +46,7 @@ from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import intents as intents_
     from hikari.api import event_factory as event_factory_
@@ -55,9 +55,7 @@ if typing.TYPE_CHECKING:
 
     _ConsumerT = typing.Callable[[gateway_shard.GatewayShard, data_binding.JSONObject], None]
     _ListenerMapT = dict[type[base_events.EventT], list[event_manager_.CallbackT[base_events.EventT]]]
-    _WaiterT = tuple[
-        typing.Optional[event_manager_.PredicateT[base_events.EventT]], "asyncio.Future[base_events.EventT]"
-    ]
+    _WaiterT = tuple[event_manager_.PredicateT[base_events.EventT] | None, "asyncio.Future[base_events.EventT]"]
     _WaiterMapT = dict[type[base_events.EventT], set[_WaiterT[base_events.EventT]]]
 
     _EventManagerBaseT = typing.TypeVar("_EventManagerBaseT", bound="EventManagerBase")
@@ -167,7 +165,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
             try:
                 await asyncio.wait_for(self._event.wait(), timeout=self._timeout)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise StopAsyncIteration from None
 
             self._event.clear()
@@ -610,7 +608,7 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: float | None,
+        timeout: float | None,  # noqa: ASYNC109
         predicate: event_manager_.PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         self._check_event(event_type, 1)
@@ -630,7 +628,7 @@ class EventManagerBase(event_manager_.EventManager):
         waiter_set.add(pair)  # type: ignore[arg-type]
         try:
             return await asyncio.wait_for(future, timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             waiter_set.remove(pair)  # type: ignore[arg-type]
             if not waiter_set:
                 del self._waiters[event_type]

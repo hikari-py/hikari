@@ -12,6 +12,7 @@ from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
 from hikari.events.monetization_events import *
+from hikari.events.poll_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *

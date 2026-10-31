@@ -28,7 +28,7 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
     from hikari import channels
     from hikari import guilds
@@ -86,7 +86,7 @@ class VoiceComponent(abc.ABC):
         *,
         deaf: bool = False,
         mute: bool = False,
-        timeout: int | None = 5,
+        timeout: int | None = 5,  # noqa: ASYNC109
         **kwargs: object,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.

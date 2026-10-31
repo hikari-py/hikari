@@ -63,10 +63,10 @@ if typing.TYPE_CHECKING:
     from hikari.interactions import modal_interactions
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
-    _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
-    ]
-    _ModalOrMessageResponseBuilderT = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
+    _MessageResponseBuilderT = (
+        special_endpoints.InteractionDeferredBuilder | special_endpoints.InteractionMessageBuilder
+    )
+    _ModalOrMessageResponseBuilderT = _MessageResponseBuilderT | special_endpoints.InteractionModalBuilder
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.interaction_server")
 
@@ -478,6 +478,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 call = listener(interaction)
 
                 if inspect.isasyncgen(call):
+                    call = typing.cast("typing.AsyncGenerator[typing.Any, typing.Any]", call)
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
 

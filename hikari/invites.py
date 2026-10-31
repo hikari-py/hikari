@@ -22,7 +22,17 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Invite", "InviteCode", "InviteGuild", "InviteWithMetadata", "TargetType", "VanityURL")
+__all__: typing.Sequence[str] = (
+    "Invite",
+    "InviteCode",
+    "InviteFlags",
+    "InviteGuild",
+    "InviteRole",
+    "InviteType",
+    "InviteWithMetadata",
+    "TargetType",
+    "VanityURL",
+)
 
 import abc
 import typing
@@ -42,7 +52,11 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari import channels
+    from hikari import colors as colors_
+    from hikari import colours as colours_
+    from hikari import emojis as emojis_
     from hikari import files
+    from hikari import scheduled_events as scheduled_events_
     from hikari import snowflakes
     from hikari import traits
     from hikari import users
@@ -57,6 +71,31 @@ class TargetType(int, enums.Enum):
 
     EMBEDDED_APPLICATION = 2
     """This invite is targeting an embedded application."""
+
+
+@typing.final
+class InviteType(int, enums.Enum):
+    """The type of an invite."""
+
+    GUILD = 0
+    """This invite is inviting to a guild."""
+
+    GROUP_DM = 1
+    """This invite is inviting to a group DM."""
+
+    FRIEND = 2
+    """This invite is a friend invite, inviting directly to a user."""
+
+
+@typing.final
+class InviteFlags(enums.Flag):
+    """The flags of a guild invite."""
+
+    NONE = 0
+    """No flags set."""
+
+    IS_GUEST_INVITE = 1 << 0
+    """This invite is a guest invite for a voice channel."""
 
 
 class InviteCode(abc.ABC):
@@ -227,6 +266,90 @@ class InviteGuild(guilds.PartialGuild):
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class InviteRole(guilds.PartialRole):
+    """Represents the partial role objects attached to an invite.
+
+    These are the roles which will be assigned to the user upon accepting
+    the invite.
+    """
+
+    color: colors_.Color = attrs.field(eq=False, hash=False, repr=True)
+    """The colour of this role."""
+
+    colors: colors_.ColorGradient = attrs.field(eq=False, hash=False, repr=True)
+    """The colors of this role.
+
+    Unlike the [`color`][hikari.invites.InviteRole.color] field, this can also
+    hold the role's gradient or holographic colors if set.
+    """
+
+    position: int = attrs.field(eq=False, hash=False, repr=True)
+    """The position of this role in the role hierarchy."""
+
+    icon_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the role's icon if set, else [`None`][]."""
+
+    unicode_emoji: emojis_.UnicodeEmoji | None = attrs.field(eq=False, hash=False, repr=False)
+    """Unicode emoji that makes up the role's icon, if set."""
+
+    @property
+    def colour(self) -> colours_.Colour:
+        """Alias for the `color` field."""
+        return self.color
+
+    @property
+    def colours(self) -> colours_.ColourGradient:
+        """Alias for the `colors` field."""
+        return self.colors
+
+    def make_icon_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+    ) -> files.URL | None:
+        """Generate the icon URL for this role, if set.
+
+        If no icon is set, this returns [`None`][].
+
+        Parameters
+        ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL, or [`None`][] if no icon is set.
+
+        Raises
+        ------
+        TypeError
+            If an invalid format is passed for `file_format`.
+        ValueError
+            If `size` is specified but is not a power of two or not between 16 and 4096.
+        """
+        if self.icon_hash is None:
+            return None
+
+        return routes.CDN_ROLE_ICON.compile_to_file(
+            urls.CDN_URL, role_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
+        )
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
@@ -237,6 +360,14 @@ class Invite(InviteCode):
 
     code: str = attrs.field(hash=True, repr=True)
     """The code for this invite."""
+
+    type: InviteType | int = attrs.field(eq=False, hash=False, repr=True)
+    """The type of this invite.
+
+    !!! note
+        Invite payloads attached to gateway events don't include the type,
+        in which case this will default to [`hikari.invites.InviteType.GUILD`][].
+    """
 
     guild: InviteGuild | None = attrs.field(eq=False, hash=False, repr=False)
     """The partial object of the guild this invite belongs to.
@@ -258,8 +389,12 @@ class Invite(InviteCode):
     in which case you should refer to [`hikari.invites.Invite.channel_id`][].
     """
 
-    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
-    """The ID of the channel this invite targets."""
+    channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the channel this invite targets.
+
+    Will be [`None`][] for friend invites, which target a user directly
+    instead of a channel.
+    """
 
     inviter: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The object of the user who created this invite."""
@@ -272,6 +407,24 @@ class Invite(InviteCode):
 
     target_application: applications.InviteApplication | None = attrs.field(eq=False, hash=False, repr=False)
     """The embedded application this invite targets, if applicable."""
+
+    guild_scheduled_event: scheduled_events_.ScheduledEvent | None = attrs.field(eq=False, hash=False, repr=False)
+    """The scheduled event data attached to this invite, if any."""
+
+    flags: InviteFlags = attrs.field(eq=False, hash=False, repr=False)
+    """The flags of this guild invite."""
+
+    roles: typing.Sequence[InviteRole] = attrs.field(eq=False, hash=False, repr=False)
+    """The partial objects of the roles assigned to the user upon accepting this invite.
+
+    !!! note
+        Invite payloads attached to gateway events only include the role IDs,
+        in which case this will be empty and you should refer to
+        [`hikari.invites.Invite.role_ids`][].
+    """
+
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The IDs of the roles assigned to the user upon accepting this invite."""
 
     approximate_active_member_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate amount of presences in this invite's guild.
