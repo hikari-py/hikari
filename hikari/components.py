@@ -766,7 +766,7 @@ The following values are valid for this:
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
 
-ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent]]
+ModalComponentTypesT = ActionRowComponent[PartialComponent]
 """Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:

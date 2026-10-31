@@ -3720,18 +3720,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_interaction_components(
         self, payloads: data_binding.JSONArray
     ) -> typing.Sequence[interaction_components.InteractionComponentTypesT]:
-        interaction_components: list[interaction_components.InteractionComponentTypesT] = []
+        components: list[interaction_components.InteractionComponentTypesT] = []
 
         for payload in payloads:
             interaction_component_type = component_models.ComponentType(payload["type"])
 
             if deserializer := self._interaction_components_mapping.get(interaction_component_type):
-                interaction_components.append(deserializer(payload))
+                components.append(deserializer(payload))
             else:
                 _LOGGER.debug("Unknown component type %s", interaction_component_type)
                 continue
 
-        return interaction_components
+        return components
 
     def _deserialize_interaction_label_component(
         self, payload: data_binding.JSONObject
