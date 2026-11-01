@@ -6677,6 +6677,18 @@ class TestEntityFactoryImpl:
     def modal_file_upload_component_payload(self):
         return {"type": 19, "id": 4835973, "custom_id": "file-upload-component", "values": ["690922406474154014"]}
 
+    @pytest.fixture
+    def modal_radio_group_component_payload(self):
+        return {"type": 21, "id": 3498573, "custom_id": "radio-group-component", "value": "warrior"}
+
+    @pytest.fixture
+    def modal_checkbox_group_component_payload(self):
+        return {"type": 22, "id": 7845634, "custom_id": "checkbox-group-component", "values": ["march-5", "march-10"]}
+
+    @pytest.fixture
+    def modal_checkbox_component_payload(self):
+        return {"type": 23, "id": 9834753, "custom_id": "checkbox-component", "value": True}
+
     def test__deserialize_modal_components(
         self, entity_factory_impl, modal_label_component_payload, modal_action_row_component_payload
     ):
@@ -6712,6 +6724,34 @@ class TestEntityFactoryImpl:
         )
 
         assert isinstance(label, modal_models.ModalLabelComponent)
+
+    @pytest.mark.parametrize(
+        ("type_", "fn"),
+        [
+            (4, "_deserialize_modal_text_input_component"),
+            (3, "_deserialize_modal_text_select_menu_component"),
+            (5, "_deserialize_modal_user_select_menu_component"),
+            (6, "_deserialize_modal_role_select_menu_component"),
+            (7, "_deserialize_modal_mentionable_select_menu_component"),
+            (8, "_deserialize_modal_channel_select_menu_component"),
+            (19, "_deserialize_modal_file_upload_component"),
+            (21, "_deserialize_modal_radio_group_component"),
+            (22, "_deserialize_modal_checkbox_group_component"),
+            (23, "_deserialize_modal_checkbox_component"),
+        ],
+    )
+    def test__deserialize_modal_label_component_dispatches_child_component(self, mock_app, type_, fn):
+        component_payload = {"type": type_}
+        payload = {"type": 18, "id": 2342334, "component": component_payload}
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
+            # The mapping captures the bound methods on instantiation, so patch first
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+
+            label = entity_factory_impl._deserialize_modal_label_component(payload)
+
+        expected_fn.assert_called_once_with(component_payload)
+        assert label.component is expected_fn.return_value
 
     def test__deserialize_modal_label_component_unknown_component_type(
         self, entity_factory_impl, modal_label_component_payload
@@ -6844,6 +6884,49 @@ class TestEntityFactoryImpl:
         assert file_upload.values == [snowflakes.Snowflake(690922406474154014)]
 
         assert isinstance(file_upload, modal_models.ModalFileUploadComponent)
+
+    def test__deserialize_modal_radio_group_component(self, entity_factory_impl, modal_radio_group_component_payload):
+        radio_group = entity_factory_impl._deserialize_modal_radio_group_component(modal_radio_group_component_payload)
+
+        assert radio_group.type == component_models.ComponentType.RADIO_GROUP
+        assert radio_group.id == 3498573
+        assert radio_group.custom_id == "radio-group-component"
+        assert radio_group.value == "warrior"
+
+        assert isinstance(radio_group, modal_models.ModalRadioGroupComponent)
+
+    def test__deserialize_modal_radio_group_component_without_selection(
+        self, entity_factory_impl, modal_radio_group_component_payload
+    ):
+        modal_radio_group_component_payload["value"] = None
+
+        radio_group = entity_factory_impl._deserialize_modal_radio_group_component(modal_radio_group_component_payload)
+
+        assert radio_group.value is None
+
+    def test__deserialize_modal_checkbox_group_component(
+        self, entity_factory_impl, modal_checkbox_group_component_payload
+    ):
+        checkbox_group = entity_factory_impl._deserialize_modal_checkbox_group_component(
+            modal_checkbox_group_component_payload
+        )
+
+        assert checkbox_group.type == component_models.ComponentType.CHECKBOX_GROUP
+        assert checkbox_group.id == 7845634
+        assert checkbox_group.custom_id == "checkbox-group-component"
+        assert checkbox_group.values == ["march-5", "march-10"]
+
+        assert isinstance(checkbox_group, modal_models.ModalCheckboxGroupComponent)
+
+    def test__deserialize_modal_checkbox_component(self, entity_factory_impl, modal_checkbox_component_payload):
+        checkbox = entity_factory_impl._deserialize_modal_checkbox_component(modal_checkbox_component_payload)
+
+        assert checkbox.type == component_models.ComponentType.CHECKBOX
+        assert checkbox.id == 9834753
+        assert checkbox.custom_id == "checkbox-component"
+        assert checkbox.is_checked is True
+
+        assert isinstance(checkbox, modal_models.ModalCheckboxComponent)
 
     ##################
     # MESSAGE MODELS #
