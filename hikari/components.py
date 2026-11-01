@@ -41,6 +41,7 @@ __all__: typing.Sequence[str] = (
     "MediaResourceFlag",
     "MessageActionRowComponent",
     "MessageComponentTypesT",
+    "ModalActionRowComponent",
     "PartialComponent",
     "SectionComponent",
     "SelectMenuComponent",
@@ -62,6 +63,7 @@ import attrs
 from hikari import channels
 from hikari import emojis
 from hikari import files
+from hikari import modals
 from hikari import undefined
 from hikari.internal import enums
 from hikari.internal import typing_extensions
@@ -443,17 +445,6 @@ class ChannelSelectMenuComponent(SelectMenuComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class TextInputComponent(PartialComponent):
-    """Represents a text input component."""
-
-    custom_id: str = attrs.field(repr=True)
-    """Developer set custom ID used for identifying interactions with this modal."""
-
-    value: str = attrs.field(repr=True)
-    """Value provided for this text input."""
-
-
-@attrs.define(kw_only=True, weakref_slot=False)
 class MediaResource(files.Resource[files.AsyncReader]):
     """Represents a media resource."""
 
@@ -769,6 +760,20 @@ The following values are valid for this:
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
+
+TextInputComponent = modals.ModalTextInputComponent
+"""Represents a text input component submitted through a modal.
+
+!!! deprecated 2.7.1
+    Use [`hikari.modals.ModalTextInputComponent`][] instead.
+"""
+
+ModalActionRowComponent = modals.ModalActionRowComponent
+"""A modal action row component.
+
+!!! deprecated 2.7.1
+    Use [`hikari.modals.ModalActionRowComponent`][] instead.
+"""
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
     (
