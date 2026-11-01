@@ -196,6 +196,10 @@ def _format_modal_submission(interaction: hikari.ModalInteraction) -> str:
             elif isinstance(child, hikari.ModalFileUploadComponent):
                 ids = ", ".join(str(s) for s in child.values) or "(none)"
                 lines.append(f"- file_upload `{child.custom_id}`: {ids}")
+            elif isinstance(child, hikari.ModalRadioGroupComponent):
+                lines.append(f"- radio_group `{child.custom_id}`: {child.value or '(none)'}")
+            elif isinstance(child, hikari.ModalCheckboxComponent):
+                lines.append(f"- checkbox `{child.custom_id}`: {child.is_checked}")
             else:
                 values = ", ".join(str(v) for v in child.values) or "(none)"
                 lines.append(f"- select `{child.custom_id}`: {values}")

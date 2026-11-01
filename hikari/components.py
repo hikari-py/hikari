@@ -197,6 +197,30 @@ class ComponentType(int, enums.Enum):
         as [`hikari.components.ComponentType.LABEL`][].
     """
 
+    RADIO_GROUP = 21
+    """A radio group component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.LABEL`][].
+    """
+
+    CHECKBOX_GROUP = 22
+    """A checkbox group component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.LABEL`][].
+    """
+
+    CHECKBOX = 23
+    """A checkbox component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.LABEL`][].
+    """
+
 
 @typing.final
 class ButtonStyle(int, enums.Enum):
