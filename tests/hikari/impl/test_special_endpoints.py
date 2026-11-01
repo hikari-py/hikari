@@ -1465,6 +1465,17 @@ class TestInteractionModalBuilder:
         builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
         assert builder.components == [component]
 
+    def test_add_text_display(self):
+        builder = special_endpoints.InteractionModalBuilder("title", "custom_id")
+
+        assert builder.add_text_display("Some content", id=482) is builder
+
+        assert len(builder.components) == 1
+        component = builder.components[0]
+        assert isinstance(component, special_endpoints.TextDisplayComponentBuilder)
+        assert component.content == "Some content"
+        assert component.id == 482
+
     def test_build(self):
         component = mock.Mock(build=mock.Mock(return_value=({"type": 18}, [])))
         builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
