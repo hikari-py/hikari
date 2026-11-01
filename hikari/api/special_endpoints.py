@@ -3180,6 +3180,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 1,
         max_values: int = 1,
         is_required: bool = True,
+        file_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Set the child component to a file upload component for this label component.
@@ -3195,6 +3196,11 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             The maximum number of files which can be uploaded.
         is_required
             Whether this file upload should be marked as required.
+        file_types
+            The file types to accept, up to 10.
+
+            Each entry is either `image`, `video`, `audio` or a dot-prefixed
+            extension such as `.pdf`. Only the file extension is matched.
         id
             The ID to give to the file upload.
 
@@ -3344,6 +3350,15 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
     def is_required(self) -> bool:
         """Whether the file upload should be marked as required."""
 
+    @property
+    @abc.abstractmethod
+    def file_types(self) -> undefined.UndefinedOr[typing.Sequence[str]]:
+        """The file types this upload accepts, up to 10.
+
+        Each entry is either `image`, `video`, `audio` or a dot-prefixed
+        extension such as `.pdf`. Only the file extension is matched.
+        """
+
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
         """Set the developer set custom ID used for identifying this file upload.
@@ -3397,6 +3412,24 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
         ----------
         state
             Whether this file upload is required.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_file_types(self, file_types: undefined.UndefinedOr[typing.Sequence[str]], /) -> Self:
+        """Set the file types this upload accepts.
+
+        Parameters
+        ----------
+        file_types
+            The file types to accept, up to 10.
+
+            Each entry is either `image`, `video`, `audio` or a dot-prefixed
+            extension such as `.pdf`. Only the file extension is matched.
 
         Returns
         -------
