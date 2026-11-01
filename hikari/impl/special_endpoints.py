@@ -1494,7 +1494,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
         data = data_binding.JSONObjectBuilder()
         data.put("title", self._title)
         data.put("custom_id", self._custom_id)
-        data.put_array("components", self._components, conversion=lambda component: component.build())
+        data.put_array("components", self._components, conversion=lambda component: component.build()[0])
 
         return {"type": self.type, "data": data}, ()
 
