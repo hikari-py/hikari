@@ -474,6 +474,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_guild_channel_type_mapping",
         "_interaction_metadata_mapping",
         "_interaction_type_mapping",
+        "_modal_action_row_component_mapping",
         "_modal_components_mapping",
         "_modal_label_component_mapping",
         "_scheduled_event_type_mapping",
@@ -588,7 +589,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         }
         self._modal_components_mapping: dict[
             component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalComponentTypesT]
-        ] = {component_models.ComponentType.LABEL: self._deserialize_modal_label_component}
+        ] = {
+            component_models.ComponentType.LABEL: self._deserialize_modal_label_component,
+            component_models.ComponentType.ACTION_ROW: self._deserialize_modal_action_row_component,
+        }
+        self._modal_action_row_component_mapping: dict[
+            component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalTextInputComponent]
+        ] = {component_models.ComponentType.TEXT_INPUT: self._deserialize_modal_text_input_component}
         self._modal_label_component_mapping: dict[
             component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalLabelComponentTypesT]
         ] = {
@@ -3744,6 +3751,23 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return modals.ModalLabelComponent(
             type=component_models.ComponentType(payload["type"]), id=payload["id"], component=component
+        )
+
+    def _deserialize_modal_action_row_component(
+        self, payload: data_binding.JSONObject
+    ) -> modals.ModalActionRowComponent:
+        components: list[modals.ModalTextInputComponent] = []
+
+        for component_payload in payload["components"]:
+            component_type = component_models.ComponentType(component_payload["type"])
+
+            if deserializer := self._modal_action_row_component_mapping.get(component_type):
+                components.append(deserializer(component_payload))
+            else:
+                _LOGGER.debug("Unknown action row component type %s", component_type)
+
+        return modals.ModalActionRowComponent(
+            type=component_models.ComponentType(payload["type"]), id=payload["id"], components=components
         )
 
     def _deserialize_modal_text_input_component(
