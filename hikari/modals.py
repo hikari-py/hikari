@@ -140,7 +140,7 @@ ModalComponentTypesT = ModalLabelComponent
 
 The following values are valid for this:
 
-* [`hikari.interactions.modal_components.ModalLabelComponent`][]
+* [`hikari.modals.ModalLabelComponent`][]
 """
 
 ModalLabelComponentTypesT = (
@@ -156,11 +156,11 @@ ModalLabelComponentTypesT = (
 
 The following values are valid for this:
 
-* [`hikari.interactions.modal_components.ModalTextInputComponent`][]
-* [`hikari.interactions.modal_components.ModalTextSelectMenuComponent`][]
-* [`hikari.interactions.modal_components.ModalUserSelectMenuComponent`][]
-* [`hikari.interactions.modal_components.ModalRoleSelectMenuComponent`][]
-* [`hikari.interactions.modal_components.ModalMentionableSelectMenuComponent`][]
-* [`hikari.interactions.modal_components.ModalChannelSelectMenuComponent`][]
-* [`hikari.interactions.modal_components.ModalFileUploadComponent`][]
+* [`hikari.modals.ModalTextInputComponent`][]
+* [`hikari.modals.ModalTextSelectMenuComponent`][]
+* [`hikari.modals.ModalUserSelectMenuComponent`][]
+* [`hikari.modals.ModalRoleSelectMenuComponent`][]
+* [`hikari.modals.ModalMentionableSelectMenuComponent`][]
+* [`hikari.modals.ModalChannelSelectMenuComponent`][]
+* [`hikari.modals.ModalFileUploadComponent`][]
 """
