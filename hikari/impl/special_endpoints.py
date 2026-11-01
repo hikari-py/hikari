@@ -92,6 +92,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -2261,6 +2262,15 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
         return payload, attachments
 
 
+def _warn_text_input_label_deprecated(*, stack_level: int) -> None:
+    deprecation.warn_deprecated(
+        "TextInputBuilder.label",
+        removal_version="2.9.0",
+        additional_info="Wrap the text input in a 'LabelComponentBuilder' instead.",
+        stack_level=stack_level,
+    )
+
+
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class TextInputBuilder(special_endpoints.TextInputBuilder):
@@ -2278,6 +2288,10 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
     _required: bool = attrs.field(alias="required", default=True, kw_only=True)
     _min_length: int = attrs.field(alias="min_length", default=0, kw_only=True)
     _max_length: int = attrs.field(alias="max_length", default=4000, kw_only=True)
+
+    def __attrs_post_init__(self) -> None:
+        if self._label is not undefined.UNDEFINED:
+            _warn_text_input_label_deprecated(stack_level=5)
 
     @property
     @typing_extensions.override
@@ -2341,6 +2355,9 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
 
     @typing_extensions.override
     def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
+        if label is not undefined.UNDEFINED:
+            _warn_text_input_label_deprecated(stack_level=4)
+
         self._label = label
         return self
 
@@ -2572,6 +2589,14 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
         alias="components", factory=list
     )
     _stored_type: int | None = attrs.field(init=False, default=None)
+
+    def __attrs_post_init__(self) -> None:
+        deprecation.warn_deprecated(
+            "ModalActionRowBuilder",
+            removal_version="2.9.0",
+            additional_info="Use 'LabelComponentBuilder' instead.",
+            stack_level=4,
+        )
 
     @property
     @typing_extensions.override

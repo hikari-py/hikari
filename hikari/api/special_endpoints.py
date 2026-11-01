@@ -75,6 +75,7 @@ import typing
 from hikari import components as components_
 from hikari import polls
 from hikari import undefined
+from hikari.internal import deprecation
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
@@ -1969,15 +1970,14 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @deprecation.deprecated("Wrap the text input in a 'LabelComponentBuilder' instead.")
     def label(self) -> undefined.UndefinedOr[str]:
         """Label above this text input.
 
-        !!! deprecated
+        !!! deprecated 2.7.1
             Discord deprecated this field in favour of wrapping text inputs in a
             [`hikari.api.special_endpoints.LabelComponentBuilder`][], which
-            carries its own `label` and `description`. Only set this when using
-            the legacy [`hikari.api.special_endpoints.ModalActionRowBuilder`][]
-            modal layout.
+            carries its own `label` and `description`. This will be removed in `2.9.0`.
         """
 
     @property
@@ -2041,8 +2041,14 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    @deprecation.deprecated("Wrap the text input in a 'LabelComponentBuilder' instead.")
     def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
         """Set the label above this text input.
+
+        !!! deprecated 2.7.1
+            Discord deprecated this field in favour of wrapping text inputs in a
+            [`hikari.api.special_endpoints.LabelComponentBuilder`][], which
+            carries its own `label` and `description`. This will be removed in `2.9.0`.
 
         Parameters
         ----------
@@ -2413,8 +2419,15 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """
 
 
+@deprecation.deprecated("Use 'LabelComponentBuilder' instead.")
 class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
-    """Builder class for modal action row components."""
+    """Builder class for modal action row components.
+
+    !!! deprecated 2.7.1
+        Discord deprecated action rows in modals in favour of
+        [`hikari.api.special_endpoints.LabelComponentBuilder`][].
+        This will be removed in `2.9.0`.
+    """
 
     __slots__: typing.Sequence[str] = ()
 

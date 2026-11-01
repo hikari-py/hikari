@@ -765,14 +765,14 @@ TextInputComponent = modals.ModalTextInputComponent
 """Represents a text input component submitted through a modal.
 
 !!! deprecated 2.7.1
-    Use [`hikari.modals.ModalTextInputComponent`][] instead.
+    Use [`hikari.modals.ModalTextInputComponent`][] instead. This will be removed in `2.9.0`.
 """
 
 ModalActionRowComponent = modals.ModalActionRowComponent
 """A modal action row component.
 
 !!! deprecated 2.7.1
-    Use [`hikari.modals.ModalActionRowComponent`][] instead.
+    Use [`hikari.modals.ModalActionRowComponent`][] instead. This will be removed in `2.9.0`.
 """
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
