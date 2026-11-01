@@ -588,7 +588,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_models.ComponentType.CONTAINER: self._deserialize_container_component,
         }
         self._modal_components_mapping: dict[
-            component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalComponentTypesT]
+            component_models.ComponentType,
+            typing.Callable[[data_binding.JSONObject], modals.ModalComponentTypesT | None],
         ] = {
             component_models.ComponentType.LABEL: self._deserialize_modal_label_component,
             component_models.ComponentType.ACTION_ROW: self._deserialize_modal_action_row_component,
@@ -3731,26 +3732,27 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for payload in payloads:
             modal_component_type = component_models.ComponentType(payload["type"])
 
-            if deserializer := self._modal_components_mapping.get(modal_component_type):
-                components.append(deserializer(payload))
-            else:
-                _LOGGER.debug("Unknown component type %s", modal_component_type)
+            if (deserializer := self._modal_components_mapping.get(modal_component_type)) is None:
+                _LOGGER.debug("Unknown modal component type %s", modal_component_type)
                 continue
+
+            if (component := deserializer(payload)) is not None:
+                components.append(component)
 
         return components
 
-    def _deserialize_modal_label_component(self, payload: data_binding.JSONObject) -> modals.ModalLabelComponent:
-        component_type = component_models.ComponentType(payload["component"]["type"])
-        deserializer = self._modal_label_component_mapping.get(component_type)
-        if deserializer is None:
-            _LOGGER.debug("Unrecognised label component type: %s", component_type)
-            msg = f"Unrecognised label component type: {component_type}"
-            raise errors.UnrecognisedEntityError(msg)
+    def _deserialize_modal_label_component(self, payload: data_binding.JSONObject) -> modals.ModalLabelComponent | None:
+        component_payload = payload["component"]
+        component_type = component_models.ComponentType(component_payload["type"])
 
-        component = deserializer(payload["component"])
+        if (deserializer := self._modal_label_component_mapping.get(component_type)) is None:
+            _LOGGER.debug("Unknown label component type %s", component_type)
+            return None
 
         return modals.ModalLabelComponent(
-            type=component_models.ComponentType(payload["type"]), id=payload["id"], component=component
+            type=component_models.ComponentType(payload["type"]),
+            id=payload["id"],
+            component=deserializer(component_payload),
         )
 
     def _deserialize_modal_action_row_component(

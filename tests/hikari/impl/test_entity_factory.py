@@ -6713,6 +6713,22 @@ class TestEntityFactoryImpl:
 
         assert isinstance(label, modal_models.ModalLabelComponent)
 
+    def test__deserialize_modal_label_component_unknown_component_type(
+        self, entity_factory_impl, modal_label_component_payload
+    ):
+        modal_label_component_payload["component"] = {"type": -9434994}
+
+        assert entity_factory_impl._deserialize_modal_label_component(modal_label_component_payload) is None
+
+    def test__deserialize_modal_components_skips_label_with_unknown_component_type(
+        self, entity_factory_impl, modal_label_component_payload
+    ):
+        modal_label_component_payload["component"] = {"type": -9434994}
+
+        components = entity_factory_impl._deserialize_modal_components([modal_label_component_payload])
+
+        assert components == []
+
     def test__deserialize_modal_action_row_component(
         self, entity_factory_impl, modal_action_row_component_payload, modal_text_input_component_payload
     ):
