@@ -3273,10 +3273,16 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         min_values: int = 1,
         max_values: int = 1,
         is_required: bool = True,
+        file_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         component = FileUploadComponentBuilder(
-            id=id, custom_id=custom_id, min_values=min_values, max_values=max_values, is_required=is_required
+            id=id,
+            custom_id=custom_id,
+            min_values=min_values,
+            max_values=max_values,
+            is_required=is_required,
+            file_types=file_types,
         )
         self.set_component(component)
         return self
@@ -3353,6 +3359,9 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
     _min_values: int = attrs.field(alias="min_values", default=1)
     _max_values: int = attrs.field(alias="max_values", default=1)
     _is_required: bool = attrs.field(alias="is_required", default=True)
+    _file_types: undefined.UndefinedOr[typing.Sequence[str]] = attrs.field(
+        alias="file_types", default=undefined.UNDEFINED
+    )
 
     @property
     @typing_extensions.override
@@ -3384,6 +3393,11 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
     def is_required(self) -> bool:
         return self._is_required
 
+    @property
+    @typing_extensions.override
+    def file_types(self) -> undefined.UndefinedOr[typing.Sequence[str]]:
+        return self._file_types
+
     @typing_extensions.override
     def set_custom_id(self, custom_id: str, /) -> Self:
         self._custom_id = custom_id
@@ -3405,6 +3419,11 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
         return self
 
     @typing_extensions.override
+    def set_file_types(self, file_types: undefined.UndefinedOr[typing.Sequence[str]], /) -> Self:
+        self._file_types = file_types
+        return self
+
+    @typing_extensions.override
     def build(
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -3415,6 +3434,7 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
         payload.put("min_values", self._min_values)
         payload.put("max_values", self._max_values)
         payload.put("required", self._is_required)
+        payload.put_array("file_types", self._file_types)
 
         return payload, []
 

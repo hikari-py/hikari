@@ -3031,7 +3031,9 @@ class TestLabelBuilder:
 
         assert label.component == component
 
-        label.set_file_upload("file-upload", min_values=3, max_values=49, is_required=False, id=482)
+        label.set_file_upload(
+            "file-upload", min_values=3, max_values=49, is_required=False, file_types=["image", ".pdf"], id=482
+        )
 
         assert isinstance(label.component, special_endpoints.FileUploadComponentBuilder)
 
@@ -3039,6 +3041,7 @@ class TestLabelBuilder:
         assert label.component.min_values == 3
         assert label.component.max_values == 49
         assert label.component.is_required is False
+        assert label.component.file_types == ["image", ".pdf"]
         assert label.component.id == 482
 
     def test_set_radio_group(self):
@@ -3141,9 +3144,18 @@ class TestFileUploadBuilder:
         assert file_upload.set_is_required(False) is file_upload
         assert file_upload.is_required is False
 
+    def test_set_file_types(self, file_upload):
+        assert file_upload.set_file_types(["image", ".pdf"]) is file_upload
+        assert file_upload.file_types == ["image", ".pdf"]
+
     def test_build(self):
         file_upload = special_endpoints.FileUploadComponentBuilder(
-            id=1234, custom_id="file-upload-id", min_values=482, max_values=500, is_required=False
+            id=1234,
+            custom_id="file-upload-id",
+            min_values=482,
+            max_values=500,
+            is_required=False,
+            file_types=["image", ".pdf"],
         )
 
         payload, attachments = file_upload.build()
@@ -3155,6 +3167,7 @@ class TestFileUploadBuilder:
             "min_values": 482,
             "max_values": 500,
             "required": False,
+            "file_types": ["image", ".pdf"],
         }
 
         assert attachments == []
