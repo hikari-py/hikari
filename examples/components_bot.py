@@ -42,30 +42,46 @@ async def register_commands(_: hikari.StartingEvent) -> None:
     """Register the example's slash commands."""
     application = await bot.rest.fetch_application()
     commands = [
-        bot.rest.slash_command_builder("modal-text", "Open a single text input modal."),
-        bot.rest.slash_command_builder("modal-multi", "Open a modal with text, select, and file upload."),
+        bot.rest.slash_command_builder("modal-text", "Open a modal with a text input, radio group and checkbox."),
+        bot.rest.slash_command_builder(
+            "modal-multi", "Open a modal with text, select, checkbox group and file upload."
+        ),
         bot.rest.slash_command_builder("message-components", "Send a message using message components."),
     ]
     await bot.rest.set_application_commands(application=application.id, commands=commands, guild=COMMAND_GUILD_ID)
 
 
-def _build_text_modal_components() -> list[se.LabelComponentBuilder]:
-    return [
-        se.LabelComponentBuilder(
-            label="What's your favourite colour?",
-            description="Free-form short answer.",
-            component=se.TextInputBuilder(
-                custom_id="favourite-colour",
-                style=hikari.TextInputStyle.SHORT,
-                placeholder="e.g. blurple",
-                required=True,
-                max_length=40,
-            ),
-        )
-    ]
+def _build_text_modal_components() -> list[hikari.api.ComponentBuilder]:
+    colour_label = se.LabelComponentBuilder(
+        label="What's your favourite colour?",
+        description="Free-form short answer.",
+        component=se.TextInputBuilder(
+            custom_id="favourite-colour",
+            style=hikari.TextInputStyle.SHORT,
+            placeholder="e.g. blurple",
+            required=True,
+            max_length=40,
+        ),
+    )
+
+    source_radio = se.RadioGroupBuilder(custom_id="source")
+    source_radio.add_option("A friend", "friend")
+    source_radio.add_option("Search engine", "search")
+    source_radio.add_option("Somewhere else", "other", description="Tell us in the text field above.")
+    source_label = se.LabelComponentBuilder(label="How did you hear about us?", component=source_radio)
+
+    newsletter_label = se.LabelComponentBuilder(
+        label="Subscribe to updates",
+        description="A single checkbox, unchecked by default.",
+        component=se.CheckboxBuilder(custom_id="newsletter"),
+    )
+
+    return [colour_label, source_label, newsletter_label]
 
 
-def _build_multi_modal_components() -> list[se.LabelComponentBuilder]:
+def _build_multi_modal_components() -> list[hikari.api.ComponentBuilder]:
+    intro = se.TextDisplayComponentBuilder(content="Fill in as much as you can. Only the summary is required.")
+
     text_label = se.LabelComponentBuilder(
         label="Bug summary",
         description="Briefly describe the bug.",
@@ -81,13 +97,32 @@ def _build_multi_modal_components() -> list[se.LabelComponentBuilder]:
         severity_select.add_option(label, value)
     severity_label = se.LabelComponentBuilder(label="Severity", component=severity_select)
 
-    upload_label = se.LabelComponentBuilder(
-        label="Attachments",
-        description="Upload up to 3 supporting files.",
-        component=se.FileUploadComponentBuilder(custom_id="attachments", min_values=0, max_values=3, is_required=False),
+    areas_label = se.LabelComponentBuilder(
+        label="Affected areas",
+        description="Tick everything that applies.",
+        component=se.CheckboxGroupBuilder(
+            custom_id="areas",
+            options=[
+                se.GroupOptionBuilder("Gateway", "gateway"),
+                se.GroupOptionBuilder("REST", "rest"),
+                se.GroupOptionBuilder("Cache", "cache"),
+                se.GroupOptionBuilder("Docs", "docs"),
+            ],
+            min_values=0,
+            max_values=4,
+            is_required=False,
+        ),
     )
 
-    return [text_label, severity_label, upload_label]
+    upload_label = se.LabelComponentBuilder(
+        label="Attachments",
+        description="Upload up to 3 screenshots or log files.",
+        component=se.FileUploadComponentBuilder(
+            custom_id="attachments", min_values=0, max_values=3, is_required=False, file_types=["image", ".log", ".txt"]
+        ),
+    )
+
+    return [intro, text_label, severity_label, areas_label, upload_label]
 
 
 def _build_button_action_row() -> se.MessageActionRowBuilder:
@@ -200,6 +235,8 @@ def _format_modal_submission(interaction: hikari.ModalInteraction) -> str:
                 lines.append(f"- radio_group `{child.custom_id}`: {child.value or '(none)'}")
             elif isinstance(child, hikari.ModalCheckboxComponent):
                 lines.append(f"- checkbox `{child.custom_id}`: {child.is_checked}")
+            elif isinstance(child, hikari.ModalCheckboxGroupComponent):
+                lines.append(f"- checkbox_group `{child.custom_id}`: {', '.join(child.values) or '(none)'}")
             else:
                 values = ", ".join(str(v) for v in child.values) or "(none)"
                 lines.append(f"- select `{child.custom_id}`: {values}")
