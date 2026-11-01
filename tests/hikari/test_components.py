@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 from hikari import components
+from hikari import modals
 
 
 class TestActionRowComponent:
@@ -50,3 +51,11 @@ class TestActionRowComponent:
         row = components.ActionRowComponent(type=1, id=5855932, components=[object(), object()])
 
         assert len(row) == 2
+
+
+def test_text_input_component_alias():
+    assert components.TextInputComponent is modals.ModalTextInputComponent
+
+
+def test_modal_action_row_component_alias():
+    assert components.ModalActionRowComponent is modals.ModalActionRowComponent
