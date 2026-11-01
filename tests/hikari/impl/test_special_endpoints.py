@@ -2017,7 +2017,6 @@ class TestSelectMenuBuilder:
             "type": components.ComponentType.ROLE_SELECT_MENU,
             "custom_id": "o2o2o2",
             "disabled": False,
-            "required": True,
             "min_values": 0,
             "max_values": 1,
         }
@@ -2102,7 +2101,6 @@ class TestTextSelectMenuBuilder:
             "min_values": 0,
             "max_values": 1,
             "disabled": False,
-            "required": True,
             "options": [],
         }
 
@@ -2160,7 +2158,6 @@ class TestChannelSelectMenuBuilder:
             "min_values": 0,
             "max_values": 1,
             "disabled": False,
-            "required": True,
             "channel_types": [],
         }
 

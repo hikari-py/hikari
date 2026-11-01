@@ -1759,8 +1759,11 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_required(self) -> bool:
-        """Whether the select menu should be marked as required."""
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether the select menu should be marked as required.
+
+        Only applies to select menus in modals, where Discord defaults this to [`True`][].
+        """
 
     @property
     @abc.abstractmethod
@@ -1821,7 +1824,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this select menu is required.
 
         Parameters
@@ -3042,9 +3045,9 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Set the child component to a select menu component for this label component.
@@ -3064,6 +3067,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            Discord requires this to be at least 1 unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3091,9 +3096,9 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
         """Set the child component to a text menu component for this label component.
@@ -3107,6 +3112,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            Discord requires this to be at least 1 unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3135,9 +3142,9 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         *,
         channel_types: typing.Sequence[channels.ChannelType] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Set the child component to a channel menu component for this label component.
@@ -3156,6 +3163,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            Discord requires this to be at least 1 unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3179,7 +3188,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         *,
         min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         file_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
@@ -3347,8 +3356,11 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_required(self) -> bool:
-        """Whether the file upload should be marked as required."""
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether the file upload should be marked as required.
+
+        Discord defaults this to [`True`][].
+        """
 
     @property
     @abc.abstractmethod
@@ -3405,7 +3417,7 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this file upload is required.
 
         Parameters

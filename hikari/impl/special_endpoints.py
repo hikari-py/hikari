@@ -2030,7 +2030,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     _min_values: int = attrs.field(alias="min_values", default=0)
     _max_values: int = attrs.field(alias="max_values", default=1)
     _is_disabled: bool = attrs.field(alias="is_disabled", default=False)
-    _is_required: bool = attrs.field(alias="is_required", default=True)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
 
     @property
     @typing_extensions.override
@@ -2054,7 +2054,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
     @property
     @typing_extensions.override
-    def is_required(self) -> bool:
+    def is_required(self) -> undefined.UndefinedOr[bool]:
         return self._is_required
 
     @property
@@ -2083,7 +2083,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         return self
 
     @typing_extensions.override
-    def set_is_required(self, state: bool, /) -> Self:
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_required = state
         return self
 
@@ -2144,7 +2144,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     @typing.overload
@@ -2158,7 +2158,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     def __init__(
@@ -2172,7 +2172,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         super().__init__(
             type=component_models.ComponentType.TEXT_SELECT_MENU,
@@ -2488,7 +2488,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2500,7 +2499,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
-                is_required=is_required,
             )
         )
 
@@ -2515,7 +2513,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2527,7 +2524,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
-                is_required=is_required,
             )
         )
 
@@ -2541,7 +2537,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
@@ -2552,7 +2547,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             min_values=min_values,
             max_values=max_values,
             is_disabled=is_disabled,
-            is_required=is_required,
         )
         self.add_component(component)
         return component
@@ -3188,9 +3182,9 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.set_component(
@@ -3212,9 +3206,9 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
@@ -3237,9 +3231,9 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         *,
         channel_types: typing.Sequence[channels.ChannelType] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         component = ChannelSelectMenuBuilder(
@@ -3262,7 +3256,7 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         *,
         min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         file_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
@@ -3348,7 +3342,7 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
     _custom_id: str = attrs.field(alias="custom_id")
     _min_values: int = attrs.field(alias="min_values", default=1)
     _max_values: int = attrs.field(alias="max_values", default=1)
-    _is_required: bool = attrs.field(alias="is_required", default=True)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
     _file_types: undefined.UndefinedOr[typing.Sequence[str]] = attrs.field(
         alias="file_types", default=undefined.UNDEFINED
     )
@@ -3380,7 +3374,7 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
 
     @property
     @typing_extensions.override
-    def is_required(self) -> bool:
+    def is_required(self) -> undefined.UndefinedOr[bool]:
         return self._is_required
 
     @property
@@ -3404,7 +3398,7 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
         return self
 
     @typing_extensions.override
-    def set_is_required(self, state: bool, /) -> Self:
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_required = state
         return self
 
