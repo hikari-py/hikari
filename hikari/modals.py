@@ -35,6 +35,7 @@ __all__: typing.Sequence[str] = (
     "ModalRadioGroupComponent",
     "ModalRoleSelectMenuComponent",
     "ModalSelectMenuComponent",
+    "ModalTextDisplayComponent",
     "ModalTextInputComponent",
     "ModalTextSelectMenuComponent",
     "ModalUserSelectMenuComponent",
@@ -183,13 +184,22 @@ class ModalCheckboxComponent(PartialModalComponent):
     """Whether the checkbox was checked."""
 
 
-ModalComponentTypesT = ModalLabelComponent | ModalActionRowComponent
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalTextDisplayComponent(PartialModalComponent):
+    """Represents a text display component submitted through a modal.
+
+    Discord only sends back the type and ID of text displays, not their content.
+    """
+
+
+ModalComponentTypesT = ModalLabelComponent | ModalActionRowComponent | ModalTextDisplayComponent
 """Type hints of the top-level components a submitted modal can contain.
 
 The following values are valid for this:
 
 * [`hikari.modals.ModalLabelComponent`][]
 * [`hikari.modals.ModalActionRowComponent`][]
+* [`hikari.modals.ModalTextDisplayComponent`][]
 """
 
 ModalLabelComponentTypesT = (

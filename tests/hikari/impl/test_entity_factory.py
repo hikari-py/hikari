@@ -6546,6 +6546,10 @@ class TestEntityFactoryImpl:
         return {"type": 1, "id": 8394572, "components": [modal_text_input_component_payload]}
 
     @pytest.fixture
+    def modal_text_display_component_payload(self):
+        return {"type": 10, "id": 6345634}
+
+    @pytest.fixture
     def modal_text_select_menu_component_payload(self):
         return {
             "type": 3,
@@ -6592,17 +6596,34 @@ class TestEntityFactoryImpl:
         return {"type": 23, "id": 9834753, "custom_id": "checkbox-component", "value": True}
 
     def test__deserialize_modal_components(
-        self, entity_factory_impl, modal_label_component_payload, modal_action_row_component_payload
+        self,
+        entity_factory_impl,
+        modal_label_component_payload,
+        modal_action_row_component_payload,
+        modal_text_display_component_payload,
     ):
         components = entity_factory_impl._deserialize_modal_components(
-            [modal_label_component_payload, modal_action_row_component_payload]
+            [modal_label_component_payload, modal_action_row_component_payload, modal_text_display_component_payload]
         )
 
-        assert len(components) == 2
+        assert len(components) == 3
         assert components[0] == entity_factory_impl._deserialize_modal_label_component(modal_label_component_payload)
         assert components[1] == entity_factory_impl._deserialize_modal_action_row_component(
             modal_action_row_component_payload
         )
+        assert components[2] == entity_factory_impl._deserialize_modal_text_display_component(
+            modal_text_display_component_payload
+        )
+
+    def test__deserialize_modal_text_display_component(self, entity_factory_impl, modal_text_display_component_payload):
+        text_display = entity_factory_impl._deserialize_modal_text_display_component(
+            modal_text_display_component_payload
+        )
+
+        assert text_display.type == component_models.ComponentType.TEXT_DISPLAY
+        assert text_display.id == 6345634
+
+        assert isinstance(text_display, modal_models.ModalTextDisplayComponent)
 
     def test__deserialize_modal_components_unknown_top_component_type(self, entity_factory_impl):
         components = entity_factory_impl._deserialize_modal_components(

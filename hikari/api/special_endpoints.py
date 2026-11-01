@@ -1078,6 +1078,25 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
             The component builder to add to this modal.
         """
 
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this modal.
+
+        Parameters
+        ----------
+        content
+            The content of the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        InteractionModalBuilder
+            The builder object to enable chained calls.
+        """
+
 
 class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""

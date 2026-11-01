@@ -591,6 +591,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             component_models.ComponentType.LABEL: self._deserialize_modal_label_component,
             component_models.ComponentType.ACTION_ROW: self._deserialize_modal_action_row_component,
+            component_models.ComponentType.TEXT_DISPLAY: self._deserialize_modal_text_display_component,
         }
         self._modal_action_row_component_mapping: dict[
             component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalTextInputComponent]
@@ -3725,6 +3726,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return modals.ModalActionRowComponent(
             type=component_models.ComponentType(payload["type"]), id=payload["id"], components=components
         )
+
+    def _deserialize_modal_text_display_component(
+        self, payload: data_binding.JSONObject
+    ) -> modals.ModalTextDisplayComponent:
+        return modals.ModalTextDisplayComponent(type=component_models.ComponentType(payload["type"]), id=payload["id"])
 
     def _deserialize_modal_text_input_component(
         self, payload: data_binding.JSONObject

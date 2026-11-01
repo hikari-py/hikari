@@ -1483,6 +1483,10 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
         return self
 
     @typing_extensions.override
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        return self.add_component(TextDisplayComponentBuilder(id=id, content=content))
+
+    @typing_extensions.override
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
