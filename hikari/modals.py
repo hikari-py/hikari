@@ -53,7 +53,7 @@ if typing.TYPE_CHECKING:
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class PartialModalComponent:
-    """Base class for all component entities."""
+    """Base class for all components submitted through a modal."""
 
     type: components.ComponentType | int = attrs.field()
     """The type of component this is."""
@@ -112,7 +112,7 @@ class ModalChannelSelectMenuComponent(ModalSelectMenuComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ModalTextInputComponent(PartialModalComponent):
-    """Represents a text input component."""
+    """Represents a text input component submitted through a modal."""
 
     custom_id: str = attrs.field()
     """Developer set custom ID used for identifying this text input."""
@@ -123,7 +123,7 @@ class ModalTextInputComponent(PartialModalComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ModalLabelComponent(PartialModalComponent):
-    """Represents a label component."""
+    """Represents a label component submitted through a modal."""
 
     component: ModalLabelComponentTypesT = attrs.field()
     """The component within the label."""
@@ -159,7 +159,7 @@ class ModalActionRowComponent(PartialModalComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ModalFileUploadComponent(PartialModalComponent):
-    """Represents a file upload component."""
+    """Represents a file upload component submitted through a modal."""
 
     custom_id: str = attrs.field()
     """Developer set custom ID used for identifying interactions with this file upload."""

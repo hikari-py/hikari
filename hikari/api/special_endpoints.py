@@ -2971,13 +2971,10 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         """Set the child component of this label component.
 
         !!! warning
-            It is generally better to use
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][],
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_select_menu`][],
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][],
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][] or
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][]
-            to set your component on the builder. Those methods utilize this one.
+            It is generally better to use the `set_*` helpers of this builder, such as
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][] or
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_radio_group`][],
+            to set your component. Those methods utilize this one.
 
         Parameters
         ----------

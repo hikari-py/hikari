@@ -188,7 +188,11 @@ class ComponentType(int, enums.Enum):
     """
 
     LABEL = 18
-    """A label component."""
+    """A label component.
+
+    !!! note
+        This is a top-level component which is only valid in modals.
+    """
 
     FILE_UPLOAD = 19
     """A file upload component.
@@ -741,6 +745,7 @@ TextInputComponent = modals.ModalTextInputComponent
 
 !!! deprecated 2.7.1
     Use [`hikari.modals.ModalTextInputComponent`][] instead. This will be removed in `2.9.0`.
+    This is no longer a [`hikari.components.PartialComponent`][].
 """
 
 ModalActionRowComponent = modals.ModalActionRowComponent
@@ -748,6 +753,7 @@ ModalActionRowComponent = modals.ModalActionRowComponent
 
 !!! deprecated 2.7.1
     Use [`hikari.modals.ModalActionRowComponent`][] instead. This will be removed in `2.9.0`.
+    This is no longer an [`hikari.components.ActionRowComponent`][].
 """
 
 ModalComponentTypesT = modals.ModalComponentTypesT
