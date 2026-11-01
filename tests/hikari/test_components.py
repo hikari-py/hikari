@@ -59,3 +59,7 @@ def test_text_input_component_alias():
 
 def test_modal_action_row_component_alias():
     assert components.ModalActionRowComponent is modals.ModalActionRowComponent
+
+
+def test_modal_component_types_alias():
+    assert components.ModalComponentTypesT is modals.ModalComponentTypesT

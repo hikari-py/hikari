@@ -135,6 +135,23 @@ class ModalActionRowComponent(PartialModalComponent):
     components: typing.Sequence[ModalTextInputComponent] = attrs.field()
     """Sequence of the components contained within this row."""
 
+    @typing.overload
+    def __getitem__(self, index: int, /) -> ModalTextInputComponent: ...
+
+    @typing.overload
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[ModalTextInputComponent]: ...
+
+    def __getitem__(
+        self, index_or_slice: int | slice, /
+    ) -> ModalTextInputComponent | typing.Sequence[ModalTextInputComponent]:
+        return self.components[index_or_slice]
+
+    def __iter__(self) -> typing.Iterator[ModalTextInputComponent]:
+        return iter(self.components)
+
+    def __len__(self) -> int:
+        return len(self.components)
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ModalFileUploadComponent(PartialModalComponent):
