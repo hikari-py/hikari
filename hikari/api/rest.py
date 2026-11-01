@@ -32,6 +32,7 @@ from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
+from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -9123,8 +9124,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    @deprecation.deprecated("Use 'LabelComponentBuilder' instead.")
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
         """Build an action row modal component for use in interactions and REST calls.
+
+        !!! deprecated 2.7.1
+            Discord deprecated action rows in modals in favour of
+            [`hikari.api.special_endpoints.LabelComponentBuilder`][].
+            This will be removed in `2.9.0`.
 
         Returns
         -------
