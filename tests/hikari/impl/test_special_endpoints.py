@@ -1445,15 +1445,13 @@ class TestInteractionModalBuilder:
         assert component.id == 482
 
     def test_build(self):
-        component = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=({"type": 18}, [])))
         builder = special_endpoints.InteractionModalBuilder("title", "custom_id").add_component(component)
 
         result, attachments = builder.build(mock.Mock())
-        assert result == {
-            "type": 9,
-            "data": {"title": "title", "custom_id": "custom_id", "components": [component.build.return_value]},
-        }
+        assert result == {"type": 9, "data": {"title": "title", "custom_id": "custom_id", "components": [{"type": 18}]}}
         assert attachments == ()
+        component.build.assert_called_once_with()
 
 
 class TestCommandBuilder:
