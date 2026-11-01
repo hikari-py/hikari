@@ -5503,6 +5503,24 @@ class TestEntityFactoryImpl:
             modal_label_component_payload
         )
 
+    def test_deserialize_modal_interaction_with_action_rows(
+        self, entity_factory_impl, modal_interaction_payload, modal_action_row_component_payload
+    ):
+        modal_interaction_payload["data"]["components"] = [modal_action_row_component_payload]
+
+        interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
+
+        assert len(interaction.components) == 1
+        action_row = interaction.components[0]
+        assert isinstance(action_row, modal_models.ModalActionRowComponent)
+        assert action_row.id == 8394572
+        assert len(action_row.components) == 1
+        text_input = action_row.components[0]
+        assert isinstance(text_input, modal_models.ModalTextInputComponent)
+        assert text_input.type == component_models.ComponentType.TEXT_INPUT
+        assert text_input.custom_id == "text-input-component"
+        assert text_input.value == "text input value"
+
     def test_deserialize_modal_interaction_with_user(
         self, entity_factory_impl, modal_interaction_payload, user_payload
     ):
@@ -6524,6 +6542,10 @@ class TestEntityFactoryImpl:
         return {"type": 4, "id": 34534857, "custom_id": "text-input-component", "value": "text input value"}
 
     @pytest.fixture
+    def modal_action_row_component_payload(self, modal_text_input_component_payload):
+        return {"type": 1, "id": 8394572, "components": [modal_text_input_component_payload]}
+
+    @pytest.fixture
     def modal_text_select_menu_component_payload(self):
         return {
             "type": 3,
@@ -6557,11 +6579,18 @@ class TestEntityFactoryImpl:
     def modal_file_upload_component_payload(self):
         return {"type": 19, "id": 4835973, "custom_id": "file-upload-component", "values": ["690922406474154014"]}
 
-    def test__deserialize_modal_components(self, entity_factory_impl, modal_label_component_payload):
-        components = entity_factory_impl._deserialize_modal_components([modal_label_component_payload])
+    def test__deserialize_modal_components(
+        self, entity_factory_impl, modal_label_component_payload, modal_action_row_component_payload
+    ):
+        components = entity_factory_impl._deserialize_modal_components(
+            [modal_label_component_payload, modal_action_row_component_payload]
+        )
 
-        assert len(components) == 1
+        assert len(components) == 2
         assert components[0] == entity_factory_impl._deserialize_modal_label_component(modal_label_component_payload)
+        assert components[1] == entity_factory_impl._deserialize_modal_action_row_component(
+            modal_action_row_component_payload
+        )
 
     def test__deserialize_modal_components_unknown_top_component_type(self, entity_factory_impl):
         components = entity_factory_impl._deserialize_modal_components(
@@ -6585,6 +6614,28 @@ class TestEntityFactoryImpl:
         )
 
         assert isinstance(label, modal_models.ModalLabelComponent)
+
+    def test__deserialize_modal_action_row_component(
+        self, entity_factory_impl, modal_action_row_component_payload, modal_text_input_component_payload
+    ):
+        action_row = entity_factory_impl._deserialize_modal_action_row_component(modal_action_row_component_payload)
+
+        assert action_row.type == component_models.ComponentType.ACTION_ROW
+        assert action_row.id == 8394572
+        assert action_row.components == [
+            entity_factory_impl._deserialize_modal_text_input_component(modal_text_input_component_payload)
+        ]
+
+        assert isinstance(action_row, modal_models.ModalActionRowComponent)
+
+    def test__deserialize_modal_action_row_component_unknown_component_type(
+        self, entity_factory_impl, modal_action_row_component_payload
+    ):
+        modal_action_row_component_payload["components"] = [{"type": -9434994}]
+
+        action_row = entity_factory_impl._deserialize_modal_action_row_component(modal_action_row_component_payload)
+
+        assert action_row.components == []
 
     def test__deserialize_modal_text_input_component(self, entity_factory_impl, modal_text_input_component_payload):
         text_input = entity_factory_impl._deserialize_modal_text_input_component(modal_text_input_component_payload)

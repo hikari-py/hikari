@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "ModalActionRowComponent",
     "ModalChannelSelectMenuComponent",
     "ModalComponentTypesT",
     "ModalFileUploadComponent",
@@ -125,6 +126,17 @@ class ModalLabelComponent(PartialModalComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
+class ModalActionRowComponent(PartialModalComponent):
+    """Represents an action row submitted through a modal built without labels.
+
+    Discord sends this for modals created with action rows instead of labels.
+    """
+
+    components: typing.Sequence[ModalTextInputComponent] = attrs.field()
+    """Sequence of the components contained within this row."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
 class ModalFileUploadComponent(PartialModalComponent):
     """Represents a file upload component."""
 
@@ -135,12 +147,13 @@ class ModalFileUploadComponent(PartialModalComponent):
     """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
 
 
-ModalComponentTypesT = ModalLabelComponent
+ModalComponentTypesT = ModalLabelComponent | ModalActionRowComponent
 """Type hints of the top-level components a submitted modal can contain.
 
 The following values are valid for this:
 
 * [`hikari.modals.ModalLabelComponent`][]
+* [`hikari.modals.ModalActionRowComponent`][]
 """
 
 ModalLabelComponentTypesT = (
