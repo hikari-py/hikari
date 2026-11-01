@@ -91,6 +91,9 @@ class TestModalInteraction:
             attachment_size_limit=12345,
         )
 
+    def test_hash(self, mock_modal_interaction):
+        assert isinstance(hash(mock_modal_interaction), int)
+
     def test_build_response(self, mock_modal_interaction, mock_app):
         mock_app.rest.interaction_message_builder = mock.Mock()
         response = mock_modal_interaction.build_response()

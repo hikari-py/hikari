@@ -40,6 +40,7 @@ __all__: typing.Sequence[str] = (
     "MessageActionRowComponent",
     "MessageComponentTypesT",
     "ModalActionRowComponent",
+    "ModalComponentTypesT",
     "PartialComponent",
     "SectionComponent",
     "SelectMenuComponent",
@@ -747,6 +748,15 @@ ModalActionRowComponent = modals.ModalActionRowComponent
 
 !!! deprecated 2.7.1
     Use [`hikari.modals.ModalActionRowComponent`][] instead. This will be removed in `2.9.0`.
+"""
+
+ModalComponentTypesT = modals.ModalComponentTypesT
+"""Type hints of the top-level components a submitted modal can contain.
+
+!!! deprecated 2.7.1
+    Use [`hikari.modals.ModalComponentTypesT`][] instead. This will be removed in `2.9.0`.
+    This used to be an alias of [`hikari.components.TextInputComponent`][] and now covers
+    the top-level components of a submitted modal.
 """
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
