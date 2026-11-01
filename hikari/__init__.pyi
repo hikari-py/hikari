@@ -93,12 +93,12 @@ from hikari.intents import *
 from hikari.interactions.base_interactions import *
 from hikari.interactions.command_interactions import *
 from hikari.interactions.component_interactions import *
-from hikari.interactions.modal_components import *
 from hikari.interactions.modal_interactions import *
 from hikari.invites import *
 from hikari.iterators import *
 from hikari.locales import *
 from hikari.messages import *
+from hikari.modals import *
 from hikari.monetization import *
 from hikari.permissions import *
 from hikari.polls import *

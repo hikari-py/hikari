@@ -45,6 +45,7 @@ from hikari import guilds as guild_models
 from hikari import invites as invite_models
 from hikari import locales
 from hikari import messages as message_models
+from hikari import modals
 from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
 from hikari import polls as poll_models
@@ -64,7 +65,6 @@ from hikari.api import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
-from hikari.interactions import modal_components
 from hikari.interactions import modal_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
@@ -587,12 +587,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_models.ComponentType.CONTAINER: self._deserialize_container_component,
         }
         self._modal_components_mapping: dict[
-            component_models.ComponentType,
-            typing.Callable[[data_binding.JSONObject], modal_components.ModalComponentTypesT],
+            component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalComponentTypesT]
         ] = {component_models.ComponentType.LABEL: self._deserialize_modal_label_component}
         self._modal_label_component_mapping: dict[
-            component_models.ComponentType,
-            typing.Callable[[data_binding.JSONObject], modal_components.ModalLabelComponentTypesT],
+            component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalLabelComponentTypesT]
         ] = {
             component_models.ComponentType.TEXT_INPUT: self._deserialize_modal_text_input_component,
             component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_modal_text_select_menu_component,
@@ -3720,8 +3718,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_components(
         self, payloads: data_binding.JSONArray
-    ) -> typing.Sequence[modal_components.ModalComponentTypesT]:
-        components: list[modal_components.ModalComponentTypesT] = []
+    ) -> typing.Sequence[modals.ModalComponentTypesT]:
+        components: list[modals.ModalComponentTypesT] = []
 
         for payload in payloads:
             modal_component_type = component_models.ComponentType(payload["type"])
@@ -3734,9 +3732,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return components
 
-    def _deserialize_modal_label_component(
-        self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalLabelComponent:
+    def _deserialize_modal_label_component(self, payload: data_binding.JSONObject) -> modals.ModalLabelComponent:
         component_type = component_models.ComponentType(payload["component"]["type"])
         deserializer = self._modal_label_component_mapping.get(component_type)
         if deserializer is None:
@@ -3746,14 +3742,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         component = deserializer(payload["component"])
 
-        return modal_components.ModalLabelComponent(
+        return modals.ModalLabelComponent(
             type=component_models.ComponentType(payload["type"]), id=payload["id"], component=component
         )
 
     def _deserialize_modal_text_input_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalTextInputComponent:
-        return modal_components.ModalTextInputComponent(
+    ) -> modals.ModalTextInputComponent:
+        return modals.ModalTextInputComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
@@ -3762,8 +3758,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_text_select_menu_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalTextSelectMenuComponent:
-        return modal_components.ModalTextSelectMenuComponent(
+    ) -> modals.ModalTextSelectMenuComponent:
+        return modals.ModalTextSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
@@ -3772,8 +3768,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_user_select_menu_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalUserSelectMenuComponent:
-        return modal_components.ModalUserSelectMenuComponent(
+    ) -> modals.ModalUserSelectMenuComponent:
+        return modals.ModalUserSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
@@ -3782,8 +3778,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_role_select_menu_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalRoleSelectMenuComponent:
-        return modal_components.ModalRoleSelectMenuComponent(
+    ) -> modals.ModalRoleSelectMenuComponent:
+        return modals.ModalRoleSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
@@ -3792,8 +3788,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_mentionable_select_menu_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalMentionableSelectMenuComponent:
-        return modal_components.ModalMentionableSelectMenuComponent(
+    ) -> modals.ModalMentionableSelectMenuComponent:
+        return modals.ModalMentionableSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
@@ -3802,8 +3798,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_channel_select_menu_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalChannelSelectMenuComponent:
-        return modal_components.ModalChannelSelectMenuComponent(
+    ) -> modals.ModalChannelSelectMenuComponent:
+        return modals.ModalChannelSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
@@ -3812,8 +3808,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_file_upload_component(
         self, payload: data_binding.JSONObject
-    ) -> modal_components.ModalFileUploadComponent:
-        return modal_components.ModalFileUploadComponent(
+    ) -> modals.ModalFileUploadComponent:
+        return modals.ModalFileUploadComponent(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
