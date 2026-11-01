@@ -3000,6 +3000,47 @@ class TestLabelBuilder:
         assert label.component.is_required is False
         assert label.component.id == 482
 
+    def test_set_radio_group(self):
+        option = special_endpoints.GroupOptionBuilder(label="Warrior", value="warrior")
+        label = special_endpoints.LabelComponentBuilder(label="test", component=mock.Mock())
+
+        assert label.set_radio_group("radio-group", options=[option], is_required=False, id=482) is label
+
+        assert isinstance(label.component, special_endpoints.RadioGroupBuilder)
+        assert label.component.custom_id == "radio-group"
+        assert label.component.options == [option]
+        assert label.component.is_required is False
+        assert label.component.id == 482
+
+    def test_set_checkbox_group(self):
+        option = special_endpoints.GroupOptionBuilder(label="March 5", value="march-5")
+        label = special_endpoints.LabelComponentBuilder(label="test", component=mock.Mock())
+
+        assert (
+            label.set_checkbox_group(
+                "checkbox-group", options=[option], min_values=0, max_values=3, is_required=False, id=482
+            )
+            is label
+        )
+
+        assert isinstance(label.component, special_endpoints.CheckboxGroupBuilder)
+        assert label.component.custom_id == "checkbox-group"
+        assert label.component.options == [option]
+        assert label.component.min_values == 0
+        assert label.component.max_values == 3
+        assert label.component.is_required is False
+        assert label.component.id == 482
+
+    def test_set_checkbox(self):
+        label = special_endpoints.LabelComponentBuilder(label="test", component=mock.Mock())
+
+        assert label.set_checkbox("checkbox", is_default=True, id=482) is label
+
+        assert isinstance(label.component, special_endpoints.CheckboxBuilder)
+        assert label.component.custom_id == "checkbox"
+        assert label.component.is_default is True
+        assert label.component.id == 482
+
     def test_build(self):
         component = mock.Mock(build=mock.Mock(return_value=({}, [])))
 
@@ -3074,6 +3115,207 @@ class TestFileUploadBuilder:
             "max_values": 500,
             "required": False,
         }
+
+        assert attachments == []
+
+
+class TestGroupOptionBuilder:
+    @pytest.fixture
+    def option(self):
+        return special_endpoints.GroupOptionBuilder(label="Warrior", value="warrior")
+
+    def test_set_label(self, option):
+        assert option.set_label("Mage") is option
+        assert option.label == "Mage"
+
+    def test_set_value(self, option):
+        assert option.set_value("mage") is option
+        assert option.value == "mage"
+
+    def test_set_description(self, option):
+        assert option.set_description("Casts spells") is option
+        assert option.description == "Casts spells"
+
+    def test_set_is_default(self, option):
+        assert option.set_is_default(True) is option
+        assert option.is_default is True
+
+    def test_build(self):
+        option = special_endpoints.GroupOptionBuilder(
+            label="Warrior", value="warrior", description="Hits things", is_default=True
+        )
+
+        assert option.build() == {"label": "Warrior", "value": "warrior", "default": True, "description": "Hits things"}
+
+    def test_build_partial(self, option):
+        assert option.build() == {"label": "Warrior", "value": "warrior", "default": False}
+
+
+class TestRadioGroupBuilder:
+    @pytest.fixture
+    def radio_group(self):
+        return special_endpoints.RadioGroupBuilder(custom_id="radio-group-id")
+
+    def test_type_property(self, radio_group):
+        assert radio_group.type is components.ComponentType.RADIO_GROUP
+
+    def test_set_custom_id(self, radio_group):
+        assert radio_group.set_custom_id("other-id") is radio_group
+        assert radio_group.custom_id == "other-id"
+
+    def test_add_option(self, radio_group):
+        assert radio_group.add_option("Warrior", "warrior", description="Hits things", is_default=True) is radio_group
+
+        assert len(radio_group.options) == 1
+        option = radio_group.options[0]
+        assert isinstance(option, special_endpoints.GroupOptionBuilder)
+        assert option.label == "Warrior"
+        assert option.value == "warrior"
+        assert option.description == "Hits things"
+        assert option.is_default is True
+
+    def test_set_is_required(self, radio_group):
+        assert radio_group.set_is_required(False) is radio_group
+        assert radio_group.is_required is False
+
+    def test_build(self):
+        option_1 = mock.Mock(special_endpoints.GroupOptionBuilder)
+        option_2 = mock.Mock(special_endpoints.GroupOptionBuilder)
+        radio_group = special_endpoints.RadioGroupBuilder(
+            id=1234, custom_id="radio-group-id", options=[option_1, option_2], is_required=False
+        )
+
+        payload, attachments = radio_group.build()
+
+        assert payload == {
+            "type": components.ComponentType.RADIO_GROUP,
+            "id": 1234,
+            "custom_id": "radio-group-id",
+            "options": [option_1.build.return_value, option_2.build.return_value],
+            "required": False,
+        }
+        option_1.build.assert_called_once_with()
+        option_2.build.assert_called_once_with()
+
+        assert attachments == []
+
+    def test_build_partial(self, radio_group):
+        payload, attachments = radio_group.build()
+
+        assert payload == {"type": components.ComponentType.RADIO_GROUP, "custom_id": "radio-group-id", "options": []}
+
+        assert attachments == []
+
+
+class TestCheckboxGroupBuilder:
+    @pytest.fixture
+    def checkbox_group(self):
+        return special_endpoints.CheckboxGroupBuilder(custom_id="checkbox-group-id")
+
+    def test_type_property(self, checkbox_group):
+        assert checkbox_group.type is components.ComponentType.CHECKBOX_GROUP
+
+    def test_set_custom_id(self, checkbox_group):
+        assert checkbox_group.set_custom_id("other-id") is checkbox_group
+        assert checkbox_group.custom_id == "other-id"
+
+    def test_add_option(self, checkbox_group):
+        assert checkbox_group.add_option("March 5", "march-5", description="A day", is_default=True) is checkbox_group
+
+        assert len(checkbox_group.options) == 1
+        option = checkbox_group.options[0]
+        assert isinstance(option, special_endpoints.GroupOptionBuilder)
+        assert option.label == "March 5"
+        assert option.value == "march-5"
+        assert option.description == "A day"
+        assert option.is_default is True
+
+    def test_set_min_values(self, checkbox_group):
+        assert checkbox_group.set_min_values(0) is checkbox_group
+        assert checkbox_group.min_values == 0
+
+    def test_set_max_values(self, checkbox_group):
+        assert checkbox_group.set_max_values(7) is checkbox_group
+        assert checkbox_group.max_values == 7
+
+    def test_set_is_required(self, checkbox_group):
+        assert checkbox_group.set_is_required(False) is checkbox_group
+        assert checkbox_group.is_required is False
+
+    def test_build(self):
+        option_1 = mock.Mock(special_endpoints.GroupOptionBuilder)
+        option_2 = mock.Mock(special_endpoints.GroupOptionBuilder)
+        checkbox_group = special_endpoints.CheckboxGroupBuilder(
+            id=1234,
+            custom_id="checkbox-group-id",
+            options=[option_1, option_2],
+            min_values=0,
+            max_values=2,
+            is_required=False,
+        )
+
+        payload, attachments = checkbox_group.build()
+
+        assert payload == {
+            "type": components.ComponentType.CHECKBOX_GROUP,
+            "id": 1234,
+            "custom_id": "checkbox-group-id",
+            "options": [option_1.build.return_value, option_2.build.return_value],
+            "min_values": 0,
+            "max_values": 2,
+            "required": False,
+        }
+        option_1.build.assert_called_once_with()
+        option_2.build.assert_called_once_with()
+
+        assert attachments == []
+
+    def test_build_partial(self, checkbox_group):
+        payload, attachments = checkbox_group.build()
+
+        assert payload == {
+            "type": components.ComponentType.CHECKBOX_GROUP,
+            "custom_id": "checkbox-group-id",
+            "options": [],
+        }
+
+        assert attachments == []
+
+
+class TestCheckboxBuilder:
+    @pytest.fixture
+    def checkbox(self):
+        return special_endpoints.CheckboxBuilder(custom_id="checkbox-id")
+
+    def test_type_property(self, checkbox):
+        assert checkbox.type is components.ComponentType.CHECKBOX
+
+    def test_set_custom_id(self, checkbox):
+        assert checkbox.set_custom_id("other-id") is checkbox
+        assert checkbox.custom_id == "other-id"
+
+    def test_set_is_default(self, checkbox):
+        assert checkbox.set_is_default(True) is checkbox
+        assert checkbox.is_default is True
+
+    def test_build(self):
+        checkbox = special_endpoints.CheckboxBuilder(id=1234, custom_id="checkbox-id", is_default=True)
+
+        payload, attachments = checkbox.build()
+
+        assert payload == {
+            "type": components.ComponentType.CHECKBOX,
+            "id": 1234,
+            "custom_id": "checkbox-id",
+            "default": True,
+        }
+
+        assert attachments == []
+
+    def test_build_partial(self, checkbox):
+        payload, attachments = checkbox.build()
+
+        assert payload == {"type": components.ComponentType.CHECKBOX, "custom_id": "checkbox-id"}
 
         assert attachments == []
 
