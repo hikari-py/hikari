@@ -52,6 +52,9 @@ class TestAttachment:
             is_ephemeral=False,
             duration=1,
             waveform="122111",
+            placeholder=None,
+            placeholder_version=None,
+            flags=messages.AttachmentFlag.NONE,
         )
         assert str(attachment) == "super_cool_file.cool"
 

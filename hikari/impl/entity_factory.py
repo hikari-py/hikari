@@ -749,6 +749,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 oauth2_install_parameters=oauth2_install_parameters
             )
 
+        guild: guild_models.PartialGuild | None = None
+        guild_id: snowflakes.Snowflake | None = None
+        if (guild_payload := payload.get("guild")) is not None:
+            guild = guild_models.PartialGuild(
+                app=self._app,
+                id=snowflakes.Snowflake(guild_payload["id"]),
+                name=guild_payload["name"],
+                icon_hash=guild_payload.get("icon"),
+            )
+            guild_id = guild.id
+        elif (raw_guild_id := payload.get("guild_id")) is not None:
+            guild_id = snowflakes.Snowflake(raw_guild_id)
+
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -762,6 +775,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             flags=application_models.ApplicationFlags(payload["flags"]),
             icon_hash=payload.get("icon"),
             team=team,
+            guild_id=guild_id,
+            guild=guild,
             cover_image_hash=payload.get("cover_image"),
             privacy_policy_url=payload.get("privacy_policy_url"),
             terms_of_service_url=payload.get("terms_of_service_url"),
@@ -1817,6 +1832,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 proxy_resource=proxy,
                 height=image_payload.get("height"),
                 width=image_payload.get("width"),
+                placeholder=image_payload.get("placeholder"),
+                placeholder_version=image_payload.get("placeholder_version"),
+                flags=embed_models.EmbedMediaFlag(image_payload.get("flags", 0)),
             )
 
         thumbnail: embed_models.EmbedImage | None = None
@@ -1827,6 +1845,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 proxy_resource=proxy,
                 height=thumbnail_payload.get("height"),
                 width=thumbnail_payload.get("width"),
+                placeholder=thumbnail_payload.get("placeholder"),
+                placeholder_version=thumbnail_payload.get("placeholder_version"),
+                flags=embed_models.EmbedMediaFlag(thumbnail_payload.get("flags", 0)),
             )
 
         video: embed_models.EmbedVideo | None = None
@@ -1837,6 +1858,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 proxy_resource=files.ensure_resource(raw_proxy_url) if raw_proxy_url else None,
                 height=video_payload.get("height"),
                 width=video_payload.get("width"),
+                placeholder=video_payload.get("placeholder"),
+                placeholder_version=video_payload.get("placeholder_version"),
+                flags=embed_models.EmbedMediaFlag(video_payload.get("flags", 0)),
             )
 
         provider: embed_models.EmbedProvider | None = None
@@ -1889,6 +1913,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             author=author,
             footer=footer,
             fields=fields,
+            flags=embed_models.EmbedFlag(payload.get("flags", 0)),
         )
 
     # We rather keep everything we can here inline.
@@ -3561,6 +3586,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 loading_state = None
 
+        flags: undefined.UndefinedOr[component_models.MediaResourceFlag] = undefined.UNDEFINED
+        if "flags" in payload:
+            flags = component_models.MediaResourceFlag(payload["flags"])
+
+        content_scan_flags: undefined.UndefinedOr[component_models.ContentScanFlag] = undefined.UNDEFINED
+        if content_scan_payload := payload.get("content_scan_metadata"):
+            content_scan_flags = component_models.ContentScanFlag(content_scan_payload["flags"])
+
         return component_models.MediaResource(
             resource=files.ensure_resource(payload["url"]),
             proxy_resource=files.ensure_resource(payload["proxy_url"]) if "proxy_url" in payload else None,
@@ -3568,6 +3601,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             width=width,
             content_type=content_type,
             loading_state=loading_state,
+            placeholder=payload.get("placeholder", undefined.UNDEFINED),
+            placeholder_version=payload.get("placeholder_version", undefined.UNDEFINED),
+            flags=flags,
+            content_scan_flags=content_scan_flags,
         )
 
     def _deserialize_action_row_component(
@@ -3722,6 +3759,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_ephemeral=payload.get("ephemeral", False),
             duration=payload.get("duration_secs"),
             waveform=payload.get("waveform"),
+            placeholder=payload.get("placeholder"),
+            placeholder_version=payload.get("placeholder_version"),
+            flags=message_models.AttachmentFlag(payload.get("flags", 0)),
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:

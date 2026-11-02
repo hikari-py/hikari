@@ -30,6 +30,7 @@ __all__: typing.Sequence[str] = (
     "ComponentType",
     "ContainerComponent",
     "ContainerTypesT",
+    "ContentScanFlag",
     "FileComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
@@ -37,6 +38,7 @@ __all__: typing.Sequence[str] = (
     "MediaGalleryItem",
     "MediaLoadingType",
     "MediaResource",
+    "MediaResourceFlag",
     "MessageActionRowComponent",
     "MessageComponentTypesT",
     "ModalActionRowComponent",
@@ -62,6 +64,7 @@ import attrs
 from hikari import channels
 from hikari import emojis
 from hikari import files
+from hikari import undefined
 from hikari.internal import enums
 from hikari.internal import typing_extensions
 
@@ -71,7 +74,6 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import emojis
-    from hikari import undefined
 
 
 @typing.final
@@ -260,6 +262,34 @@ class MediaLoadingType(int, enums.Enum):
     """Media was not found."""
 
 
+@typing.final
+class MediaResourceFlag(enums.Flag):
+    """Additional flags for media resources."""
+
+    NONE = 0
+    """None."""
+
+    IS_ANIMATED = 1 << 0
+    """This image is animated."""
+
+
+@typing.final
+class ContentScanFlag(enums.Flag):
+    """Results of Discord's content scanning of a media resource."""
+
+    NONE = 0
+    """None."""
+
+    IS_EXPLICIT_CONTENT = 1 << 0
+    """This media was flagged as explicit."""
+
+    IS_GORE_CONTENT = 1 << 1
+    """This media was flagged as gore."""
+
+    IS_SELF_HARM_CONTENT = 1 << 2
+    """This media was flagged as self-harm."""
+
+
 @attrs.define(kw_only=True, weakref_slot=False)
 class PartialComponent:
     """Base class for all component entities."""
@@ -431,6 +461,22 @@ class MediaResource(files.Resource[files.AsyncReader]):
 
     loading_state: undefined.UndefinedNoneOr[MediaLoadingType] = attrs.field(repr=True)
     """The loading state of the media item."""
+
+    placeholder: undefined.UndefinedNoneOr[str] = attrs.field(default=undefined.UNDEFINED, repr=False)
+    """A thumbhash placeholder of the media item, if it is an image or video."""
+
+    placeholder_version: undefined.UndefinedNoneOr[int] = attrs.field(default=undefined.UNDEFINED, repr=False)
+    """The version of the placeholder."""
+
+    flags: undefined.UndefinedOr[MediaResourceFlag] = attrs.field(default=undefined.UNDEFINED, repr=False)
+    """The flags of the media item."""
+
+    content_scan_flags: undefined.UndefinedOr[ContentScanFlag] = attrs.field(default=undefined.UNDEFINED, repr=False)
+    """The results of Discord's content scanning of the media item.
+
+    Scanning can finish after the message was sent, so this may be
+    undefined at first and only show up in a later message update.
+    """
 
     @property
     @typing_extensions.override

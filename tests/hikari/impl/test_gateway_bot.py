@@ -697,8 +697,9 @@ class TestGatewayBot:
         gather = stack.enter_context(mock.patch.object(asyncio, "gather"))
         event = stack.enter_context(mock.patch.object(asyncio, "Event"))
         first_completed = stack.enter_context(
-            mock.patch.object(aio, "first_completed", side_effect=[None, asyncio.TimeoutError, None])
+            mock.patch.object(aio, "first_completed", side_effect=[None, TimeoutError, None])
         )
+        timeout = stack.enter_context(mock.patch.object(asyncio, "timeout", wraps=asyncio.timeout))
         check_for_updates = stack.enter_context(mock.patch.object(ux, "check_for_updates", new=mock.Mock()))
 
         event_manager.dispatch = mock.AsyncMock()
@@ -761,10 +762,11 @@ class TestGatewayBot:
                 # Shard 1
                 mock.call(closing_event_closing_wait, gather.return_value),
                 # Shard 2
-                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=10),
+                mock.call(closing_event_closing_wait, shard1.join.return_value),
                 mock.call(closing_event_closing_wait, gather.return_value),
             ]
         )
+        timeout.assert_called_once_with(10)
 
     @pytest.mark.asyncio
     async def test_start_when_request_close_mid_startup(self, bot, rest, voice, event_manager, event_factory):
@@ -797,9 +799,7 @@ class TestGatewayBot:
 
         start_one_shard.assert_not_called()
 
-        first_completed.assert_called_once_with(
-            event.return_value.wait.return_value, shard1.join.return_value, timeout=5
-        )
+        first_completed.assert_called_once_with(event.return_value.wait.return_value, shard1.join.return_value)
 
     @pytest.mark.asyncio
     async def test_start_when_shard_closed_mid_startup(self, bot, rest, voice, event_manager, event_factory):
@@ -833,9 +833,7 @@ class TestGatewayBot:
 
         start_one_shard.assert_not_called()
 
-        first_completed.assert_called_once_with(
-            event.return_value.wait.return_value, shard1.join.return_value, timeout=5
-        )
+        first_completed.assert_called_once_with(event.return_value.wait.return_value, shard1.join.return_value)
 
     def test_stream(self, bot):
         event_type = object()

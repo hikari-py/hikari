@@ -24,6 +24,7 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Attachment",
+    "AttachmentFlag",
     "Message",
     "MessageActivity",
     "MessageActivityType",
@@ -270,6 +271,38 @@ class MessageActivityType(int, enums.Enum):
     """Request to join an activity."""
 
 
+@typing.final
+class AttachmentFlag(enums.Flag):
+    """Additional flags for attachments."""
+
+    NONE = 0
+    """None."""
+
+    IS_CLIP = 1 << 0
+    """This attachment is a clip from a stream."""
+
+    IS_THUMBNAIL = 1 << 1
+    """This attachment is the thumbnail of a thread in a media channel."""
+
+    IS_REMIX = 1 << 2
+    """This attachment has been edited using the remix feature on mobile."""
+
+    IS_SPOILER = 1 << 3
+    """This attachment was marked as a spoiler and is blurred until clicked."""
+
+    CONTAINS_EXPLICIT_CONTENT = 1 << 4
+    """This attachment was flagged as explicit by Discord's content scanning."""
+
+    IS_ANIMATED = 1 << 5
+    """This attachment is an animated image."""
+
+    CONTAINS_GORE_CONTENT = 1 << 6
+    """This attachment was flagged as gore by Discord's content scanning."""
+
+    CONTAINS_SELF_HARM_CONTENT = 1 << 7
+    """This attachment was flagged as self-harm by Discord's content scanning."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
@@ -328,6 +361,19 @@ class Attachment(snowflakes.Unique, files.WebResource):
 
     waveform: str | None = attrs.field(hash=False, eq=False, repr=False)
     """A base64 encoded representation of the sampled waveform for the voice message."""
+
+    placeholder: str | None = attrs.field(hash=False, eq=False, repr=False)
+    """A thumbhash placeholder of the attachment, if it is an image or video."""
+
+    placeholder_version: int | None = attrs.field(hash=False, eq=False, repr=False)
+    """The version of the placeholder, if present."""
+
+    flags: AttachmentFlag = attrs.field(hash=False, eq=False, repr=False)
+    """The flags of this attachment.
+
+    Content scanning can finish after the message was sent, so the
+    `CONTAINS_*` flags may only show up in a later message update.
+    """
 
     @typing_extensions.override
     def __str__(self) -> str:
