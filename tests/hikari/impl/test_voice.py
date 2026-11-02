@@ -362,7 +362,7 @@ class TestVoiceComponentImpl:
         mock_shard.update_voice_state.assert_has_awaits(
             [mock.call(123, 4532, self_deaf=False, self_mute=True), mock.call(123, None)]
         )
-        timeout.assert_called_once_with(5.0)
+        assert timeout.call_args_list == [mock.call(None), mock.call(5.0)]
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("more_connections", [True, False])
