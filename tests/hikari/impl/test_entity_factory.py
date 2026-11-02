@@ -2950,15 +2950,24 @@ class TestEntityFactoryImpl:
                 "proxy_url": "https://media.somewhere.com/image.png",
                 "height": 122,
                 "width": 133,
+                "placeholder": "image thumbhash",
+                "placeholder_version": 1,
+                "flags": 32,
             },
             "thumbnail": {
                 "url": "https://somewhere.com/thumbnail.png",
                 "proxy_url": "https://media.somewhere.com/thumbnail.png",
                 "height": 123,
                 "width": 456,
+                "placeholder": "thumbnail thumbhash",
+                "placeholder_version": 1,
+                "flags": 32,
             },
             "video": {
                 "url": "https://somewhere.com/video.mp4",
+                "placeholder": "video thumbhash",
+                "placeholder_version": 1,
+                "flags": 32,
                 "height": 1234,
                 "width": 4567,
                 "proxy_url": "https://somewhere.com/proxy/video.mp4",
@@ -2971,11 +2980,16 @@ class TestEntityFactoryImpl:
                 "proxy_icon_url": "https://media.somewhere.com/author.png",
             },
             "fields": [{"name": "title", "value": "some value", "inline": True}],
+            "flags": 48,
         }
 
     def test_deserialize_embed_with_full_embed(self, entity_factory_impl, embed_payload):
         embed = entity_factory_impl.deserialize_embed(embed_payload)
         assert embed.title == "embed title"
+        assert (
+            embed.flags
+            == embed_models.EmbedFlag.CONTAINS_EXPLICIT_CONTENT | embed_models.EmbedFlag.IS_CONTENT_INVENTORY_ENTRY
+        )
         assert embed.description == "embed description"
         assert embed.url == "https://somewhere.com"
         assert embed.timestamp == datetime.datetime(2020, 3, 22, 16, 40, 39, 218000, tzinfo=datetime.UTC)
@@ -2991,18 +3005,27 @@ class TestEntityFactoryImpl:
         assert embed.image.proxy_resource.url == "https://media.somewhere.com/image.png"
         assert embed.image.height == 122
         assert embed.image.width == 133
+        assert embed.image.placeholder == "image thumbhash"
+        assert embed.image.placeholder_version == 1
+        assert embed.image.flags == embed_models.EmbedMediaFlag.IS_ANIMATED
         assert isinstance(embed.image, embed_models.EmbedImage)
         # EmbedThumbnail
         assert embed.thumbnail.resource.url == "https://somewhere.com/thumbnail.png"
         assert embed.thumbnail.proxy_resource.url == "https://media.somewhere.com/thumbnail.png"
         assert embed.thumbnail.height == 123
         assert embed.thumbnail.width == 456
+        assert embed.thumbnail.placeholder == "thumbnail thumbhash"
+        assert embed.thumbnail.placeholder_version == 1
+        assert embed.thumbnail.flags == embed_models.EmbedMediaFlag.IS_ANIMATED
         assert isinstance(embed.thumbnail, embed_models.EmbedImage)
         # EmbedVideo
         assert embed.video.resource.url == "https://somewhere.com/video.mp4"
         assert embed.video.proxy_resource.url == "https://somewhere.com/proxy/video.mp4"
         assert embed.video.height == 1234
         assert embed.video.width == 4567
+        assert embed.video.placeholder == "video thumbhash"
+        assert embed.video.placeholder_version == 1
+        assert embed.video.flags == embed_models.EmbedMediaFlag.IS_ANIMATED
         assert isinstance(embed.video, embed_models.EmbedVideo)
         # EmbedProvider
         assert embed.provider.name == "some name"
@@ -3147,6 +3170,7 @@ class TestEntityFactoryImpl:
                 fields=[embed_models.EmbedField(value="VALUE", name="NAME", inline=True)],
                 provider=None,
                 video=embed_models.EmbedVideo(resource=video_icon),
+                flags=embed_models.EmbedFlag.NONE,
             )
         )
 
@@ -3201,6 +3225,7 @@ class TestEntityFactoryImpl:
                     resource=embed_models.EmbedResource(resource=files.URL("http://foobar.com"))
                 ),
                 provider=embed_models.EmbedProvider(name="I said nya"),
+                flags=embed_models.EmbedFlag.NONE,
             )
         )
 
@@ -3239,6 +3264,7 @@ class TestEntityFactoryImpl:
                 fields=None,
                 image=None,
                 thumbnail=None,
+                flags=embed_models.EmbedFlag.NONE,
             )
         )
         assert payload == {
@@ -6196,6 +6222,10 @@ class TestEntityFactoryImpl:
             "height": 1904,
             "content_type": "ooga/booga",
             "loading_state": 2,
+            "placeholder": "a thumbhash",
+            "placeholder_version": 1,
+            "flags": 1,
+            "content_scan_metadata": {"flags": 5},
         }
 
     @pytest.fixture
@@ -6248,11 +6278,21 @@ class TestEntityFactoryImpl:
         assert media.height == 1904
         assert media.content_type == "ooga/booga"
         assert media.loading_state == component_models.MediaLoadingType.LOADED_SUCCESS
+        assert media.placeholder == "a thumbhash"
+        assert media.placeholder_version == 1
+        assert media.flags == component_models.MediaResourceFlag.IS_ANIMATED
+        assert media.content_scan_flags == (
+            component_models.ContentScanFlag.IS_EXPLICIT_CONTENT | component_models.ContentScanFlag.IS_SELF_HARM_CONTENT
+        )
 
         assert isinstance(media, component_models.MediaResource)
 
     def test__deserialize_media_with_unset_fields(self, entity_factory_impl, media_payload):
         del media_payload["proxy_url"]
+        del media_payload["placeholder"]
+        del media_payload["placeholder_version"]
+        del media_payload["flags"]
+        del media_payload["content_scan_metadata"]
         del media_payload["width"]
         del media_payload["height"]
         del media_payload["content_type"]
@@ -6265,6 +6305,10 @@ class TestEntityFactoryImpl:
         assert media.height is undefined.UNDEFINED
         assert media.content_type is undefined.UNDEFINED
         assert media.loading_state is undefined.UNDEFINED
+        assert media.placeholder is undefined.UNDEFINED
+        assert media.placeholder_version is undefined.UNDEFINED
+        assert media.flags is undefined.UNDEFINED
+        assert media.content_scan_flags is undefined.UNDEFINED
 
         assert isinstance(media, component_models.MediaResource)
 
@@ -6601,6 +6645,9 @@ class TestEntityFactoryImpl:
             "ephemeral": True,
             "duration_secs": 1000.123,
             "waveform": "some encoded string",
+            "placeholder": "a thumbhash",
+            "placeholder_version": 1,
+            "flags": 40,
         }
 
     @pytest.fixture
@@ -6700,6 +6747,9 @@ class TestEntityFactoryImpl:
         assert attachment.is_ephemeral is True
         assert attachment.duration == 1000.123
         assert attachment.waveform == "some encoded string"
+        assert attachment.placeholder == "a thumbhash"
+        assert attachment.placeholder_version == 1
+        assert attachment.flags == message_models.AttachmentFlag.IS_SPOILER | message_models.AttachmentFlag.IS_ANIMATED
         assert isinstance(attachment, message_models.Attachment)
 
     def test__deserialize_message_attachment_with_null_fields(self, entity_factory_impl, attachment_payload):
@@ -6721,6 +6771,9 @@ class TestEntityFactoryImpl:
         del attachment_payload["ephemeral"]
         del attachment_payload["duration_secs"]
         del attachment_payload["waveform"]
+        del attachment_payload["placeholder"]
+        del attachment_payload["placeholder_version"]
+        del attachment_payload["flags"]
 
         attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
 
@@ -6732,6 +6785,9 @@ class TestEntityFactoryImpl:
         assert attachment.is_ephemeral is False
         assert attachment.duration is None
         assert attachment.waveform is None
+        assert attachment.placeholder is None
+        assert attachment.placeholder_version is None
+        assert attachment.flags == message_models.AttachmentFlag.NONE
 
     def test__deserialize_partial_message_interaction_metadata(
         self, entity_factory_impl, partial_interaction_metadata_payload, user_payload

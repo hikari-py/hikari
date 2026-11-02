@@ -26,8 +26,10 @@ __all__: typing.Sequence[str] = (
     "Embed",
     "EmbedAuthor",
     "EmbedField",
+    "EmbedFlag",
     "EmbedFooter",
     "EmbedImage",
+    "EmbedMediaFlag",
     "EmbedProvider",
     "EmbedResource",
     "EmbedResourceWithProxy",
@@ -45,12 +47,44 @@ from hikari import errors
 from hikari import files
 from hikari import undefined
 from hikari.internal import attrs_extensions
+from hikari.internal import enums
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import datetime
     from typing import Self
+
+
+@typing.final
+class EmbedFlag(enums.Flag):
+    """Additional flags for embeds."""
+
+    NONE = 0
+    """None."""
+
+    CONTAINS_EXPLICIT_CONTENT = 1 << 4
+    """This embed's media was flagged as explicit by Discord's content scanning."""
+
+    IS_CONTENT_INVENTORY_ENTRY = 1 << 5
+    """This embed is a fallback for a reply to an activity card."""
+
+    CONTAINS_GORE_CONTENT = 1 << 6
+    """This embed's media was flagged as gore by Discord's content scanning."""
+
+    CONTAINS_SELF_HARM_CONTENT = 1 << 7
+    """This embed's media was flagged as self-harm by Discord's content scanning."""
+
+
+@typing.final
+class EmbedMediaFlag(enums.Flag):
+    """Additional flags for embed images and videos."""
+
+    NONE = 0
+    """None."""
+
+    IS_ANIMATED = 1 << 5
+    """This image is animated."""
 
 
 @attrs_extensions.with_copy
@@ -159,6 +193,30 @@ class EmbedImage(EmbedResourceWithProxy):
         any received embed attached to a message event.
     """
 
+    placeholder: str | None = attrs.field(default=None, repr=False)
+    """A thumbhash placeholder of the media, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    placeholder_version: int | None = attrs.field(default=None, repr=False)
+    """The version of the placeholder, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    flags: EmbedMediaFlag = attrs.field(default=EmbedMediaFlag.NONE, repr=False)
+    """The flags of the media.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy):
@@ -178,6 +236,30 @@ class EmbedVideo(EmbedResourceWithProxy):
 
     width: int | None = attrs.field(default=None, repr=False)
     """The width of the video."""
+
+    placeholder: str | None = attrs.field(default=None, repr=False)
+    """A thumbhash placeholder of the media, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    placeholder_version: int | None = attrs.field(default=None, repr=False)
+    """The version of the placeholder, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    flags: EmbedMediaFlag = attrs.field(default=EmbedMediaFlag.NONE, repr=False)
+    """The flags of the media.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
 
 
 @attrs_extensions.with_copy
@@ -263,6 +345,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         "_color",
         "_description",
         "_fields",
+        "_flags",
         "_footer",
         "_image",
         "_provider",
@@ -289,6 +372,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         provider: EmbedProvider | None,
         footer: EmbedFooter | None,
         fields: typing.MutableSequence[EmbedField] | None,
+        flags: EmbedFlag,
     ) -> Embed:
         """Generate an embed from the given attributes.
 
@@ -310,6 +394,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         embed._provider = provider
         embed._footer = footer
         embed._fields = fields
+        embed._flags = flags
         return embed
 
     def __init__(
@@ -346,6 +431,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         self._provider: EmbedProvider | None = None
         self._thumbnail: EmbedImage | None = None
         self._footer: EmbedFooter | None = None
+        self._flags = EmbedFlag.NONE
 
         # More boilerplate to allow this to be optional, but saves a useless list on every embed
         # when we don't always need it.
@@ -565,6 +651,17 @@ class Embed:  # noqa: PLW1641 - No __hash__
             Use [`hikari.embeds.Embed.set_thumbnail`][] to update this value.
         """
         return self._thumbnail
+
+    @property
+    def flags(self) -> EmbedFlag:
+        """Return the flags of the embed.
+
+        !!! note
+            Flags cannot be set by bots or webhooks while sending an embed.
+            Content scanning can finish after the message was sent, so the
+            `CONTAINS_*` flags may only show up in a later message update.
+        """
+        return self._flags
 
     @property
     def video(self) -> EmbedVideo | None:
