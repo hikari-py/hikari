@@ -732,14 +732,14 @@ class TestGatewayShardImplAsync:
         client._ws.send_json.assert_awaited_once_with(data)
         client._handshake_event.wait.assert_not_called()
 
-    async def test__send_json_when_priority(self, client):
+    async def test__send_json_when_internal(self, client):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
         client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
         data = object()
 
-        await client._send_json(data, priority=True)
+        await client._send_json(data, internal=True)
 
         client._non_priority_rate_limit.acquire.assert_not_called()
         client._total_rate_limit.acquire.assert_awaited_once_with()
@@ -1258,7 +1258,7 @@ class TestGatewayShardImplAsync:
                     "presence": serialize_and_store_presence_payload.return_value,
                 },
             },
-            priority=True,
+            internal=True,
         )
 
         assert shield.call_count == 2
@@ -1334,7 +1334,7 @@ class TestGatewayShardImplAsync:
         self._assert_dropped_queues(client, 1)
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
-            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
+            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, internal=True
         )
 
         assert shield.call_count == 2
@@ -1633,7 +1633,7 @@ class TestGatewayShardImplAsync:
             with mock.patch.object(time, "time", return_value=200):
                 await client._send_heartbeat()
 
-        send_json.assert_awaited_once_with({"op": 1, "d": 10}, priority=True)
+        send_json.assert_awaited_once_with({"op": 1, "d": 10}, internal=True)
         assert client._last_heartbeat_sent == 200
 
     async def test__poll_events_on_dispatch(self, client):

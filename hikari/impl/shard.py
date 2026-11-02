@@ -696,16 +696,18 @@ class GatewayShardImpl(shard.GatewayShard):
         msg = f"shard {self._shard_id} has shut down"
         raise errors.ComponentStateConflictError(msg)
 
-    async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
-        if priority:
-            await self._total_rate_limit.acquire()
-        else:
-            await self._acquire_non_priority()
+    async def _send_json(self, data: data_binding.JSONObject, *, internal: bool = False) -> None:
+        await self._acquire_rate_limits(internal=internal)
 
         assert self._ws is not None
         await self._ws.send_json(data)
 
-    async def _acquire_non_priority(self) -> None:
+    async def _acquire_rate_limits(self, *, internal: bool) -> None:
+        if internal:
+            # Internal payloads belong to the current connection and are only sent while it is up
+            await self._total_rate_limit.acquire()
+            return
+
         session_id = self._session_id
 
         while True:
@@ -862,7 +864,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _send_heartbeat(self) -> None:
         self._logger.log(ux.TRACE, "sending HEARTBEAT [s:%s]", self._seq)
-        await self._send_json({_OP: _HEARTBEAT, _D: self._seq}, priority=True)
+        await self._send_json({_OP: _HEARTBEAT, _D: self._seq}, internal=True)
         self._last_heartbeat_sent = time.time()
 
     async def _heartbeat(self, heartbeat_interval: float) -> None:
@@ -1059,13 +1061,13 @@ class GatewayShardImpl(shard.GatewayShard):
                         "presence": self._serialize_and_store_presence_payload(),
                     },
                 },
-                priority=True,
+                internal=True,
             )
         else:
             self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
                 {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}},
-                priority=True,
+                internal=True,
             )
 
         lifetime_tasks = (heartbeat_task, poll_events_task)
@@ -1159,7 +1161,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         except asyncio.CancelledError:
                             pass
 
-                # Wake queued payloads so they wait for the next connection (see `_acquire_non_priority`)
+                # Wake queued payloads so they wait for the next connection (see `_acquire_rate_limits`)
                 self._total_rate_limit.close(_DisconnectedError())
                 self._non_priority_rate_limit.close(_DisconnectedError())
 
