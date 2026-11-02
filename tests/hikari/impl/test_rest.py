@@ -2387,7 +2387,7 @@ class TestRESTClientImplAsync:
         generate_error_response.assert_called_once_with(rest_client._client_session.request.return_value)
 
     @hikari_test_helpers.timeout()
-    @pytest.mark.parametrize("exception", [asyncio.TimeoutError, aiohttp.ClientConnectionError])
+    @pytest.mark.parametrize("exception", [TimeoutError, aiohttp.ClientConnectionError])
     async def test_request_when_connection_error_will_retry_until_exhausted(self, rest_client, exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=ClientSessionRequestMock(side_effect=exception))
