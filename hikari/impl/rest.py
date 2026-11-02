@@ -41,6 +41,7 @@ import platform
 import sys
 import typing
 import urllib.parse
+import warnings
 
 import aiohttp
 
@@ -76,6 +77,7 @@ from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -5110,7 +5112,16 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing_extensions.override
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:  # pyright: ignore[reportDeprecated]
-        return special_endpoints_impl.ModalActionRowBuilder()
+        deprecation.warn_deprecated(
+            "RESTClient.build_modal_action_row",
+            removal_version="2.9.0",
+            additional_info="Use 'LabelComponentBuilder' instead.",
+        )
+
+        # The builder warns about itself on creation, this call already did
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            return special_endpoints_impl.ModalActionRowBuilder()
 
     @typing_extensions.override
     async def fetch_scheduled_event(
