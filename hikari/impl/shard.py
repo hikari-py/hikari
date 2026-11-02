@@ -691,11 +691,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
-    def _new_session_error(self) -> errors.SessionInvalidatedError:
-        return errors.SessionInvalidatedError(f"shard {self._shard_id} started a new session")
-
-    def _shut_down_error(self) -> errors.ComponentStateConflictError:
-        return errors.ComponentStateConflictError(f"shard {self._shard_id} has shut down")
+    def _raise_shut_down(self) -> typing.NoReturn:
+        msg = f"shard {self._shard_id} has shut down"
+        raise errors.ComponentStateConflictError(msg)
 
     async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
         if priority:
@@ -726,7 +724,7 @@ class GatewayShardImpl(shard.GatewayShard):
         # Not using `aio.first_completed` as it would propagate the keep alive task's exception
         assert self._handshake_event is not None
         if self._keep_alive_task is None or self._keep_alive_task.done():
-            raise self._shut_down_error()
+            self._raise_shut_down()
 
         handshake = asyncio.ensure_future(self._handshake_event.wait())
         try:
@@ -735,10 +733,11 @@ class GatewayShardImpl(shard.GatewayShard):
             handshake.cancel()
 
         if self._keep_alive_task.done():
-            raise self._shut_down_error()
+            self._raise_shut_down()
 
         if self._session_id != session_id:
-            raise self._new_session_error()
+            msg = f"shard {self._shard_id} started a new session"
+            raise errors.SessionInvalidatedError(msg)
 
     def _check_if_connected(self) -> None:
         if not self.is_connected:
