@@ -185,6 +185,103 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_channel_member_permissions(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+        *,
+        implicit: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> permissions_.Permissions:
+        """Fetch the permissions of a member in a channel.
+
+        The result combines the member's roles with the channel overwrites
+        that apply to them. Threads use the overwrites of their parent channel.
+
+        Parameters
+        ----------
+        channel
+            The channel to compute the permissions in. This may be the
+            object or the ID of an existing guild channel.
+        user
+            The member to compute the permissions for. This may be the
+            object or the ID of an existing user.
+        implicit
+            Whether to apply implicit permission masking when the member is
+            missing [`hikari.permissions.Permissions.VIEW_CHANNEL`][], or
+            [`hikari.permissions.Permissions.CONNECT`][] in voice and stage
+            channels. Defaults to [`True`][] and is never applied to bots.
+
+        Returns
+        -------
+        hikari.permissions.Permissions
+            The computed permissions.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel,
+            or [`hikari.permissions.Permissions.CONNECT`][] in voice and stage channels.
+        hikari.errors.NotFoundError
+            If the channel or the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_channel_role_permissions(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        *,
+        implicit: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> permissions_.Permissions:
+        """Fetch the permissions a role grants in a channel.
+
+        The result combines the role with `@everyone` and the channel
+        overwrites of both. Other roles and member specific overwrites are
+        not included. Threads use the overwrites of their parent channel.
+
+        Parameters
+        ----------
+        channel
+            The channel to compute the permissions in. This may be the
+            object or the ID of an existing guild channel.
+        role
+            The role to compute the permissions for. This may be the
+            object or the ID of an existing role.
+        implicit
+            Whether to apply implicit permission masking when the role is
+            missing [`hikari.permissions.Permissions.VIEW_CHANNEL`][], or
+            [`hikari.permissions.Permissions.CONNECT`][] in voice and stage
+            channels. Defaults to [`True`][].
+
+        Returns
+        -------
+        hikari.permissions.Permissions
+            The computed permissions.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel,
+            or [`hikari.permissions.Permissions.CONNECT`][] in voice and stage channels.
+        hikari.errors.NotFoundError
+            If the channel or the role is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_channel(  # noqa: PLR0913 - Too many arguments
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
@@ -6191,6 +6288,44 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_member_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users_.PartialUser]
+    ) -> permissions_.Permissions:
+        """Fetch the guild wide permissions of a member.
+
+        The result combines the member's roles with `@everyone`. Channel
+        overwrites are not included, use
+        [`hikari.api.rest.RESTClient.fetch_channel_member_permissions`][]
+        for those.
+
+        Parameters
+        ----------
+        guild
+            The guild to compute the permissions in. This may be the
+            object or the ID of an existing guild.
+        user
+            The member to compute the permissions for. This may be the
+            object or the ID of an existing user.
+
+        Returns
+        -------
+        hikari.permissions.Permissions
+            The computed permissions.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     def fetch_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -7005,6 +7140,44 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         hikari.guilds.Role
             The requested role.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the role is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_role_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> permissions_.Permissions:
+        """Fetch the guild wide permissions a role grants.
+
+        The result combines the role with `@everyone`. Other roles, member
+        specific restrictions and channel overwrites are not included, use
+        [`hikari.api.rest.RESTClient.fetch_channel_role_permissions`][] for
+        the latter.
+
+        Parameters
+        ----------
+        guild
+            The guild to compute the permissions in. This may be the
+            object or the ID of an existing guild.
+        role
+            The role to compute the permissions for. This may be the
+            object or the ID of an existing role.
+
+        Returns
+        -------
+        hikari.permissions.Permissions
+            The computed permissions.
 
         Raises
         ------
