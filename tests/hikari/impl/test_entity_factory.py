@@ -1001,6 +1001,7 @@ class TestEntityFactoryImpl:
             "owner": owner_payload,
             "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
             "flags": 65536,
+            "flags_new": "2147549184",
             "team": {
                 "icon": "hashtag",
                 "id": "202020202",
@@ -1045,7 +1046,8 @@ class TestEntityFactoryImpl:
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
-        assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
+        assert application.flags == application_models.ApplicationFlags(2147549184)
+        assert application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT in application.flags
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
         assert application.role_connections_verification_url == "https://verifymethis.com"
@@ -1104,14 +1106,6 @@ class TestEntityFactoryImpl:
         ]
         assert isinstance(application, application_models.Application)
 
-    def test_deserialize_application_with_flags_new(self, entity_factory_impl, application_payload):
-        application_payload["flags_new"] = "2147549184"
-
-        application = entity_factory_impl.deserialize_application(application_payload)
-
-        assert application.flags == application_models.ApplicationFlags(2147549184)
-        assert application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT in application.flags
-
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
             {
@@ -1122,6 +1116,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "flags_new": "0",
                 "owner": owner_payload,
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
@@ -1152,6 +1147,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "flags_new": "0",
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
                 "event_webhooks_url": None,

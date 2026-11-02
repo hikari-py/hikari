@@ -1379,7 +1379,7 @@ class TestEventFactoryImpl:
             "user": mock_user_payload,
             "guilds": [{"id": "432123"}, {"id": "949494"}],
             "session_id": "kjsdjiodsaiosad",
-            "application": {"id": "4123212", "flags": "4949494"},
+            "application": {"id": "4123212", "flags": "4949494", "flags_new": "2147488438"},
         }
         mock_app.entity_factory.deserialize_my_user.return_value = mock.Mock(app=mock_app)
 
@@ -1394,21 +1394,6 @@ class TestEventFactoryImpl:
         assert event.unavailable_guilds == [432123, 949494]
         assert event.session_id == "kjsdjiodsaiosad"
         assert event.application_id == 4123212
-        assert event.application_flags == 4949494
-
-    def test_deserialize_ready_event_with_application_flags_new(self, event_factory, mock_app, mock_shard):
-        mock_payload = {
-            "v": "69",
-            "resume_gateway_url": "testing.com",
-            "user": object(),
-            "guilds": [],
-            "session_id": "kjsdjiodsaiosad",
-            "application": {"id": "4123212", "flags": "4949494", "flags_new": "2147488438"},
-        }
-        mock_app.entity_factory.deserialize_my_user.return_value = mock.Mock(app=mock_app)
-
-        event = event_factory.deserialize_ready_event(mock_shard, mock_payload)
-
         assert event.application_flags == 2147488438
 
     def test_deserialize_connected_event(self, event_factory, mock_app, mock_shard):
