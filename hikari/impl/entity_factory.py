@@ -772,7 +772,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload.get("rpc_origins"),
             public_key=bytes.fromhex(payload["verify_key"]),
-            flags=application_models.ApplicationFlags(payload["flags"]),
+            flags=application_models.ApplicationFlags(int(payload["flags_new"])),
             icon_hash=payload.get("icon"),
             team=team,
             guild_id=guild_id,
