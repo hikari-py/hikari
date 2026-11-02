@@ -920,6 +920,11 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_ready_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> shard_events.ShardReadyEvent:
+        # "flags" is capped at 31 bits, "flags_new" carries the full value as a string.
+        application_payload = payload["application"]
+        raw_application_flags = application_payload.get("flags_new", application_payload["flags"])
+        application_flags = application_models.ApplicationFlags(int(raw_application_flags))
+
         return shard_events.ShardReadyEvent(
             shard=shard,
             actual_gateway_version=int(payload["v"]),
@@ -928,7 +933,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             my_user=self._app.entity_factory.deserialize_my_user(payload["user"]),
             unavailable_guilds=[snowflakes.Snowflake(guild["id"]) for guild in payload["guilds"]],
             application_id=snowflakes.Snowflake(payload["application"]["id"]),
-            application_flags=application_models.ApplicationFlags(int(payload["application"]["flags"])),
+            application_flags=application_flags,
         )
 
     @typing_extensions.override

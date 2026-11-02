@@ -87,6 +87,14 @@ _interaction_option_type_mapping: dict[int, typing.Callable[[typing.Any], typing
 }
 
 
+def _deserialize_application_flags(payload: data_binding.JSONObject) -> application_models.ApplicationFlags:
+    # "flags" is capped at 31 bits, "flags_new" carries the full value as a string.
+    if (flags_new := payload.get("flags_new")) is not None:
+        return application_models.ApplicationFlags(int(flags_new))
+
+    return application_models.ApplicationFlags(int(payload["flags"]))
+
+
 def _with_int_cast(cast: typing.Callable[[int], ValueT]) -> typing.Callable[[typing.Any], ValueT]:
     """Wrap a cast to ensure the value passed to it will first be cast to int."""
     return lambda value: cast(int(value))
@@ -759,7 +767,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner=self.deserialize_user(payload["owner"]),
             rpc_origins=payload.get("rpc_origins"),
             public_key=bytes.fromhex(payload["verify_key"]),
-            flags=application_models.ApplicationFlags(payload["flags"]),
+            flags=_deserialize_application_flags(payload),
             icon_hash=payload.get("icon"),
             team=team,
             cover_image_hash=payload.get("cover_image"),

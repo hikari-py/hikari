@@ -1104,6 +1104,14 @@ class TestEntityFactoryImpl:
         ]
         assert isinstance(application, application_models.Application)
 
+    def test_deserialize_application_with_flags_new(self, entity_factory_impl, application_payload):
+        application_payload["flags_new"] = "2147549184"
+
+        application = entity_factory_impl.deserialize_application(application_payload)
+
+        assert application.flags == application_models.ApplicationFlags(2147549184)
+        assert application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT in application.flags
+
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
             {
