@@ -226,7 +226,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
         except Exception:
             _LOGGER.debug("error occurred in initialization, leaving voice channel %s in guild %s", channel, guild)
             try:
-                await asyncio.wait_for(shard.update_voice_state(guild, None), timeout=5.0)
+                async with asyncio.timeout(5.0):
+                    await shard.update_voice_state(guild, None)
             except TimeoutError:
                 pass
 

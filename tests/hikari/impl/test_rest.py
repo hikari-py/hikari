@@ -1003,6 +1003,21 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 newest_first=False,
                 first_id="0",
+                shard=undefined.UNDEFINED,
+            )
+
+    def test_fetch_my_guilds_with_shard(self, rest_client):
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "OwnGuildIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_my_guilds(shard=3) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                newest_first=False,
+                first_id="0",
+                shard=3,
             )
 
     def test_fetch_my_guilds_when_start_at_is_datetime(self, rest_client):
@@ -1017,6 +1032,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 newest_first=False,
                 first_id="735757641938108416",
+                shard=undefined.UNDEFINED,
             )
 
     def test_fetch_my_guilds_when_start_at_is_else(self, rest_client):
@@ -1030,6 +1046,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 newest_first=True,
                 first_id="123",
+                shard=undefined.UNDEFINED,
             )
 
     def test_fetch_audit_log_when_before_is_undefined(self, rest_client):
@@ -2387,7 +2404,7 @@ class TestRESTClientImplAsync:
         generate_error_response.assert_called_once_with(rest_client._client_session.request.return_value)
 
     @hikari_test_helpers.timeout()
-    @pytest.mark.parametrize("exception", [asyncio.TimeoutError, aiohttp.ClientConnectionError])
+    @pytest.mark.parametrize("exception", [TimeoutError, aiohttp.ClientConnectionError])
     async def test_request_when_connection_error_will_retry_until_exhausted(self, rest_client, exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=ClientSessionRequestMock(side_effect=exception))
@@ -3384,8 +3401,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=123, message=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_message(StubModel(123), StubModel(456), reason="broke laws")
-        rest_client._request.assert_awaited_once_with(expected_route, reason="broke laws")
+        await rest_client.delete_message(StubModel(123), StubModel(456))
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_delete_messages(self, rest_client):
         messages = [StubModel(i) for i in range(200)]
@@ -3422,7 +3439,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
         self, rest_client
@@ -3444,7 +3461,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -3463,7 +3480,7 @@ class TestRESTClientImplAsync:
                     json=expected_json,
                     reason="broke laws",
                 ),
-                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message), reason="broke laws"),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
             ]
         )
 
