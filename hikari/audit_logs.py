@@ -326,7 +326,7 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that a permission overwrite was deleted from a channel."""
 
     CHANNEL_POSITION_UPDATE = 16
-    """Indicates that a channels were reordered."""
+    """Indicates that channels were reordered."""
 
     MEMBER_KICK = 20
     """Indicates that a member was kicked from guild."""
