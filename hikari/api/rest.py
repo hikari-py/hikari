@@ -9136,7 +9136,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     @deprecation.deprecated("Use 'LabelComponentBuilder' instead.")
-    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
+    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:  # pyright: ignore[reportDeprecated]
         """Build an action row modal component for use in interactions and REST calls.
 
         !!! deprecated 2.7.1

@@ -5109,7 +5109,7 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.MessageActionRowBuilder()
 
     @typing_extensions.override
-    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
+    def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:  # pyright: ignore[reportDeprecated]
         return special_endpoints_impl.ModalActionRowBuilder()
 
     @typing_extensions.override

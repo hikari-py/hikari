@@ -2581,7 +2581,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
+class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):  # pyright: ignore[reportDeprecated]
     """Standard implementation of [`hikari.api.special_endpoints.ModalActionRowBuilder`][]."""
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
