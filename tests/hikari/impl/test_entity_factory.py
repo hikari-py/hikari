@@ -1505,11 +1505,11 @@ class TestEntityFactoryImpl:
     def test__deserialize_channel_position_update_entry_info(
         self, entity_factory_impl, channel_position_update_info_payload
     ):
-        position_update_entry_info = entity_factory_impl._deserialize_channel_position_update_entry_info(
+        channel_position_update_entry_info = entity_factory_impl._deserialize_channel_position_update_entry_info(
             channel_position_update_info_payload
         )
-        assert position_update_entry_info.count == 42
-        assert isinstance(position_update_entry_info, audit_log_models.ChannelPositionUpdateEntryInfo)
+        assert channel_position_update_entry_info.count == 42
+        assert isinstance(channel_position_update_entry_info, audit_log_models.ChannelPositionUpdateEntryInfo)
 
     @pytest.fixture
     def message_pin_info_payload(self):
