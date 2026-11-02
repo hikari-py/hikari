@@ -273,9 +273,9 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     @typing_extensions.override
     def add_reposition_channel(
         self,
-        position: undefined.UndefinedOr[int],
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:

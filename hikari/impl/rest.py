@@ -3815,7 +3815,7 @@ class RESTClientImpl(rest_api.RESTClient):
         builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request, reason=reason)
         if positions is not undefined.UNDEFINED:
             for pos, channel in positions.items():
-                builder.add_reposition_channel(position=pos, channel=channel)
+                builder.add_reposition_channel(channel, position=pos)
         return builder
 
     @typing_extensions.override

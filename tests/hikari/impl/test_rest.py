@@ -5872,7 +5872,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock()
 
         await rest_client.reposition_channels(StubModel(123), reason="because why not").add_reposition_channel(
-            undefined.UNDEFINED, StubModel(456), parent=None
+            StubModel(456), parent=None
         )
 
         rest_client._request.assert_awaited_once_with(

@@ -146,7 +146,7 @@ class ChannelRepositioner(abc.ABC):
     channel_repositioner = rest.reposition_channels(
         guild=GUILD_ID, reason="The reason."
     )
-    channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
+    channel_repositioner.add_reposition_channel(CHANNEL_ID, position=2)
 
     await channel_repositioner
     ```
@@ -154,7 +154,7 @@ class ChannelRepositioner(abc.ABC):
     ```py
     channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
     channel_repositioner.add_reposition_channel(
-        position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
+        CHANNEL_ID, position=1, lock_permissions=True, parent=CATEGORY_ID
     )
     # when lock_permissions is set to True, the channels permissions will be synced
     # with the new parent.
@@ -232,9 +232,9 @@ class ChannelRepositioner(abc.ABC):
     @abc.abstractmethod
     def add_reposition_channel(
         self,
-        position: undefined.UndefinedOr[int],
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
@@ -242,13 +242,13 @@ class ChannelRepositioner(abc.ABC):
 
         Parameters
         ----------
+        channel
+            The channel that should be repositioned. This can either be a
+            `[hikari.channels.GuildChannel`][] or the id of the channel.
         position
             The new position for the channel.
 
             If [`hikari.undefined.UNDEFINED`][], the position is left unchanged.
-        channel
-            The channel that should be repositioned. This can either be a
-            `[hikari.channels.GuildChannel`][] or the id of the channel.
         lock_permissions
             Whether the channel should sync permissions to the new parent channel or not.
             When set to `False` or `UNDEFINED` the channel will not sync its permissions
