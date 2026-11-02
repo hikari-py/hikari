@@ -1003,6 +1003,21 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 newest_first=False,
                 first_id="0",
+                shard=undefined.UNDEFINED,
+            )
+
+    def test_fetch_my_guilds_with_shard(self, rest_client):
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "OwnGuildIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_my_guilds(shard=3) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                newest_first=False,
+                first_id="0",
+                shard=3,
             )
 
     def test_fetch_my_guilds_when_start_at_is_datetime(self, rest_client):
@@ -1017,6 +1032,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 newest_first=False,
                 first_id="735757641938108416",
+                shard=undefined.UNDEFINED,
             )
 
     def test_fetch_my_guilds_when_start_at_is_else(self, rest_client):
@@ -1030,6 +1046,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 newest_first=True,
                 first_id="123",
+                shard=undefined.UNDEFINED,
             )
 
     def test_fetch_audit_log_when_before_is_undefined(self, rest_client):

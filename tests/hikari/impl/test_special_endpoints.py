@@ -317,6 +317,28 @@ class TestOwnGuildIterator:
         )
 
     @pytest.mark.asyncio
+    async def test_aiter_with_shard(self):
+        expected_route = routes.GET_MY_GUILDS.compile()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(side_effect=[[{"id": "123321123123"}], []])
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, newest_first=False, first_id="123321", shard=3
+        )
+
+        await iterator
+
+        mock_request.assert_has_awaits(
+            [
+                mock.call(
+                    compiled_route=expected_route, query={"after": "123321", "with_counts": "true", "shard": "3"}
+                ),
+                mock.call(
+                    compiled_route=expected_route, query={"after": "123321123123", "with_counts": "true", "shard": "3"}
+                ),
+            ]
+        )
+
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         mock_payload_1 = {"id": "1213321123123"}
         mock_payload_2 = {"id": "1213321123666"}

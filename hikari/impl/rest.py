@@ -2432,6 +2432,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         newest_first: bool = False,
         start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        shard: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         if start_at is undefined.UNDEFINED:
             start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
@@ -2441,6 +2442,7 @@ class RESTClientImpl(rest_api.RESTClient):
             request_call=self._request,
             newest_first=newest_first,
             first_id=_to_searchable_snowflake_str(start_at),
+            shard=shard,
         )
 
     @typing_extensions.override
