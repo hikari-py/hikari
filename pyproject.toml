@@ -104,18 +104,18 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 
-mypy = ["mypy[faster-cache]==2.4.0", { include-group = "types" }]
+mypy = ["mypy[faster-cache]==2.4.1", { include-group = "types" }]
 pyright = ["pyright==1.1.414", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
-    "pytest==9.1.1",
-    "pytest-asyncio==1.4.0",
+    "pytest==9.2.0",
+    "pytest-asyncio==1.4.1.post1",
     "pytest-cov==7.1.0",
     "pytest-randomly==5.0.0",
     { include-group = "coverage" },
 ]
 release = ["twine==7.0.0"]
-ruff = ["ruff==0.17.2"]
+ruff = ["ruff==0.17.3"]
 slotscheck = ["slotscheck==0.21.0"]
 towncrier = ["towncrier==26.9.0"]
 types = [
