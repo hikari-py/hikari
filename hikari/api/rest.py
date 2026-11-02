@@ -1659,8 +1659,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -1672,9 +1670,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message
             The message to delete. This may be the object or the ID of
             an existing message.
-        reason
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
 
         Raises
         ------
@@ -1739,6 +1734,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
+
+            Discord does not record a reason for single message deletions,
+            so a chunk with only one message left is deleted without it.
 
         Raises
         ------

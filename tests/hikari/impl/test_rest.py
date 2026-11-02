@@ -3401,8 +3401,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=123, message=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_message(StubModel(123), StubModel(456), reason="broke laws")
-        rest_client._request.assert_awaited_once_with(expected_route, reason="broke laws")
+        await rest_client.delete_message(StubModel(123), StubModel(456))
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_delete_messages(self, rest_client):
         messages = [StubModel(i) for i in range(200)]
@@ -3439,7 +3439,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
         self, rest_client
@@ -3461,7 +3461,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
+        rest_client.delete_message.assert_awaited_once_with(channel, message)
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -3480,7 +3480,7 @@ class TestRESTClientImplAsync:
                     json=expected_json,
                     reason="broke laws",
                 ),
-                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message), reason="broke laws"),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
             ]
         )
 
