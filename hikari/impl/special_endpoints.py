@@ -526,7 +526,14 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
 class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_newest_first", "_request_call", "_route")
+    __slots__: typing.Sequence[str] = (
+        "_entity_factory",
+        "_first_id",
+        "_newest_first",
+        "_request_call",
+        "_route",
+        "_shard",
+    )
 
     def __init__(
         self,
@@ -535,12 +542,14 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         *,
         newest_first: bool,
         first_id: str,
+        shard: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> None:
         super().__init__()
         self._entity_factory = entity_factory
         self._newest_first = newest_first
         self._request_call = request_call
         self._first_id = first_id
+        self._shard = shard
         self._route = routes.GET_MY_GUILDS.compile()
 
     @typing_extensions.override
@@ -548,6 +557,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
         query.put("before" if self._newest_first else "after", self._first_id)
+        query.put("shard", self._shard)
         # We rely on Discord's default for the limit here since for this endpoint this has always scaled
         # along side the maximum page size limit to match the maximum amount of guilds a user can be in.
 

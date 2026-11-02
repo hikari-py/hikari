@@ -164,7 +164,8 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
                 self._event = asyncio.Event()
 
             try:
-                await asyncio.wait_for(self._event.wait(), timeout=self._timeout)
+                async with asyncio.timeout(self._timeout):
+                    await self._event.wait()
             except TimeoutError:
                 raise StopAsyncIteration from None
 
@@ -627,7 +628,8 @@ class EventManagerBase(event_manager_.EventManager):
 
         waiter_set.add(pair)  # type: ignore[arg-type]
         try:
-            return await asyncio.wait_for(future, timeout=timeout)
+            async with asyncio.timeout(timeout):
+                return await future
         except TimeoutError:
             waiter_set.remove(pair)  # type: ignore[arg-type]
             if not waiter_set:

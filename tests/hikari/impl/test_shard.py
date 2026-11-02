@@ -139,20 +139,21 @@ class TestGatewayTransport:
     @pytest.mark.asyncio
     async def test_send_close(self, transport_impl):
         transport_impl._sent_close = False
+        transport_impl._ws.close = mock.AsyncMock()
 
-        with mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for:
+        with mock.patch.object(asyncio, "timeout", wraps=asyncio.timeout) as timeout:
             with mock.patch.object(asyncio, "sleep") as sleep:
                 await transport_impl.send_close(code=1234, message=b"some message")
 
-        wait_for.assert_awaited_once_with(transport_impl._ws.close.return_value, timeout=5)
-        transport_impl._ws.close.assert_called_once_with(code=1234, message=b"some message")
+        timeout.assert_called_once_with(5)
+        transport_impl._ws.close.assert_awaited_once_with(code=1234, message=b"some message")
         transport_impl._exit_stack.aclose.assert_awaited_once_with()
         sleep.assert_awaited_once_with(0.25)
 
     @pytest.mark.asyncio
     async def test_send_close_when_TimeoutError(self, transport_impl):
         transport_impl._sent_close = False
-        transport_impl._ws.close.side_effect = asyncio.TimeoutError
+        transport_impl._ws.close.side_effect = TimeoutError
 
         with mock.patch.object(asyncio, "sleep") as sleep:
             await transport_impl.send_close(code=1234, message=b"some message")
@@ -165,7 +166,7 @@ class TestGatewayTransport:
     async def test_send_close_when_already_sent(self, transport_impl):
         transport_impl._sent_close = True
 
-        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", side_effect=asyncio.TimeoutError) as close:
+        with mock.patch.object(aiohttp.ClientWebSocketResponse, "close", side_effect=TimeoutError) as close:
             await transport_impl.send_close(code=1234, message=b"some message")
 
         close.assert_not_called()
@@ -374,7 +375,7 @@ class TestGatewayTransport:
             ),
             (aiohttp.ClientOSError("some os error"), "some os error"),
             (aiohttp.ClientConnectionError("some error"), "some error"),
-            (asyncio.TimeoutError("some error"), "Timeout exceeded"),
+            (TimeoutError("some error"), "Timeout exceeded"),
         ],
     )
     async def test_connect_when_expected_error_while_connecting(self, http_settings, proxy_settings, error, reason):
@@ -710,12 +711,10 @@ class TestGatewayShardImplAsync:
     async def test_join(self, client):
         client._keep_alive_task = object()
 
-        with mock.patch.object(asyncio, "wait_for") as wait_for:
-            with mock.patch.object(asyncio, "shield", new=mock.Mock()) as shield:
-                await client.join()
+        with mock.patch.object(asyncio, "shield", new=mock.AsyncMock()) as shield:
+            await client.join()
 
-        shield.assert_called_once_with(client._keep_alive_task)
-        wait_for.assert_awaited_once_with(shield.return_value, timeout=None)
+        shield.assert_awaited_once_with(client._keep_alive_task)
 
     async def test__send_json(self, client):
         client._total_rate_limit = mock.AsyncMock()

@@ -216,6 +216,27 @@ class GuildFeature(str, enums.Enum):
     ENHANCED_ROLE_COLORS = "ENHANCED_ROLE_COLORS"
     """Guild is able to set gradient and holographic role colors."""
 
+    PRUNE_REQUIRES_ADMIN = "PRUNE_REQUIRES_ADMIN"
+    """Guild requires the [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission to prune members."""
+
+    ANIMATED_BANNER = "ANIMATED_BANNER"
+    """Guild has access to set an animated guild banner image."""
+
+    AUTO_MODERATION = "AUTO_MODERATION"
+    """Guild has set up auto moderation rules."""
+
+    DEVELOPER_SUPPORT_SERVER = "DEVELOPER_SUPPORT_SERVER"
+    """Guild has been set as a support server on the App Directory."""
+
+    GUESTS_ENABLED = "GUESTS_ENABLED"
+    """Guild has access to guest invites."""
+
+    GUILD_TAGS = "GUILD_TAGS"
+    """Guild has access to set guild tags."""
+
+    ROLE_ICONS = "ROLE_ICONS"
+    """Guild is able to set role icons."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
@@ -383,6 +404,24 @@ class GuildMemberFlags(enums.Flag):
 
     STARTED_ONBOARDING = 1 << 3
     """Member has started onboarding."""
+
+    IS_GUEST = 1 << 4
+    """Member is a guest and can only access the voice channel they were invited to."""
+
+    STARTED_HOME_ACTIONS = 1 << 5
+    """Member has started the Server Guide new member actions."""
+
+    COMPLETED_HOME_ACTIONS = 1 << 6
+    """Member has completed the Server Guide new member actions."""
+
+    AUTOMOD_QUARANTINED_USERNAME = 1 << 7
+    """Member's username, display name or nickname is blocked by auto moderation."""
+
+    DM_SETTINGS_UPSELL_ACKNOWLEDGED = 1 << 9
+    """Member has dismissed the DM settings upsell."""
+
+    AUTOMOD_QUARANTINED_GUILD_TAG = 1 << 10
+    """Member's guild tag is blocked by auto moderation."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
