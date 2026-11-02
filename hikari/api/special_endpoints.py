@@ -232,11 +232,11 @@ class ChannelRepositioner(abc.ABC):
     @abc.abstractmethod
     def add_reposition_channel(
         self,
-        position: int,
+        position: undefined.UndefinedOr[int],
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel that should be repositioned to the channel repositioner.
 
@@ -244,6 +244,8 @@ class ChannelRepositioner(abc.ABC):
         ----------
         position
             The new position for the channel.
+
+            If [`hikari.undefined.UNDEFINED`][], the position is left unchanged.
         channel
             The channel that should be repositioned. This can either be a
             `[hikari.channels.GuildChannel`][] or the id of the channel.
@@ -254,6 +256,8 @@ class ChannelRepositioner(abc.ABC):
             permissions to the new parent.
         parent
             The id of the parent where this channel should be repositioned under.
+
+            If [`None`][], the channel is moved out of its current category.
 
         Returns
         -------
@@ -301,11 +305,11 @@ class RepositionedChannel(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def position(self) -> int:
+    def position(self) -> undefined.UndefinedOr[int]:
         """Position property."""
 
     @abc.abstractmethod
-    def set_position(self, position: int) -> Self:
+    def set_position(self, position: undefined.UndefinedOr[int]) -> Self:
         """Set the position.
 
         Returns
@@ -331,11 +335,11 @@ class RepositionedChannel(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+    def parent(self) -> undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
         """Parent property."""
 
     @abc.abstractmethod
-    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+    def set_parent(self, parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
         """Set the parent.
 
         Returns
