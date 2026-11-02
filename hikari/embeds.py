@@ -50,6 +50,7 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import datetime
+    from typing import Self
 
 
 @attrs_extensions.with_copy
@@ -616,7 +617,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
     def set_author(
         self, *, name: str | None = None, url: str | None = None, icon: files.Resourceish | None = None
-    ) -> Embed:
+    ) -> Self:
         """Set the author of this embed.
 
         Parameters
@@ -660,7 +661,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             self._author = EmbedAuthor(name=name, url=url, icon=real_icon)
         return self
 
-    def set_footer(self, text: str | None, *, icon: files.Resourceish | None = None) -> Embed:
+    def set_footer(self, text: str | None, *, icon: files.Resourceish | None = None) -> Self:
         """Set the footer of this embed.
 
         Parameters
@@ -710,7 +711,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             self._footer = EmbedFooter(icon=real_icon, text=text)
         return self
 
-    def set_image(self, image: files.Resourceish | None = None, /) -> Embed:
+    def set_image(self, image: files.Resourceish | None = None, /) -> Self:
         """Set the image on this embed.
 
         Parameters
@@ -750,7 +751,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
         return self
 
-    def set_thumbnail(self, image: files.Resourceish | None = None, /) -> Embed:
+    def set_thumbnail(self, image: files.Resourceish | None = None, /) -> Self:
         """Set the image on this embed.
 
         Parameters
@@ -789,7 +790,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
         return self
 
-    def add_field(self, name: str | None = None, value: str | None = None, *, inline: bool = False) -> Embed:
+    def add_field(self, name: str | None = None, value: str | None = None, *, inline: bool = False) -> Self:
         """Add a new field to this embed.
 
         Parameters
@@ -825,7 +826,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         /,
         *,
         inline: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> Embed:
+    ) -> Self:
         """Edit an existing field on this embed.
 
         Parameters
@@ -866,7 +867,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             field.is_inline = inline
         return self
 
-    def remove_field(self, index: int, /) -> Embed:
+    def remove_field(self, index: int, /) -> Self:
         """Remove an existing field from this embed.
 
         Parameters
@@ -891,7 +892,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             self._fields = None
         return self
 
-    def clear_fields(self) -> Embed:
+    def clear_fields(self) -> Self:
         """Remove all existing fields from this embed.
 
         Returns
