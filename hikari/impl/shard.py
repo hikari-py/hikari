@@ -721,7 +721,6 @@ class GatewayShardImpl(shard.GatewayShard):
             await self._wait_for_reconnect(session_id)
 
     async def _wait_for_reconnect(self, session_id: str | None) -> None:
-        # Not using `aio.first_completed` as it would propagate the keep alive task's exception
         assert self._handshake_event is not None
         if self._keep_alive_task is None or self._keep_alive_task.done():
             self._raise_shut_down()
