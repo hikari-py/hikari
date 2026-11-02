@@ -2979,8 +2979,11 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][],
             [`hikari.api.special_endpoints.LabelComponentBuilder.set_select_menu`][],
             [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][],
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][] or
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][]
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_radio_group`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_checkbox_group`][] or
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_checkbox`][]
             to set your component on the builder. Those methods utilize this one.
 
         Parameters
