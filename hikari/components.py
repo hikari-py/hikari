@@ -187,7 +187,11 @@ class ComponentType(int, enums.Enum):
     """
 
     LABEL = 18
-    """A label component."""
+    """A label component.
+
+    !!! note
+        This is a top-level component which is only valid in modals.
+    """
 
     FILE_UPLOAD = 19
     """A file upload component.
