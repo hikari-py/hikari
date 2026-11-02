@@ -1026,6 +1026,8 @@ class TestEntityFactoryImpl:
             "event_webhooks_url": "https://eventme.com",
             "event_webhooks_status": 2,
             "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
+            "guild_id": "4949494949",
+            "guild": {"id": "4949494949", "name": "Hikari Support", "icon": "supporticon"},
         }
 
     def test_deserialize_application(
@@ -1102,6 +1104,12 @@ class TestEntityFactoryImpl:
         assert application.event_webhooks_types == [
             application_models.ApplicationEventWebhookType.APPLICATION_AUTHORIZED
         ]
+        assert application.guild_id == 4949494949
+        assert application.guild.app is mock_app
+        assert application.guild.id == 4949494949
+        assert application.guild.name == "Hikari Support"
+        assert application.guild.icon_hash == "supporticon"
+        assert isinstance(application.guild, guild_models.PartialGuild)
         assert isinstance(application, application_models.Application)
 
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
@@ -1130,6 +1138,24 @@ class TestEntityFactoryImpl:
         assert application.event_webhooks_url is None
         assert application.event_webhooks_status is application_models.ApplicationEventWebhookStatus.DISABLED
         assert application.event_webhooks_types == []
+        assert application.guild_id is None
+        assert application.guild is None
+
+    def test_deserialize_application_with_only_guild(self, entity_factory_impl, application_payload):
+        del application_payload["guild_id"]
+
+        application = entity_factory_impl.deserialize_application(application_payload)
+
+        assert application.guild_id == 4949494949
+        assert application.guild.id == 4949494949
+
+    def test_deserialize_application_with_only_guild_id(self, entity_factory_impl, application_payload):
+        del application_payload["guild"]
+
+        application = entity_factory_impl.deserialize_application(application_payload)
+
+        assert application.guild_id == 4949494949
+        assert application.guild is None
 
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
