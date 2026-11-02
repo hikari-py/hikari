@@ -1503,6 +1503,19 @@ class TestEntityFactoryImpl:
         assert isinstance(overwrite_entry_info, audit_log_models.ChannelOverwriteEntryInfo)
 
     @pytest.fixture
+    def channel_position_update_info_payload(self):
+        return {"count": "42"}
+
+    def test__deserialize_channel_position_update_entry_info(
+        self, entity_factory_impl, channel_position_update_info_payload
+    ):
+        channel_position_update_entry_info = entity_factory_impl._deserialize_channel_position_update_entry_info(
+            channel_position_update_info_payload
+        )
+        assert channel_position_update_entry_info.count == 42
+        assert isinstance(channel_position_update_entry_info, audit_log_models.ChannelPositionUpdateEntryInfo)
+
+    @pytest.fixture
     def message_pin_info_payload(self):
         return {"channel_id": "123123123", "message_id": "69696969"}
 
@@ -1564,6 +1577,17 @@ class TestEntityFactoryImpl:
         member_move_entry_info = entity_factory_impl._deserialize_member_move_entry_info(member_move_info_payload)
         assert member_move_entry_info.channel_id == 22222222
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
+
+    @pytest.fixture
+    def role_position_update_info_payload(self):
+        return {"count": "42"}
+
+    def test__deserialize_role_position_update_entry_info(self, entity_factory_impl, role_position_update_info_payload):
+        role_position_update_entry_info = entity_factory_impl._deserialize_role_position_update_entry_info(
+            role_position_update_info_payload
+        )
+        assert role_position_update_entry_info.count == 42
+        assert isinstance(role_position_update_entry_info, audit_log_models.RolePositionUpdateEntryInfo)
 
     @pytest.fixture
     def voice_channel_status_create_info_payload(self):

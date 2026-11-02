@@ -533,6 +533,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_CREATE: self._deserialize_channel_overwrite_entry_info,
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_UPDATE: self._deserialize_channel_overwrite_entry_info,
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_DELETE: self._deserialize_channel_overwrite_entry_info,
+            audit_log_models.AuditLogEventType.CHANNEL_POSITION_UPDATE: self._deserialize_channel_position_update_entry_info,  # noqa: E501
             audit_log_models.AuditLogEventType.MESSAGE_PIN: self._deserialize_message_pin_entry_info,
             audit_log_models.AuditLogEventType.MESSAGE_UNPIN: self._deserialize_message_pin_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_PRUNE: self._deserialize_member_prune_entry_info,
@@ -540,6 +541,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MESSAGE_DELETE: self._deserialize_message_delete_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_DISCONNECT: self._deserialize_member_disconnect_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
+            audit_log_models.AuditLogEventType.ROLE_POSITION_UPDATE: self._deserialize_role_position_update_entry_info,
             audit_log_models.AuditLogEventType.VOICE_CHANNEL_STATUS_CREATE: self._deserialize_voice_channel_status_create_entry_info,  # noqa: E501
             audit_log_models.AuditLogEventType.VOICE_CHANNEL_STATUS_DELETE: self._deserialize_voice_channel_status_delete_entry_info,  # noqa: E501
         }
@@ -946,6 +948,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_name=payload.get("role_name"),
         )
 
+    def _deserialize_channel_position_update_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.ChannelPositionUpdateEntryInfo:
+        return audit_log_models.ChannelPositionUpdateEntryInfo(app=self._app, count=int(payload["count"]))
+
     def _deserialize_message_pin_entry_info(
         self, payload: data_binding.JSONObject
     ) -> audit_log_models.MessagePinEntryInfo:
@@ -987,6 +994,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return audit_log_models.MemberMoveEntryInfo(
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
         )
+
+    def _deserialize_role_position_update_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.RolePositionUpdateEntryInfo:
+        return audit_log_models.RolePositionUpdateEntryInfo(app=self._app, count=int(payload["count"]))
 
     def _deserialize_voice_channel_status_create_entry_info(
         self, payload: data_binding.JSONObject
