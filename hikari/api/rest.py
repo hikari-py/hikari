@@ -2991,6 +2991,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         newest_first: bool = False,
         start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        shard: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         """Fetch the token's associated guilds.
 
@@ -3010,6 +3011,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a datetime object, it will be transformed into a snowflake. This
             may also be a guild object. In this case, the
             date the object was first created will be used.
+        shard
+            If provided, only the guilds stored in this shard are returned.
+
+            Apps using large bot sharding must provide this, Discord rejects
+            their requests without it. Valid values go from `0` to
+            `max_concurrency - 1`, which is not the same as the gateway shard ID.
 
         Returns
         -------
