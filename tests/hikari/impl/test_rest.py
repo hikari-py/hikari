@@ -5884,6 +5884,18 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because why not")
 
+    async def test_reposition_channels_without_position_and_parent(self, rest_client):
+        expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.reposition_channels(StubModel(123), reason="because why not").add_reposition_channel(
+            StubModel(456), parent=None
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json=[{"id": "456", "parent_id": None}], reason="because why not"
+        )
+
     async def test_reposition_channels_no_channels(self, rest_client):
         expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
         rest_client._request = mock.AsyncMock()

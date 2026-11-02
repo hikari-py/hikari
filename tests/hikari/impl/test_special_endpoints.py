@@ -113,6 +113,11 @@ class TestRepositionChannelHelper:
 
         assert reposition_channel_helper.position == 187
 
+    def test_set_position_undefined(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_position(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.position is undefined.UNDEFINED
+
     def test_set_lock_permissions(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_lock_permissions(True)
 
@@ -134,6 +139,11 @@ class TestRepositionChannelHelper:
         reposition_channel_helper.set_parent(undefined.UNDEFINED)
 
         assert reposition_channel_helper.parent == undefined.UNDEFINED
+
+    def test_set_parent_none(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_parent(None)
+
+        assert reposition_channel_helper.parent is None
 
 
 class TestReactorIterator:

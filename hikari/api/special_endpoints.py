@@ -146,7 +146,7 @@ class ChannelRepositioner(abc.ABC):
     channel_repositioner = rest.reposition_channels(
         guild=GUILD_ID, reason="The reason."
     )
-    channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
+    channel_repositioner.add_reposition_channel(CHANNEL_ID, position=2)
 
     await channel_repositioner
     ```
@@ -154,7 +154,7 @@ class ChannelRepositioner(abc.ABC):
     ```py
     channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
     channel_repositioner.add_reposition_channel(
-        position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
+        CHANNEL_ID, position=1, lock_permissions=True, parent=CATEGORY_ID
     )
     # when lock_permissions is set to True, the channels permissions will be synced
     # with the new parent.
@@ -232,21 +232,23 @@ class ChannelRepositioner(abc.ABC):
     @abc.abstractmethod
     def add_reposition_channel(
         self,
-        position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel that should be repositioned to the channel repositioner.
 
         Parameters
         ----------
-        position
-            The new position for the channel.
         channel
             The channel that should be repositioned. This can either be a
             `[hikari.channels.GuildChannel`][] or the id of the channel.
+        position
+            The new position for the channel.
+
+            If [`hikari.undefined.UNDEFINED`][], the position is left unchanged.
         lock_permissions
             Whether the channel should sync permissions to the new parent channel or not.
             When set to `False` or `UNDEFINED` the channel will not sync its permissions
@@ -254,6 +256,8 @@ class ChannelRepositioner(abc.ABC):
             permissions to the new parent.
         parent
             The id of the parent where this channel should be repositioned under.
+
+            If [`None`][], the channel is moved out of its current category.
 
         Returns
         -------
@@ -301,11 +305,11 @@ class RepositionedChannel(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def position(self) -> int:
+    def position(self) -> undefined.UndefinedOr[int]:
         """Position property."""
 
     @abc.abstractmethod
-    def set_position(self, position: int) -> Self:
+    def set_position(self, position: undefined.UndefinedOr[int]) -> Self:
         """Set the position.
 
         Returns
@@ -331,11 +335,11 @@ class RepositionedChannel(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+    def parent(self) -> undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
         """Parent property."""
 
     @abc.abstractmethod
-    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+    def set_parent(self, parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
         """Set the parent.
 
         Returns
