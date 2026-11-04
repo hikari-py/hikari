@@ -123,6 +123,7 @@ def message():
         id=snowflakes.Snowflake(1234),
         channel_id=snowflakes.Snowflake(5678),
         guild_id=snowflakes.Snowflake(910112),
+        channel_type=None,
         author=mock.Mock(spec_set=users.User),
         member=mock.Mock(spec_set=guilds.Member),
         content="blahblahblah",

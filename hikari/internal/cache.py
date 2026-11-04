@@ -737,6 +737,7 @@ class MessageData(BaseData[messages.Message]):
     id: snowflakes.Snowflake = attrs.field()
     channel_id: snowflakes.Snowflake = attrs.field()
     guild_id: snowflakes.Snowflake | None = attrs.field()
+    channel_type: channels_.ChannelType | int | None = attrs.field()
     author: RefCell[users_.User] = attrs.field()
     member: RefCell[MemberData] | None = attrs.field()
     content: str | None = attrs.field()
@@ -804,6 +805,7 @@ class MessageData(BaseData[messages.Message]):
             id=message.id,
             channel_id=message.channel_id,
             guild_id=message.guild_id,
+            channel_type=message.channel_type,
             author=author or RefCell(copy.copy(message.author)),
             member=member,
             content=message.content,
@@ -853,6 +855,7 @@ class MessageData(BaseData[messages.Message]):
             app=app,
             channel_id=self.channel_id,
             guild_id=self.guild_id,
+            channel_type=self.channel_type,
             author=self.author.copy(),
             member=self.member.object.build_entity(app) if self.member else None,
             content=self.content,

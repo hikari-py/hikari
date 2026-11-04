@@ -414,6 +414,9 @@ class ClientStatus:
     web: Status | str = attrs.field(repr=True)
     """The status of the target user's web session."""
 
+    vr: Status | str = attrs.field(repr=True)
+    """The status of the target user's virtual reality session."""
+
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)

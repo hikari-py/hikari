@@ -130,6 +130,9 @@ class PartialAutoModAction:
 class AutoModBlockMessage(PartialAutoModAction):
     """Block the content of the triggering message."""
 
+    custom_message: str | None = attrs.field()
+    """Additional explanation shown to members when their message is blocked."""
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class AutoModSendAlertMessage(PartialAutoModAction):

@@ -308,7 +308,7 @@ def member_presence_payload(user_payload, presence_activity_payload):
         "guild_id": "44004040",
         "status": "dnd",
         "activities": [presence_activity_payload],
-        "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd"},
+        "client_status": {"desktop": "online", "mobile": "idle", "web": "dnd", "vr": "online"},
     }
 
 
@@ -4822,6 +4822,7 @@ class TestEntityFactoryImpl:
         assert channel.id == 695382395666300958
         assert channel.name == "discord-announcements"
         assert channel.permissions == permission_models.Permissions(17179869183)
+        assert channel.app_permissions == permission_models.Permissions(442368)
         assert isinstance(channel, base_interactions.InteractionChannel)
         assert len(resolved.members) == 1
         member = resolved.members[115590097100865541]
@@ -4839,6 +4840,16 @@ class TestEntityFactoryImpl:
         assert resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
 
         assert isinstance(resolved, base_interactions.ResolvedOptionData)
+
+    def test__deserialize_interaction_channel_with_unset_fields(self, entity_factory_impl):
+        channel = entity_factory_impl._deserialize_interaction_channel(
+            {"id": "695382395666300958", "name": "discord-announcements", "type": 0}
+        )
+
+        assert channel.permissions == permission_models.Permissions.NONE
+        assert channel.app_permissions is None
+        assert channel.parent_id is None
+        assert channel.thread_metadata is None
 
     def test__deserialize_resolved_option_data_with_empty_resolved_resources(self, entity_factory_impl):
         resolved = entity_factory_impl._deserialize_resolved_option_data({})
@@ -4861,6 +4872,7 @@ class TestEntityFactoryImpl:
                     "id": "695382395666300958",
                     "name": "discord-announcements",
                     "permissions": "17179869183",
+                    "app_permissions": "442368",
                     "type": 0,
                 }
             },
@@ -6314,7 +6326,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def file_payload(self, media_payload):
-        return {"type": 13, "id": 2407385, "file": media_payload, "spoiler": False}
+        return {"type": 13, "id": 2407385, "file": media_payload, "spoiler": False, "name": "file.txt", "size": 1234}
 
     @pytest.fixture
     def container_payload(self, file_payload):
@@ -6498,15 +6510,21 @@ class TestEntityFactoryImpl:
         assert file.id == 2407385
         assert file.file == entity_factory_impl._deserialize_media(media_payload)
         assert file.is_spoiler is False
+        assert file.name == "file.txt"
+        assert file.size == 1234
 
         assert isinstance(file, component_models.FileComponent)
 
     def test__deserialize_file_component_with_unset_fields(self, entity_factory_impl, file_payload):
         del file_payload["spoiler"]
+        del file_payload["name"]
+        del file_payload["size"]
 
         file = entity_factory_impl._deserialize_file_component(file_payload)
 
         assert file.is_spoiler is False
+        assert file.name is None
+        assert file.size is None
 
     def test__deserialize_container_component(self, entity_factory_impl, container_payload, file_payload):
         container = entity_factory_impl._deserialize_container_component(container_payload)
@@ -6739,6 +6757,7 @@ class TestEntityFactoryImpl:
         return {
             "id": "123",
             "channel_id": "456",
+            "channel_type": 0,
             "guild_id": "678",
             "author": user_payload,
             "member": member_payload,
@@ -7282,6 +7301,7 @@ class TestEntityFactoryImpl:
         assert message.app is mock_app
         assert message.id == 123
         assert message.channel_id == 456
+        assert message.channel_type is channel_models.ChannelType.GUILD_TEXT
         assert message.guild_id == 678
         assert message.author == entity_factory_impl.deserialize_user(user_payload)
         assert message.member == entity_factory_impl.deserialize_member(
@@ -7468,6 +7488,7 @@ class TestEntityFactoryImpl:
         message = entity_factory_impl.deserialize_message(message_payload)
         assert message.app is mock_app
         assert message.content is None
+        assert message.channel_type is None
         assert message.guild_id is None
         assert message.member is None
         assert message.edited_timestamp is None
@@ -7616,6 +7637,7 @@ class TestEntityFactoryImpl:
         assert presence.client_status.desktop == presence_models.Status.ONLINE
         assert presence.client_status.mobile == presence_models.Status.IDLE
         assert presence.client_status.web == presence_models.Status.DO_NOT_DISTURB
+        assert presence.client_status.vr == presence_models.Status.ONLINE
         assert isinstance(presence.client_status, presence_models.ClientStatus)
 
         assert activity.buttons == ["owo", "no"]
@@ -7639,6 +7661,7 @@ class TestEntityFactoryImpl:
         assert presence.client_status.desktop is presence_models.Status.OFFLINE
         assert presence.client_status.mobile is presence_models.Status.OFFLINE
         assert presence.client_status.web is presence_models.Status.OFFLINE
+        assert presence.client_status.vr is presence_models.Status.OFFLINE
 
     def test_deserialize_member_presence_with_unset_activity_fields(self, entity_factory_impl, user_payload):
         presence = entity_factory_impl.deserialize_member_presence(
@@ -8870,10 +8893,18 @@ class TestEntityFactoryImpl:
         assert poll.results is None
 
     def test_deserialize_auto_mod_action_for_block_message(self, entity_factory_impl):
-        result = entity_factory_impl.deserialize_auto_mod_action({"type": 1})
+        result = entity_factory_impl.deserialize_auto_mod_action(
+            {"type": 1, "metadata": {"custom_message": "Please keep it civil"}}
+        )
 
         assert result.type is auto_mod_models.AutoModActionType.BLOCK_MESSAGE
+        assert result.custom_message == "Please keep it civil"
         assert isinstance(result, auto_mod_models.AutoModBlockMessage)
+
+    def test_deserialize_auto_mod_action_for_block_message_with_unset_fields(self, entity_factory_impl):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 1})
+
+        assert result.custom_message is None
 
     def test_deserialize_auto_mod_action_for_send_alert_message(self, entity_factory_impl):
         result = entity_factory_impl.deserialize_auto_mod_action({"type": 2, "metadata": {"channel_id": "43123123"}})

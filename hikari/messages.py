@@ -270,6 +270,9 @@ class MessageActivityType(int, enums.Enum):
     JOIN_REQUEST = 5
     """Request to join an activity."""
 
+    STREAM_REQUEST = 6
+    """Request to stream an activity."""
+
 
 @typing.final
 class AttachmentFlag(enums.Flag):
@@ -1582,6 +1585,13 @@ class Message(PartialMessage):
 
     member: guilds.Member | None = attrs.field(hash=False, eq=False, repr=False)
     """The member properties for the message's author."""
+
+    channel_type: channels_.ChannelType | int | None = attrs.field(hash=False, eq=False, repr=False)
+    """The type of the channel the message was sent in.
+
+    This is only provided for messages received over the gateway's message
+    create event and will be [`None`][] otherwise.
+    """
 
     content: str | None = attrs.field(hash=False, eq=False, repr=False)
     """The content of the message."""

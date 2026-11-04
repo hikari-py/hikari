@@ -3005,6 +3005,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # Even tho (at the time of writing) it is documented that these partial channels will always contain
             # this field, they are explicitly avoided for DM channels.
             permissions=permission_models.Permissions(int(payload.get("permissions", 0))),
+            app_permissions=(
+                permission_models.Permissions(int(raw_app_permissions))
+                if (raw_app_permissions := payload.get("app_permissions")) is not None
+                else None
+            ),
             parent_id=snowflakes.Snowflake(payload["parent_id"]) if payload.get("parent_id") else None,
             thread_metadata=thread_metadata,
         )
@@ -3706,6 +3711,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=payload["id"],
             file=self._deserialize_media(payload["file"]),
             is_spoiler=payload.get("spoiler", False),
+            name=payload.get("name"),
+            size=payload.get("size"),
         )
 
     def _deserialize_container_component(self, payload: data_binding.JSONObject) -> component_models.ContainerComponent:
@@ -4175,6 +4182,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            channel_type=channel_models.ChannelType(payload["channel_type"]) if "channel_type" in payload else None,
             guild_id=guild_id,
             author=author,
             member=member,
@@ -4336,7 +4344,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "web" in client_status_payload
             else presence_models.Status.OFFLINE
         )
-        client_status = presence_models.ClientStatus(desktop=desktop, mobile=mobile, web=web)
+        vr = (
+            presence_models.Status(client_status_payload["vr"])
+            if "vr" in client_status_payload
+            else presence_models.Status.OFFLINE
+        )
+        client_status = presence_models.ClientStatus(desktop=desktop, mobile=mobile, web=web, vr=vr)
 
         return presence_models.MemberPresence(
             app=self._app,
@@ -4909,7 +4922,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_auto_mod_block_message(
         self, payload: data_binding.JSONObject
     ) -> auto_mod_models.AutoModBlockMessage:
-        return auto_mod_models.AutoModBlockMessage(type=auto_mod_models.AutoModActionType(payload["type"]))
+        custom_message: str | None = None
+        if metadata := payload.get("metadata"):
+            custom_message = metadata.get("custom_message")
+
+        return auto_mod_models.AutoModBlockMessage(
+            type=auto_mod_models.AutoModActionType(payload["type"]), custom_message=custom_message
+        )
 
     def _deserialize_auto_mod_block_send_alert_message(
         self, payload: data_binding.JSONObject
