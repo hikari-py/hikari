@@ -1416,7 +1416,7 @@ class CacheImpl(cache.MutableCache):
             return
 
         presence_data = cache_utility.MemberPresenceData.build_from_entity(presence)
-        for activity, activity_data in zip(presence.activities, presence_data.activities):
+        for activity, activity_data in zip(presence.activities, presence_data.activities, strict=True):
             emoji = activity.emoji
             if not isinstance(emoji, emojis.CustomEmoji):
                 continue

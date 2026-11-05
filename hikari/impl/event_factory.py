@@ -928,7 +928,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             my_user=self._app.entity_factory.deserialize_my_user(payload["user"]),
             unavailable_guilds=[snowflakes.Snowflake(guild["id"]) for guild in payload["guilds"]],
             application_id=snowflakes.Snowflake(payload["application"]["id"]),
-            application_flags=application_models.ApplicationFlags(int(payload["application"]["flags"])),
+            application_flags=application_models.ApplicationFlags(int(payload["application"]["flags_new"])),
         )
 
     @typing_extensions.override
