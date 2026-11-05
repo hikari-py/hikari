@@ -1001,6 +1001,7 @@ class TestEntityFactoryImpl:
             "owner": owner_payload,
             "verify_key": "698c5d0859abb686be1f8a19e0e7634d8471e33817650f9fb29076de227bca90",
             "flags": 65536,
+            "flags_new": "2147549184",
             "team": {
                 "icon": "hashtag",
                 "id": "202020202",
@@ -1047,7 +1048,8 @@ class TestEntityFactoryImpl:
             application.public_key
             == b'i\x8c]\x08Y\xab\xb6\x86\xbe\x1f\x8a\x19\xe0\xe7cM\x84q\xe38\x17e\x0f\x9f\xb2\x90v\xde"{\xca\x90'
         )
-        assert application.flags == application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT
+        assert application.flags == application_models.ApplicationFlags(2147549184)
+        assert application_models.ApplicationFlags.VERIFICATION_PENDING_GUILD_LIMIT in application.flags
         assert application.privacy_policy_url == "hahaha://hahaha"
         assert application.terms_of_service_url == "haha2:2h2h2h2"
         assert application.role_connections_verification_url == "https://verifymethis.com"
@@ -1122,6 +1124,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "flags_new": "0",
                 "owner": owner_payload,
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
@@ -1170,6 +1173,7 @@ class TestEntityFactoryImpl:
                 "bot_require_code_grant": False,
                 "verify_key": "1232313223",
                 "flags": 0,
+                "flags_new": "0",
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
                 "event_webhooks_url": None,
@@ -1499,6 +1503,19 @@ class TestEntityFactoryImpl:
         assert isinstance(overwrite_entry_info, audit_log_models.ChannelOverwriteEntryInfo)
 
     @pytest.fixture
+    def channel_position_update_info_payload(self):
+        return {"count": "42"}
+
+    def test__deserialize_channel_position_update_entry_info(
+        self, entity_factory_impl, channel_position_update_info_payload
+    ):
+        channel_position_update_entry_info = entity_factory_impl._deserialize_channel_position_update_entry_info(
+            channel_position_update_info_payload
+        )
+        assert channel_position_update_entry_info.count == 42
+        assert isinstance(channel_position_update_entry_info, audit_log_models.ChannelPositionUpdateEntryInfo)
+
+    @pytest.fixture
     def message_pin_info_payload(self):
         return {"channel_id": "123123123", "message_id": "69696969"}
 
@@ -1560,6 +1577,17 @@ class TestEntityFactoryImpl:
         member_move_entry_info = entity_factory_impl._deserialize_member_move_entry_info(member_move_info_payload)
         assert member_move_entry_info.channel_id == 22222222
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
+
+    @pytest.fixture
+    def role_position_update_info_payload(self):
+        return {"count": "42"}
+
+    def test__deserialize_role_position_update_entry_info(self, entity_factory_impl, role_position_update_info_payload):
+        role_position_update_entry_info = entity_factory_impl._deserialize_role_position_update_entry_info(
+            role_position_update_info_payload
+        )
+        assert role_position_update_entry_info.count == 42
+        assert isinstance(role_position_update_entry_info, audit_log_models.RolePositionUpdateEntryInfo)
 
     @pytest.fixture
     def voice_channel_status_create_info_payload(self):

@@ -273,11 +273,11 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     @typing_extensions.override
     def add_reposition_channel(
         self,
-        position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         self._positions.append(
             RepositionedChannel(channel=channel, position=position, lock_permissions=lock_permissions, parent=parent)
@@ -306,11 +306,11 @@ class RepositionedChannel(special_endpoints.RepositionedChannel):
     """Standard implementation of [`hikari.api.special_endpoints.RepositionedChannel`][]."""
 
     _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
-    _position: int = attrs.field(repr=True, alias="position")
+    _position: undefined.UndefinedOr[int] = attrs.field(repr=True, alias="position")
     _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(
         repr=True, default=undefined.UNDEFINED, alias="lock_permissions"
     )
-    _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
+    _parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
         repr=True, default=undefined.UNDEFINED, alias="parent"
     )
 
@@ -326,11 +326,11 @@ class RepositionedChannel(special_endpoints.RepositionedChannel):
 
     @property
     @typing_extensions.override
-    def position(self) -> int:
+    def position(self) -> undefined.UndefinedOr[int]:
         return self._position
 
     @typing_extensions.override
-    def set_position(self, position: int) -> Self:
+    def set_position(self, position: undefined.UndefinedOr[int]) -> Self:
         self._position = position
         return self
 
@@ -346,11 +346,11 @@ class RepositionedChannel(special_endpoints.RepositionedChannel):
 
     @property
     @typing_extensions.override
-    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+    def parent(self) -> undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
         return self._parent
 
     @typing_extensions.override
-    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+    def set_parent(self, parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
         self._parent = parent
         return self
 
