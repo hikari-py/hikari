@@ -448,6 +448,11 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
+    def collectibles(self) -> users.Collectibles | None:
+        return self.user.collectibles
+
+    @property
+    @typing_extensions.override
     def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 

@@ -245,6 +245,14 @@ class TestMember:
                 sku_id=snowflakes.Snowflake(123456789),
                 expires_at=datetime.datetime(2025, 4, 4, 1, 1, 1),
             ),
+            guild_collectibles=users.Collectibles(
+                nameplate=users.Nameplate(
+                    sku_id=snowflakes.Snowflake(987654321),
+                    asset="nameplates/nameplates/twilight/",
+                    label="",
+                    palette=users.NameplatePalette.COBALT,
+                )
+            ),
             guild_avatar_hash="dab",
             guild_banner_hash="dimma",
             premium_since=None,
@@ -287,6 +295,16 @@ class TestMember:
     def test_display_avatar_decoration_property_when_guild_avatar_decoration_is_None(self, model):
         model.guild_avatar_decoration = None
         assert model.display_avatar_decoration is model.user.display_avatar_decoration
+
+    def test_collectibles_property(self, model):
+        assert model.collectibles is model.user.collectibles
+
+    def test_display_collectibles_property_when_guild_collectibles_is_set(self, model):
+        assert model.display_collectibles is model.guild_collectibles
+
+    def test_display_collectibles_property_when_guild_collectibles_is_None(self, model):
+        model.guild_collectibles = None
+        assert model.display_collectibles is model.user.display_collectibles
 
     def test_display_avatar_url_when_guild_hash_is_None(self, model):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as mock_make_guild_avatar_url:
