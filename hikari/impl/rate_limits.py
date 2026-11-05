@@ -472,7 +472,7 @@ class ExponentialBackOff:
     """The current increment."""
 
     maximum: float
-    """This is the max value the backoff can be in a single iteration before an [`asyncio.TimeoutError`][] is raised."""
+    """This is the max value the backoff can be in a single iteration before a [`TimeoutError`][] is raised."""
 
     jitter_multiplier: typing.Final[float]
     """The multiplier for the random jitter."""

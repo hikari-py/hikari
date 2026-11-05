@@ -1010,12 +1010,12 @@ class _DropWhileLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
         return await self._iterator.__anext__()
 
 
-_FlattenerResultT = typing.Union[typing.AsyncIterator[AnotherValueT], typing.Iterable[AnotherValueT]]
+_FlattenerResultT = typing.AsyncIterator[AnotherValueT] | typing.Iterable[AnotherValueT]
 
-_FlattenerT = typing.Union[
-    spel.AttrGetter[ValueT, _FlattenerResultT[AnotherValueT]],
-    typing.Callable[[ValueT], _FlattenerResultT[AnotherValueT]],
-]
+_FlattenerT = (
+    spel.AttrGetter[ValueT, _FlattenerResultT[AnotherValueT]]
+    | typing.Callable[[ValueT], _FlattenerResultT[AnotherValueT]]
+)
 
 
 class _FlatMapLazyIterator(LazyIterator[AnotherValueT], typing.Generic[ValueT, AnotherValueT]):
