@@ -725,6 +725,7 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
         provider=copy.copy(embed.provider) if embed.provider else None,
         footer=copy.copy(embed.footer) if embed.footer else None,
         fields=[copy.copy(field) for field in embed.fields],
+        flags=embed.flags,
     )
 
 

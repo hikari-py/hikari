@@ -118,6 +118,8 @@ _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Res
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[frozenset[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
+# JSON error code returned with a 202 when the search index is not yet available.
+_SEARCH_NOT_INDEXED_ERROR_CODE: typing.Final[int] = 110000
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -893,7 +895,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     # Ensure we are not rate limited, and update rate limiting headers where appropriate.
                     time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
 
-                except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as ex:
+                except (TimeoutError, aiohttp.ClientConnectionError) as ex:
                     if retry_count >= self._max_retries:
                         raise errors.HTTPError(message=str(ex)) from ex
 
@@ -1892,11 +1894,9 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        await self._request(route, reason=reason)
+        await self._request(route)
 
     @typing_extensions.override
     async def delete_messages(
@@ -1943,7 +1943,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 if len(chunk) == 1:
                     message = chunk[0]
                     try:
-                        await self.delete_message(channel, message, reason=reason)
+                        await self.delete_message(channel, message)
                     except errors.NotFoundError as ex:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
@@ -2430,6 +2430,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         newest_first: bool = False,
         start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        shard: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         if start_at is undefined.UNDEFINED:
             start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
@@ -2439,6 +2440,7 @@ class RESTClientImpl(rest_api.RESTClient):
             request_call=self._request,
             newest_first=newest_first,
             first_id=_to_searchable_snowflake_str(start_at),
+            shard=shard,
         )
 
     @typing_extensions.override
@@ -3813,7 +3815,7 @@ class RESTClientImpl(rest_api.RESTClient):
         builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request, reason=reason)
         if positions is not undefined.UNDEFINED:
             for pos, channel in positions.items():
-                builder.add_reposition_channel(position=pos, channel=channel)
+                builder.add_reposition_channel(channel, position=pos)
         return builder
 
     @typing_extensions.override
@@ -3861,6 +3863,96 @@ class RESTClientImpl(rest_api.RESTClient):
         return [
             self._entity_factory.deserialize_member(member_payload, guild_id=guild_id) for member_payload in response
         ]
+
+    @typing_extensions.override
+    async def search_messages(  # noqa: PLR0913 - Too many arguments
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        content: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        offset: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_id: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        min_id: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        slop: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        author_types: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchAuthorType]] = undefined.UNDEFINED,
+        authors: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.PartialUser]] = undefined.UNDEFINED,
+        mentioned_users: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[users_.PartialUser]
+        ] = undefined.UNDEFINED,
+        mentioned_roles: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[guilds.PartialRole]
+        ] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        replied_to_users: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[users_.PartialUser]
+        ] = undefined.UNDEFINED,
+        replied_to_messages: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        pinned: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        has: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchHasType]] = undefined.UNDEFINED,
+        embed_types: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchEmbedType]] = undefined.UNDEFINED,
+        embed_providers: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        link_hostnames: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        attachment_filenames: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        attachment_extensions: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        sort_by: undefined.UndefinedOr[messages_.MessageSearchSortMode] = undefined.UNDEFINED,
+        sort_order: undefined.UndefinedOr[messages_.MessageSearchSortOrder] = undefined.UNDEFINED,
+        include_nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        wait_for_index: bool = True,
+    ) -> messages_.MessageSearchResult:
+        route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=guild)
+        query = data_binding.StringMapBuilder()
+        query.put("content", content)
+        query.put("limit", limit)
+        query.put("offset", offset)
+        query.put("slop", slop)
+        query.put("mention_everyone", mentions_everyone)
+        query.put("pinned", pinned)
+        query.put("sort_by", sort_by)
+        query.put("sort_order", sort_order)
+        query.put("include_nsfw", include_nsfw)
+
+        query.put("max_id", _to_searchable_snowflake_str(max_id))
+        query.put("min_id", _to_searchable_snowflake_str(min_id))
+
+        query.put_array("channel_id", channels)
+        query.put_array("author_id", authors)
+        query.put_array("mentions", mentioned_users)
+        query.put_array("mentions_role_id", mentioned_roles)
+        query.put_array("replied_to_user_id", replied_to_users)
+        query.put_array("replied_to_message_id", replied_to_messages)
+        query.put_array("author_type", author_types)
+        query.put_array("has", has)
+        query.put_array("embed_type", embed_types)
+        query.put_array("embed_provider", embed_providers)
+        query.put_array("link_hostname", link_hostnames)
+        query.put_array("attachment_filename", attachment_filenames)
+        query.put_array("attachment_extension", attachment_extensions)
+
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
+
+        if wait_for_index and response.get("code") == _SEARCH_NOT_INDEXED_ERROR_CODE:
+            # Discord asks for "a short delay" when it reports a retry_after of 0
+            await asyncio.sleep(float(response["retry_after"]) or 1.0)
+            response = await self._request(route, query=query)
+            assert isinstance(response, dict)
+
+        if response.get("code") == _SEARCH_NOT_INDEXED_ERROR_CODE:
+            raise errors.SearchNotIndexedError(
+                documents_indexed=int(response["documents_indexed"]), retry_after=float(response["retry_after"])
+            )
+
+        return self._entity_factory.deserialize_message_search_result(response)
 
     @typing_extensions.override
     async def edit_member(
@@ -4515,7 +4607,7 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))
 
-            except errors.UnrecognisedEntityError:  # noqa: PERF203 - Usage of try-except inside a loop
+            except errors.UnrecognisedEntityError:
                 pass
 
         return command_objs

@@ -1586,7 +1586,7 @@ class GuildForumChannel(PermissibleGuildChannel):
     """
 
 
-WebhookChannelT = typing.Union[GuildTextChannel, GuildNewsChannel]
+WebhookChannelT = GuildTextChannel | GuildNewsChannel
 """Union of the channel types which incoming and follower webhooks can be attached to.
 
 The following types are in this:
