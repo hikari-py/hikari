@@ -53,7 +53,7 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     from hikari.impl import config
 
-    CmpTuple = tuple[int, int, int, typing.Union[int, float]]
+    CmpTuple = tuple[int, int, int, int | float]
 
 # While this is discouraged for most purposes in libraries, this enables us to
 # filter out the vast majority of clutter that most network logger calls

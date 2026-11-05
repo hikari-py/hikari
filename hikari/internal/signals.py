@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     import asyncio
     import types
 
-    _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
+    _SignalHandlerT = typing.Callable[[int, types.FrameType | None], None]
 
 _INTERRUPT_SIGNALS: tuple[str, ...] = ("SIGINT", "SIGTERM")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.signals")
@@ -107,7 +107,7 @@ def handle_interrupts(
     for sig in _INTERRUPT_SIGNALS:
         try:
             signum = getattr(signal, sig)
-        except AttributeError:  # noqa: PERF203 - no try except within a loop
+        except AttributeError:
             _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform; skipping", sig)
         else:
             original_handlers[signum] = signal.getsignal(signum)
