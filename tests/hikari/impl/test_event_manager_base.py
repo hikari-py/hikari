@@ -155,7 +155,7 @@ class TestEventStream:
         async def quickly_run_task(task):
             try:
                 await asyncio.wait_for(asyncio.shield(task), timeout=0.01)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
         with streamer:
@@ -844,3 +844,21 @@ class TestEventManagerBase:
 
             @event_manager.listen()
             async def test(event: list[member_events.MemberUpdateEvent]): ...
+
+    @pytest.mark.asyncio
+    async def test_wait_for(self, event_manager):
+        event = shard_events.ShardConnectedEvent(app=mock.Mock(), shard=mock.Mock())
+        waiter = asyncio.create_task(event_manager.wait_for(shard_events.ShardConnectedEvent, timeout=10))
+        await asyncio.sleep(0)
+
+        event_manager.dispatch(event)
+
+        assert await waiter is event
+        assert shard_events.ShardConnectedEvent not in event_manager._waiters
+
+    @pytest.mark.asyncio
+    async def test_wait_for_when_timed_out(self, event_manager):
+        with pytest.raises(TimeoutError):
+            await event_manager.wait_for(shard_events.ShardConnectedEvent, timeout=0.01)
+
+        assert shard_events.ShardConnectedEvent not in event_manager._waiters

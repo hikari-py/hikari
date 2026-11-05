@@ -30,12 +30,14 @@ __all__: typing.Sequence[str] = (
     "AuditLogEventType",
     "BaseAuditLogEntryInfo",
     "ChannelOverwriteEntryInfo",
+    "ChannelPositionUpdateEntryInfo",
     "MemberDisconnectEntryInfo",
     "MemberMoveEntryInfo",
     "MemberPruneEntryInfo",
     "MessageBulkDeleteEntryInfo",
     "MessageDeleteEntryInfo",
     "MessagePinEntryInfo",
+    "RolePositionUpdateEntryInfo",
     "VoiceChannelStatusCreateEntryInfo",
     "VoiceChannelStatusDeleteEntryInfo",
 )
@@ -324,6 +326,9 @@ class AuditLogEventType(int, enums.Enum):
     CHANNEL_OVERWRITE_DELETE = 15
     """Indicates that a permission overwrite was deleted from a channel."""
 
+    CHANNEL_POSITION_UPDATE = 16
+    """Indicates that channels were reordered."""
+
     MEMBER_KICK = 20
     """Indicates that a member was kicked from guild."""
 
@@ -359,6 +364,9 @@ class AuditLogEventType(int, enums.Enum):
 
     ROLE_DELETE = 32
     """Indicates that a role was deleted."""
+
+    ROLE_POSITION_UPDATE = 33
+    """Indicates that roles were reordered."""
 
     INVITE_CREATE = 40
     """Indicates that a guild invite was created."""
@@ -537,6 +545,15 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
+class ChannelPositionUpdateEntryInfo(BaseAuditLogEntryInfo):
+    """Extra information for channel position update audit log entries."""
+
+    count: int = attrs.field(repr=True)
+    """The number of channel position updates."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -699,6 +716,15 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         channel = await self.app.rest.fetch_channel(self.channel_id)
         assert isinstance(channel, channels.GuildVoiceChannel)
         return channel
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class RolePositionUpdateEntryInfo(BaseAuditLogEntryInfo):
+    """Extra information for role position update audit log entries."""
+
+    count: int = attrs.field(repr=True)
+    """The number of role position updates."""
 
 
 @attrs_extensions.with_copy

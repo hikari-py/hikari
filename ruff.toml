@@ -1,5 +1,5 @@
 line-length = 120
-target-version = "py39"
+target-version = "py311"
 
 [format]
 docstring-code-format = true
@@ -25,6 +25,7 @@ ignore = [
     "FIX002",  # Line contains todo
     "A002",    # Function argument is shadowing a python builtin
     "FBT003",  # Boolean positional argument in function call (more false positives than real ones)
+    "ICN001",  # Unconventional import alias (we don't want `datetime` to be imported as `dt`)
 ]
 
 [lint.per-file-ignores]

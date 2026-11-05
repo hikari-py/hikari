@@ -221,7 +221,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 # second if the request is slow to execute.
                 try:
                     await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
-                except asyncio.TimeoutError:  # noqa: PERF203
+                except TimeoutError:
                     pass
 
         except (asyncio.CancelledError, errors.ComponentStateConflictError):
@@ -273,11 +273,11 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     @typing_extensions.override
     def add_reposition_channel(
         self,
-        position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+        parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         self._positions.append(
             RepositionedChannel(channel=channel, position=position, lock_permissions=lock_permissions, parent=parent)
@@ -306,11 +306,11 @@ class RepositionedChannel(special_endpoints.RepositionedChannel):
     """Standard implementation of [`hikari.api.special_endpoints.RepositionedChannel`][]."""
 
     _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
-    _position: int = attrs.field(repr=True, alias="position")
+    _position: undefined.UndefinedOr[int] = attrs.field(repr=True, alias="position")
     _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(
         repr=True, default=undefined.UNDEFINED, alias="lock_permissions"
     )
-    _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
+    _parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
         repr=True, default=undefined.UNDEFINED, alias="parent"
     )
 
@@ -326,11 +326,11 @@ class RepositionedChannel(special_endpoints.RepositionedChannel):
 
     @property
     @typing_extensions.override
-    def position(self) -> int:
+    def position(self) -> undefined.UndefinedOr[int]:
         return self._position
 
     @typing_extensions.override
-    def set_position(self, position: int) -> Self:
+    def set_position(self, position: undefined.UndefinedOr[int]) -> Self:
         self._position = position
         return self
 
@@ -346,11 +346,11 @@ class RepositionedChannel(special_endpoints.RepositionedChannel):
 
     @property
     @typing_extensions.override
-    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+    def parent(self) -> undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
         return self._parent
 
     @typing_extensions.override
-    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+    def set_parent(self, parent: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
         self._parent = parent
         return self
 
@@ -526,7 +526,14 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
 class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_newest_first", "_request_call", "_route")
+    __slots__: typing.Sequence[str] = (
+        "_entity_factory",
+        "_first_id",
+        "_newest_first",
+        "_request_call",
+        "_route",
+        "_shard",
+    )
 
     def __init__(
         self,
@@ -535,12 +542,14 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         *,
         newest_first: bool,
         first_id: str,
+        shard: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> None:
         super().__init__()
         self._entity_factory = entity_factory
         self._newest_first = newest_first
         self._request_call = request_call
         self._first_id = first_id
+        self._shard = shard
         self._route = routes.GET_MY_GUILDS.compile()
 
     @typing_extensions.override
@@ -548,6 +557,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
         query.put("before" if self._newest_first else "after", self._first_id)
+        query.put("shard", self._shard)
         # We rely on Discord's default for the limit here since for this endpoint this has always scaled
         # along side the maximum page size limit to match the maximum amount of guilds a user can be in.
 

@@ -1,3 +1,40 @@
+## 2.7.0 (2026-10-25)
+
+### Breaking Changes
+
+- The `before`, `user` and `action_type` parameters of `AuditLogIterator.__init__` are now keyword-only and optional ([#2793](https://github.com/hikari-py/hikari/issues/2793))
+- Drop Python 3.10 support ([#2839](https://github.com/hikari-py/hikari/issues/2839))
+
+### Features
+
+- Add support for the missing group DM features: `RESTClient.create_group_dm_channel`, `RESTClient.add_recipient_to_group_dm`, `RESTClient.remove_recipient_from_group_dm`, the `icon` parameter in `RESTClient.edit_channel` and the `GroupDMChannel.is_managed` field ([#2773](https://github.com/hikari-py/hikari/issues/2773))
+- Add support for voice channel statuses: `RESTClient.set_voice_channel_status`, the `VoiceChannelStatusUpdateEvent` event, the `Permissions.SET_VOICE_CHANNEL_STATUS` permission and the `VOICE_CHANNEL_STATUS_CREATE`/`VOICE_CHANNEL_STATUS_DELETE` audit log events with their entry info models ([#2774](https://github.com/hikari-py/hikari/issues/2774))
+- Add support for searching guild messages: `RESTClient.search_messages` with all of the documented filters, the `MessageSearchResult` model, its accompanying enums and the `SearchNotIndexedError` error raised while the guild's search index is not yet available ([#2778](https://github.com/hikari-py/hikari/issues/2778))
+- Add the missing `role_ids` parameter to `RESTClient.create_invite`, allowing roles to be given to the users that accept the invite ([#2792](https://github.com/hikari-py/hikari/issues/2792))
+- Add the missing `after` parameter to `RESTClient.fetch_audit_log`, allowing the audit log to be iterated in ascending order ([#2793](https://github.com/hikari-py/hikari/issues/2793))
+- Add support for scheduled event recurrence rules:
+  - Add `ScheduledEvent.recurrence_rule`, along with the new `ScheduledEventRecurrenceRule` and `ScheduledEventRecurrenceNWeekday` models and the `ScheduledEventRecurrenceFrequency`, `ScheduledEventRecurrenceWeekday` and `ScheduledEventRecurrenceMonth` enums
+  - Add the missing `recurrence_rule` parameter to `RESTClient.create_stage_event`, `RESTClient.create_voice_event`, `RESTClient.create_external_event` and `RESTClient.edit_scheduled_event` ([#2794](https://github.com/hikari-py/hikari/issues/2794))
+- Add Python 3.15 support ([#2839](https://github.com/hikari-py/hikari/issues/2839))
+- The `length` and `byteorder` arguments of `Color.to_bytes` are now optional and default to `3` and `"big"` ([#2839](https://github.com/hikari-py/hikari/issues/2839))
+
+### Optimizations
+
+- Speed up the internal enum/flag implementation:
+  - `Flag.split` (and iteration) now walks the set bits of the value instead of scanning every defined member
+  - `len(flag)` now counts bits without building a list, which also makes `list(flag)` stop exploding the value twice
+  - The set-predicate methods (`all`, `any`, `none`, `is_subset`, `is_superset`, `is_disjoint`, `difference` and `in`) no longer allocate intermediate flag instances.
+  - `bool(flag)` now uses the C-level `int.__bool__`
+  - `EnumType["NAME"]` now hits the member map directly instead of going through `getattr` ([#2789](https://github.com/hikari-py/hikari/issues/2789))
+
+### Bugfixes
+
+- Make the `TextSelectMenuBuilder` parent type parameter covariant, fixing spurious typing errors when a builder parameterized with a concrete action row type is used where one parameterized with its abstract counterpart is expected ([#2796](https://github.com/hikari-py/hikari/issues/2796))
+- Guild records that only hold stickers or threads are no longer dropped from the cache when another component of the guild is cleared, and `delete_sticker` removes the record once the guild's last sticker is gone ([#2835](https://github.com/hikari-py/hikari/issues/2835))
+- Export `PollVoteCreateEvent` and `PollVoteDeleteEvent` from `hikari.events` ([#2835](https://github.com/hikari-py/hikari/issues/2835))
+- `GUILD_STICKERS_UPDATE` is now processed when only the sticker cache component is enabled ([#2835](https://github.com/hikari-py/hikari/issues/2835))
+
+---
 ## 2.6.0 (2026-08-19)
 
 ### Breaking Changes

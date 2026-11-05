@@ -113,6 +113,11 @@ class TestRepositionChannelHelper:
 
         assert reposition_channel_helper.position == 187
 
+    def test_set_position_undefined(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_position(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.position is undefined.UNDEFINED
+
     def test_set_lock_permissions(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_lock_permissions(True)
 
@@ -134,6 +139,11 @@ class TestRepositionChannelHelper:
         reposition_channel_helper.set_parent(undefined.UNDEFINED)
 
         assert reposition_channel_helper.parent == undefined.UNDEFINED
+
+    def test_set_parent_none(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_parent(None)
+
+        assert reposition_channel_helper.parent is None
 
 
 class TestReactorIterator:
@@ -313,6 +323,28 @@ class TestOwnGuildIterator:
                 mock.call(compiled_route=expected_route, query={"after": "123321", "with_counts": "true"}),
                 mock.call(compiled_route=expected_route, query={"after": "123321124123", "with_counts": "true"}),
                 mock.call(compiled_route=expected_route, query={"after": "12332112432234", "with_counts": "true"}),
+            ]
+        )
+
+    @pytest.mark.asyncio
+    async def test_aiter_with_shard(self):
+        expected_route = routes.GET_MY_GUILDS.compile()
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(side_effect=[[{"id": "123321123123"}], []])
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, newest_first=False, first_id="123321", shard=3
+        )
+
+        await iterator
+
+        mock_request.assert_has_awaits(
+            [
+                mock.call(
+                    compiled_route=expected_route, query={"after": "123321", "with_counts": "true", "shard": "3"}
+                ),
+                mock.call(
+                    compiled_route=expected_route, query={"after": "123321123123", "with_counts": "true", "shard": "3"}
+                ),
             ]
         )
 
