@@ -3146,6 +3146,34 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def delete_my_user_application_role_connection(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> None:
+        """Delete the token's associated role connection.
+
+        !!! note
+            This requires the token to have the
+            [`hikari.applications.OAuth2Scope.ROLE_CONNECTIONS_WRITE`][] scope enabled.
+
+        Parameters
+        ----------
+        application
+            The application to delete the application role connection for.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users_.PartialUser], /) -> channels_.DMChannel:
         """Create a DM channel with a user.
 
