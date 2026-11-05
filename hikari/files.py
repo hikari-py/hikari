@@ -87,7 +87,7 @@ This may be one of:
 
 RAWISH_TYPES = (bytes, bytearray, memoryview, io.BytesIO, io.StringIO)
 
-Rawish = typing.Union[bytes, bytearray, memoryview, io.BytesIO, io.StringIO]
+Rawish = bytes | bytearray | memoryview | io.BytesIO | io.StringIO
 """Type hint representing valid raw data types.
 
 This may be one of:
@@ -99,22 +99,22 @@ This may be one of:
 - [`io.StringIO`][] (assuming UTF-8 encoding).
 """
 
-LazyByteIteratorish = typing.Union[
-    typing.AsyncIterator[bytes],
-    typing.AsyncIterable[bytes],
-    typing.Iterator[bytes],
-    typing.Iterable[bytes],
-    typing.AsyncIterator[str],
-    typing.AsyncIterable[str],
-    typing.Iterator[str],
-    typing.Iterable[str],
-    typing.AsyncGenerator[bytes, typing.Any],
-    typing.Generator[bytes, typing.Any, typing.Any],
-    typing.AsyncGenerator[str, typing.Any],
-    typing.Generator[str, typing.Any, typing.Any],
-    asyncio.StreamReader,
-    aiohttp.StreamReader,
-]
+LazyByteIteratorish = (
+    typing.AsyncIterator[bytes]
+    | typing.AsyncIterable[bytes]
+    | typing.Iterator[bytes]
+    | typing.Iterable[bytes]
+    | typing.AsyncIterator[str]
+    | typing.AsyncIterable[str]
+    | typing.Iterator[str]
+    | typing.Iterable[str]
+    | typing.AsyncGenerator[bytes, typing.Any]
+    | typing.Generator[bytes, typing.Any, typing.Any]
+    | typing.AsyncGenerator[str, typing.Any]
+    | typing.Generator[str, typing.Any, typing.Any]
+    | asyncio.StreamReader
+    | aiohttp.StreamReader
+)
 """Type hint representing an iterator/iterable of bytes.
 
 This may be one of:

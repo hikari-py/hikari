@@ -1660,8 +1660,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        *,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -1673,9 +1671,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message
             The message to delete. This may be the object or the ID of
             an existing message.
-        reason
-            If provided, the reason that will be recorded in the audit logs.
-            Maximum of 512 characters.
 
         Raises
         ------
@@ -1740,6 +1735,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
+
+            Discord does not record a reason for single message deletions,
+            so a chunk with only one message left is deleted without it.
 
         Raises
         ------
@@ -2992,6 +2990,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         newest_first: bool = False,
         start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        shard: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         """Fetch the token's associated guilds.
 
@@ -3011,6 +3010,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a datetime object, it will be transformed into a snowflake. This
             may also be a guild object. In this case, the
             date the object was first created will be used.
+        shard
+            If provided, only the guilds stored in this shard are returned.
+
+            Apps using large bot sharding must provide this, Discord rejects
+            their requests without it. Valid values go from `0` to
+            `max_concurrency - 1`, which is not the same as the gateway shard ID.
 
         Returns
         -------
@@ -6302,6 +6307,173 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def search_messages(  # noqa: PLR0913 - Too many arguments
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        content: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        offset: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_id: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        min_id: undefined.UndefinedOr[
+            snowflakes.SearchableSnowflakeishOr[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        slop: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        author_types: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchAuthorType]] = undefined.UNDEFINED,
+        authors: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.PartialUser]] = undefined.UNDEFINED,
+        mentioned_users: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[users_.PartialUser]
+        ] = undefined.UNDEFINED,
+        mentioned_roles: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[guilds.PartialRole]
+        ] = undefined.UNDEFINED,
+        mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        replied_to_users: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[users_.PartialUser]
+        ] = undefined.UNDEFINED,
+        replied_to_messages: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[messages_.PartialMessage]
+        ] = undefined.UNDEFINED,
+        pinned: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        has: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchHasType]] = undefined.UNDEFINED,
+        embed_types: undefined.UndefinedOr[typing.Sequence[messages_.MessageSearchEmbedType]] = undefined.UNDEFINED,
+        embed_providers: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        link_hostnames: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        attachment_filenames: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        attachment_extensions: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        sort_by: undefined.UndefinedOr[messages_.MessageSearchSortMode] = undefined.UNDEFINED,
+        sort_order: undefined.UndefinedOr[messages_.MessageSearchSortOrder] = undefined.UNDEFINED,
+        include_nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        wait_for_index: bool = True,
+    ) -> messages_.MessageSearchResult:
+        """Search the messages in a guild.
+
+        !!! warning
+            This endpoint requires the [`hikari.permissions.Permissions.READ_MESSAGE_HISTORY`][]
+            permission and is restricted according to whether the message content
+            intent is enabled for your application.
+
+        !!! note
+            If the guild is not yet indexed, Discord asks to retry the search
+            later. By default this waits for the time Discord asks for and
+            retries once, see `wait_for_index`.
+
+        Parameters
+        ----------
+        guild
+            The guild to search the messages in. This may be the object
+            or the ID of an existing guild.
+        content
+            If provided, filter the messages by their content
+            (max 1024 characters).
+        limit
+            If provided, the maximum amount of messages to return (1-25).
+
+            !!! note
+                Due to speed optimizations on Discord's side, the search may
+                return slightly fewer results than specified here when messages
+                have not been accessed for a long time. Do not rely on the
+                length of the returned sequence to paginate the results; use
+                `offset` and [`hikari.messages.MessageSearchResult.total_results`][]
+                instead. Discord also notes that `total_results` may not be
+                accurate while messages are actively being created or deleted.
+        offset
+            If provided, the number to offset the returned messages by
+            (max 9975). Together with the maximum `limit` of 25, this means
+            Discord only allows retrieving the first 10000 results of a search.
+        max_id
+            If provided, only return messages before this snowflake. If you
+            provide a datetime object, it will be transformed into a snowflake.
+            This may be any other Discord entity that has an ID. In this
+            case, the date the object was first created will be used.
+        min_id
+            If provided, only return messages after this snowflake. If you
+            provide a datetime object, it will be transformed into a snowflake.
+            This may be any other Discord entity that has an ID. In this
+            case, the date the object was first created will be used.
+        slop
+            If provided, the maximum number of words to skip between matching
+            tokens in the search content (max 100, defaults to `2`).
+        channels
+            If provided, filter the messages by the channels they were sent in.
+        author_types
+            If provided, filter the messages by the type of their author.
+        authors
+            If provided, filter the messages by their authors.
+        mentioned_users
+            If provided, filter the messages by the users they mention.
+        mentioned_roles
+            If provided, filter the messages by the roles they mention.
+        mentions_everyone
+            If provided, filter the messages by whether they do or do not mention `@everyone`.
+        replied_to_users
+            If provided, filter the messages by the users they reply to.
+        replied_to_messages
+            If provided, filter the messages by the messages they reply to.
+        pinned
+            If provided, filter the messages by whether they are or are not pinned.
+        has
+            If provided, filter the messages by whether or not they have specific things.
+        embed_types
+            If provided, filter the messages by their embed types.
+        embed_providers
+            If provided, filter the messages by their embed providers. This is case-sensitive.
+        link_hostnames
+            If provided, filter the messages by their link hostnames.
+        attachment_filenames
+            If provided, filter the messages by their attachment filenames.
+        attachment_extensions
+            If provided, filter the messages by their attachment extensions.
+        sort_by
+            If provided, the sorting algorithm to use for the results.
+            Defaults to [`hikari.messages.MessageSearchSortMode.TIMESTAMP`][].
+        sort_order
+            If provided, the direction to sort the results in. Defaults to
+            [`hikari.messages.MessageSearchSortOrder.DESCENDING`][]. This is
+            not respected when sorting by
+            [`hikari.messages.MessageSearchSortMode.RELEVANCE`][].
+        include_nsfw
+            If provided, whether to include results from age-restricted channels.
+        wait_for_index
+            Whether to wait for the time Discord asks for and retry once if the
+            guild's messages have not yet been indexed. Defaults to [`True`][].
+
+            If [`False`][], a [`hikari.errors.SearchNotIndexedError`][] is raised
+            immediately instead.
+
+        Returns
+        -------
+        hikari.messages.MessageSearchResult
+            The result of the search.
+
+        Raises
+        ------
+        hikari.errors.SearchNotIndexedError
+            If the guild's messages have not yet been indexed, either
+            immediately if `wait_for_index` is [`False`][] or if they are still
+            not indexed after the retry.
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.READ_MESSAGE_HISTORY`][]
+            permission.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -7178,7 +7350,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.KICK_MEMBERS`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] and
+            [`hikari.permissions.Permissions.KICK_MEMBERS`][] permissions, or the
+            [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission if the guild
+            has the [`hikari.guilds.GuildFeature.PRUNE_REQUIRES_ADMIN`][] feature.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError
@@ -7232,7 +7407,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.KICK_MEMBERS`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] and
+            [`hikari.permissions.Permissions.KICK_MEMBERS`][] permissions, or the
+            [`hikari.permissions.Permissions.ADMINISTRATOR`][] permission if the guild
+            has the [`hikari.guilds.GuildFeature.PRUNE_REQUIRES_ADMIN`][] feature.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.RateLimitTooLongError

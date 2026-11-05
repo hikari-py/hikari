@@ -26,8 +26,10 @@ __all__: typing.Sequence[str] = (
     "Embed",
     "EmbedAuthor",
     "EmbedField",
+    "EmbedFlag",
     "EmbedFooter",
     "EmbedImage",
+    "EmbedMediaFlag",
     "EmbedProvider",
     "EmbedResource",
     "EmbedResourceWithProxy",
@@ -45,11 +47,44 @@ from hikari import errors
 from hikari import files
 from hikari import undefined
 from hikari.internal import attrs_extensions
+from hikari.internal import enums
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import datetime
+    from typing import Self
+
+
+@typing.final
+class EmbedFlag(enums.Flag):
+    """Additional flags for embeds."""
+
+    NONE = 0
+    """None."""
+
+    CONTAINS_EXPLICIT_CONTENT = 1 << 4
+    """This embed's media was flagged as explicit by Discord's content scanning."""
+
+    IS_CONTENT_INVENTORY_ENTRY = 1 << 5
+    """This embed is a fallback for a reply to an activity card."""
+
+    CONTAINS_GORE_CONTENT = 1 << 6
+    """This embed's media was flagged as gore by Discord's content scanning."""
+
+    CONTAINS_SELF_HARM_CONTENT = 1 << 7
+    """This embed's media was flagged as self-harm by Discord's content scanning."""
+
+
+@typing.final
+class EmbedMediaFlag(enums.Flag):
+    """Additional flags for embed images and videos."""
+
+    NONE = 0
+    """None."""
+
+    IS_ANIMATED = 1 << 5
+    """This image is animated."""
 
 
 @attrs_extensions.with_copy
@@ -158,6 +193,30 @@ class EmbedImage(EmbedResourceWithProxy):
         any received embed attached to a message event.
     """
 
+    placeholder: str | None = attrs.field(default=None, repr=False)
+    """A thumbhash placeholder of the media, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    placeholder_version: int | None = attrs.field(default=None, repr=False)
+    """The version of the placeholder, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    flags: EmbedMediaFlag = attrs.field(default=EmbedMediaFlag.NONE, repr=False)
+    """The flags of the media.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy):
@@ -177,6 +236,30 @@ class EmbedVideo(EmbedResourceWithProxy):
 
     width: int | None = attrs.field(default=None, repr=False)
     """The width of the video."""
+
+    placeholder: str | None = attrs.field(default=None, repr=False)
+    """A thumbhash placeholder of the media, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    placeholder_version: int | None = attrs.field(default=None, repr=False)
+    """The version of the placeholder, if present and known, otherwise [`None`][].
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
+
+    flags: EmbedMediaFlag = attrs.field(default=EmbedMediaFlag.NONE, repr=False)
+    """The flags of the media.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed and
+        will be ignored during serialization.
+    """
 
 
 @attrs_extensions.with_copy
@@ -262,6 +345,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         "_color",
         "_description",
         "_fields",
+        "_flags",
         "_footer",
         "_image",
         "_provider",
@@ -288,6 +372,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         provider: EmbedProvider | None,
         footer: EmbedFooter | None,
         fields: typing.MutableSequence[EmbedField] | None,
+        flags: EmbedFlag,
     ) -> Embed:
         """Generate an embed from the given attributes.
 
@@ -309,6 +394,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         embed._provider = provider
         embed._footer = footer
         embed._fields = fields
+        embed._flags = flags
         return embed
 
     def __init__(
@@ -345,6 +431,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         self._provider: EmbedProvider | None = None
         self._thumbnail: EmbedImage | None = None
         self._footer: EmbedFooter | None = None
+        self._flags = EmbedFlag.NONE
 
         # More boilerplate to allow this to be optional, but saves a useless list on every embed
         # when we don't always need it.
@@ -432,7 +519,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
             ```py
             # Use UTC.
-            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> datetime.datetime.now(tz=datetime.UTC)
             datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
 
             # Use your current timezone.
@@ -460,7 +547,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
             # Instead, this is a timezone-aware timestamp, and we can use this
             # correctly. This will always return the current time in UTC.
-            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> datetime.datetime.now(tz=datetime.UTC)
             datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
 
             # We could instead use a custom timezone. Since the timezone is
@@ -486,7 +573,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             datetime.datetime(2020, 6, 5, 19, 33, 40, 967939, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
 
             # Changing timezones.
-            >>> dt = datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> dt = datetime.datetime.now(tz=datetime.UTC)
             >>> print(dt)
             datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
             >>> dt.astimezone(tzlocal.get_localzone())
@@ -523,7 +610,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
               timestamp = datetime.datetime.now().astimezone()
               # or
-              timestamp = datetime.datetime.now(tz=datetime.timezone.utc)
+              timestamp = datetime.datetime.now(tz=datetime.UTC)
 
             NOTE: datetime.utcnow WILL NOT WORK CORRECTLY WITH THIS IMPLEMENTATION.
 
@@ -564,6 +651,17 @@ class Embed:  # noqa: PLW1641 - No __hash__
             Use [`hikari.embeds.Embed.set_thumbnail`][] to update this value.
         """
         return self._thumbnail
+
+    @property
+    def flags(self) -> EmbedFlag:
+        """Return the flags of the embed.
+
+        !!! note
+            Flags cannot be set by bots or webhooks while sending an embed.
+            Content scanning can finish after the message was sent, so the
+            `CONTAINS_*` flags may only show up in a later message update.
+        """
+        return self._flags
 
     @property
     def video(self) -> EmbedVideo | None:
@@ -616,7 +714,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
     def set_author(
         self, *, name: str | None = None, url: str | None = None, icon: files.Resourceish | None = None
-    ) -> Embed:
+    ) -> Self:
         """Set the author of this embed.
 
         Parameters
@@ -660,7 +758,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             self._author = EmbedAuthor(name=name, url=url, icon=real_icon)
         return self
 
-    def set_footer(self, text: str | None, *, icon: files.Resourceish | None = None) -> Embed:
+    def set_footer(self, text: str | None, *, icon: files.Resourceish | None = None) -> Self:
         """Set the footer of this embed.
 
         Parameters
@@ -710,7 +808,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             self._footer = EmbedFooter(icon=real_icon, text=text)
         return self
 
-    def set_image(self, image: files.Resourceish | None = None, /) -> Embed:
+    def set_image(self, image: files.Resourceish | None = None, /) -> Self:
         """Set the image on this embed.
 
         Parameters
@@ -750,7 +848,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
         return self
 
-    def set_thumbnail(self, image: files.Resourceish | None = None, /) -> Embed:
+    def set_thumbnail(self, image: files.Resourceish | None = None, /) -> Self:
         """Set the image on this embed.
 
         Parameters
@@ -789,7 +887,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
 
         return self
 
-    def add_field(self, name: str | None = None, value: str | None = None, *, inline: bool = False) -> Embed:
+    def add_field(self, name: str | None = None, value: str | None = None, *, inline: bool = False) -> Self:
         """Add a new field to this embed.
 
         Parameters
@@ -825,7 +923,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
         /,
         *,
         inline: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> Embed:
+    ) -> Self:
         """Edit an existing field on this embed.
 
         Parameters
@@ -866,7 +964,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             field.is_inline = inline
         return self
 
-    def remove_field(self, index: int, /) -> Embed:
+    def remove_field(self, index: int, /) -> Self:
         """Remove an existing field from this embed.
 
         Parameters
@@ -891,7 +989,7 @@ class Embed:  # noqa: PLW1641 - No __hash__
             self._fields = None
         return self
 
-    def clear_fields(self) -> Embed:
+    def clear_fields(self) -> Self:
         """Remove all existing fields from this embed.
 
         Returns
