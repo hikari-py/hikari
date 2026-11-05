@@ -2795,6 +2795,7 @@ class TestCacheImpl:
         mock_embed_field = mock.MagicMock(embeds.EmbedField)
         mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
         mock_poll = mock.MagicMock(polls.Poll)
+        mock_theme = mock.MagicMock(messages.SharedClientTheme)
         mock_sticker = mock.MagicMock(stickers.PartialSticker)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
@@ -2826,6 +2827,7 @@ class TestCacheImpl:
             attachments=(mock_attachment,),
             embeds=(mock_embed,),
             poll=mock_poll,
+            shared_client_theme=mock_theme,
             reactions=(mock_reaction,),
             is_pinned=False,
             webhook_id=snowflakes.Snowflake(3123123),
@@ -2892,6 +2894,7 @@ class TestCacheImpl:
         assert result.message_reference is not mock_reference
         assert result.flags == messages.MessageFlag.CROSSPOSTED
         assert result.stickers == (mock_sticker,)
+        assert result.shared_client_theme is mock_theme
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
         assert result.application_id == 123123123123
@@ -2917,6 +2920,7 @@ class TestCacheImpl:
             attachments=(),
             embeds=(),
             poll=None,
+            shared_client_theme=None,
             reactions=(),
             is_pinned=False,
             webhook_id=None,
@@ -2950,6 +2954,7 @@ class TestCacheImpl:
         assert result.mentions_everyone is undefined.UNDEFINED
 
         assert result.webhook_id is None
+        assert result.shared_client_theme is None
         assert result.activity is None
         assert result.application is None
         assert result.message_reference is None

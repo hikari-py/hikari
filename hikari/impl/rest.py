@@ -1500,6 +1500,7 @@ class RESTClientImpl(rest_api.RESTClient):
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
+        shared_client_theme: undefined.UndefinedOr[messages_.SharedClientTheme] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1609,6 +1610,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("components", serialized_components)
         body.put("poll", poll, conversion=lambda p: p.build())
         body.put(
+            "shared_client_theme", shared_client_theme, conversion=self._entity_factory.serialize_shared_client_theme
+        )
+        body.put(
             "allowed_mentions",
             mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
         )
@@ -1697,7 +1701,7 @@ class RESTClientImpl(rest_api.RESTClient):
         return body, form_builder
 
     @typing_extensions.override
-    async def create_message(
+    async def create_message(  # noqa: PLR0913 - Too many arguments
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
@@ -1709,6 +1713,7 @@ class RESTClientImpl(rest_api.RESTClient):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
+        shared_client_theme: undefined.UndefinedOr[messages_.SharedClientTheme] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1737,6 +1742,7 @@ class RESTClientImpl(rest_api.RESTClient):
             embed=embed,
             embeds=embeds,
             poll=poll,
+            shared_client_theme=shared_client_theme,
             sticker=sticker,
             stickers=stickers,
             nonce=nonce,

@@ -1106,7 +1106,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_message(
+    async def create_message(  # noqa: PLR0913 - Too many arguments
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
@@ -1118,6 +1118,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
+        shared_client_theme: undefined.UndefinedOr[messages_.SharedClientTheme] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1198,6 +1199,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embeds.
         poll
             If provided, the poll to create.
+        shared_client_theme
+            If provided, the custom client theme to share through the message.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
