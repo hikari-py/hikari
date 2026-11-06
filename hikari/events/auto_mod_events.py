@@ -133,7 +133,7 @@ class AutoModActionExecutionEvent(AutoModEvent):
     rule_id: snowflakes.Snowflake = attr.field()
     """ID of the rule which was triggered."""
 
-    rule_trigger_type: int | auto_mod.AutoModTriggerType | None = attr.field(repr=False)
+    rule_trigger_type: auto_mod.AutoModTriggerType | None = attr.field(repr=False)
     """Type of the rule which was triggered."""
 
     user_id: snowflakes.Snowflake = attr.field(repr=False)

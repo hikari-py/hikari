@@ -160,7 +160,7 @@ class PartialSticker(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=False)
     """The name of the sticker."""
 
-    format_type: StickerFormatType | int = attrs.field(eq=False, hash=False, repr=True)
+    format_type: StickerFormatType = attrs.field(eq=False, hash=False, repr=True)
     """The format of this sticker's asset."""
 
     def make_url(  # noqa: PLR0912 - Too many branches

@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels as channels_
     from hikari import colors
+    from hikari import locales
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import traits
@@ -79,20 +80,16 @@ class TemplateGuild(guilds.PartialGuild):
     description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
-    verification_level: guilds.GuildVerificationLevel | int = attrs.field(eq=False, hash=False, repr=False)
+    verification_level: guilds.GuildVerificationLevel = attrs.field(eq=False, hash=False, repr=False)
     """The verification level needed for a user to participate in this guild."""
 
-    default_message_notifications: guilds.GuildMessageNotificationsLevel | int = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    default_message_notifications: guilds.GuildMessageNotificationsLevel = attrs.field(eq=False, hash=False, repr=False)
     """The default setting for message notifications in this guild."""
 
-    explicit_content_filter: guilds.GuildExplicitContentFilterLevel | int = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    explicit_content_filter: guilds.GuildExplicitContentFilterLevel = attrs.field(eq=False, hash=False, repr=False)
     """The setting for the explicit content filter in this guild."""
 
-    preferred_locale: str = attrs.field(eq=False, hash=False, repr=False)
+    preferred_locale: locales.Locale = attrs.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][]

@@ -63,14 +63,14 @@ This includes:
 """
 
 CommandResponseTypesT = typing.Literal[
-    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5
+    base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
 ]
 """Type-hint of the response types which are valid for a command interaction.
 
 The following types are valid for this:
 
-* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
-* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
 """
 
 
@@ -82,7 +82,7 @@ class CommandInteractionOption:
     name: str = attrs.field(repr=True)
     """Name of this option."""
 
-    type: commands.OptionType | int = attrs.field(repr=True)
+    type: commands.OptionType = attrs.field(repr=True)
     """Type of this option."""
 
     value: snowflakes.Snowflake | str | int | float | bool | None = attrs.field(repr=True)
@@ -133,7 +133,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_name: str = attrs.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
 
-    command_type: commands.CommandType | int = attrs.field(eq=False, hash=False, repr=True)
+    command_type: commands.CommandType = attrs.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
     registered_guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
