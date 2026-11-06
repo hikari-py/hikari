@@ -2593,6 +2593,42 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
+    async def test_fetch_channel_member_permissions(self, rest_client):
+        expected_route = routes.GET_CHANNEL_MEMBER_PERMISSIONS.compile(channel=123, user=456)
+        rest_client._request = mock.AsyncMock(return_value={"permissions": "2048"})
+
+        result = await rest_client.fetch_channel_member_permissions(StubModel(123), StubModel(456))
+
+        assert result == permissions.Permissions.SEND_MESSAGES
+        rest_client._request.assert_awaited_once_with(expected_route, query={})
+
+    async def test_fetch_channel_member_permissions_with_implicit(self, rest_client):
+        expected_route = routes.GET_CHANNEL_MEMBER_PERMISSIONS.compile(channel=123, user=456)
+        rest_client._request = mock.AsyncMock(return_value={"permissions": "2048"})
+
+        result = await rest_client.fetch_channel_member_permissions(StubModel(123), StubModel(456), implicit=False)
+
+        assert result == permissions.Permissions.SEND_MESSAGES
+        rest_client._request.assert_awaited_once_with(expected_route, query={"implicit": "false"})
+
+    async def test_fetch_channel_role_permissions(self, rest_client):
+        expected_route = routes.GET_CHANNEL_ROLE_PERMISSIONS.compile(channel=123, role=456)
+        rest_client._request = mock.AsyncMock(return_value={"permissions": "2048"})
+
+        result = await rest_client.fetch_channel_role_permissions(StubModel(123), StubModel(456))
+
+        assert result == permissions.Permissions.SEND_MESSAGES
+        rest_client._request.assert_awaited_once_with(expected_route, query={})
+
+    async def test_fetch_channel_role_permissions_with_implicit(self, rest_client):
+        expected_route = routes.GET_CHANNEL_ROLE_PERMISSIONS.compile(channel=123, role=456)
+        rest_client._request = mock.AsyncMock(return_value={"permissions": "2048"})
+
+        result = await rest_client.fetch_channel_role_permissions(StubModel(123), StubModel(456), implicit=True)
+
+        assert result == permissions.Permissions.SEND_MESSAGES
+        rest_client._request.assert_awaited_once_with(expected_route, query={"implicit": "true"})
+
     async def test_fetch_channel_with_dm_channel_when_cacheful(self, rest_client, mock_cache):
         expected_route = routes.GET_CHANNEL.compile(channel=123)
         mock_object = mock.Mock(spec=channels.DMChannel, type=channels.ChannelType.DM)
@@ -5923,6 +5959,15 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "789"}, guild_id=123)
 
+    async def test_fetch_member_permissions(self, rest_client):
+        expected_route = routes.GET_GUILD_MEMBER_PERMISSIONS.compile(guild=123, user=456)
+        rest_client._request = mock.AsyncMock(return_value={"permissions": "8"})
+
+        result = await rest_client.fetch_member_permissions(StubModel(123), StubModel(456))
+
+        assert result == permissions.Permissions.ADMINISTRATOR
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_fetch_my_member(self, rest_client):
         expected_route = routes.GET_MY_GUILD_MEMBER.compile(guild=45123)
         rest_client._request = mock.AsyncMock(return_value={"id": "595995"})
@@ -6332,6 +6377,15 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_fetch_role_permissions(self, rest_client):
+        expected_route = routes.GET_GUILD_ROLE_PERMISSIONS.compile(guild=123, role=456)
+        rest_client._request = mock.AsyncMock(return_value={"permissions": "8"})
+
+        result = await rest_client.fetch_role_permissions(StubModel(123), StubModel(456))
+
+        assert result == permissions.Permissions.ADMINISTRATOR
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_roles(self, rest_client):
         role1 = StubModel(456)
