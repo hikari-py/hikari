@@ -596,6 +596,12 @@ class FileComponent(PartialComponent):
     is_spoiler: bool = attrs.field()
     """If the file has a spoiler."""
 
+    name: str | None = attrs.field()
+    """The name of the file, if provided by Discord."""
+
+    size: int | None = attrs.field()
+    """The size of the file in bytes, if provided by Discord."""
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ContainerComponent(PartialComponent):

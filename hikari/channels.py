@@ -156,6 +156,13 @@ class ChannelFlag(enums.Flag):
         As of writing, this can only be set for forum channels.
     """
 
+    HIDE_MEDIA_DOWNLOAD_OPTIONS = 1 << 15
+    """Hides the embedded media download options.
+
+    !!! note
+        As of writing, this can only be set for media channels.
+    """
+
     CHANNEL_OBFUSCATED = 1 << 17
     """The channel's metadata has been obfuscated because the current user cannot view it.
 
@@ -177,6 +184,14 @@ class ChannelFlag(enums.Flag):
         capability or through the **Private Channel Obfuscation** developer
         portal toggle. After that, obfuscation will apply to all
         applications automatically.
+    """
+
+    IS_SPOILER_CHANNEL = 1 << 21
+    """Users must opt in to view the channel's contents.
+
+    !!! note
+        This can be set on all textual guild channels and voice channels
+        except stage channels, and only if the channel is not NSFW.
     """
 
 

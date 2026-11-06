@@ -25,6 +25,7 @@ import datetime
 import mock
 import pytest
 
+from hikari import channels
 from hikari import embeds
 from hikari import emojis
 from hikari import guilds
@@ -2813,6 +2814,7 @@ class TestCacheImpl:
             id=snowflakes.Snowflake(32123123),
             channel_id=snowflakes.Snowflake(3123123123),
             guild_id=snowflakes.Snowflake(5555555),
+            channel_type=channels.ChannelType.GUILD_TEXT,
             author=cache_utilities.RefCell(mock_author),
             member=cache_utilities.RefCell(member_data),
             content="OKOKOK",
@@ -2849,6 +2851,7 @@ class TestCacheImpl:
         assert result.id == 32123123
         assert result.channel_id == 3123123123
         assert result.guild_id == 5555555
+        assert result.channel_type is channels.ChannelType.GUILD_TEXT
         assert result.author == mock_author
         assert result.author is not mock_author
         assert result.member is mock_member
@@ -2904,6 +2907,7 @@ class TestCacheImpl:
             id=snowflakes.Snowflake(32123123),
             channel_id=snowflakes.Snowflake(3123123123),
             guild_id=snowflakes.Snowflake(5555555),
+            channel_type=None,
             author=cache_utilities.RefCell(object()),
             member=None,
             content=None,
@@ -2938,6 +2942,7 @@ class TestCacheImpl:
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
 
         assert result.app is cache_impl._app
+        assert result.channel_type is None
         assert result.member is None
         assert result.content is None
         assert result.edited_timestamp is None

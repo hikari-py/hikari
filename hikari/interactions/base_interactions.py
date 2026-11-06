@@ -824,6 +824,13 @@ class InteractionChannel(channels.PartialChannel):
     permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
 
+    app_permissions: permissions_.Permissions | None = attrs.field(eq=False, hash=False, repr=False)
+    """Permissions the application has in this channel, including overwrites.
+
+    This does not include implicit permissions and will be [`None`][] when
+    Discord does not include it.
+    """
+
     parent_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The parent ID of the channel.
 
