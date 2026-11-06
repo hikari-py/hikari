@@ -25,10 +25,10 @@ import pytest
 
 from hikari import applications
 from hikari import components
+from hikari import modals
 from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
-from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.interactions import modal_interactions
 
@@ -57,14 +57,17 @@ class TestModalInteraction:
             locale="es-ES",
             guild_locale="en-US",
             app_permissions=543123,
-            components=special_endpoints.ModalActionRowBuilder(
-                id=9817398,
-                components=[
-                    components.TextInputComponent(
-                        type=components.ComponentType.TEXT_INPUT, id=9817398, custom_id="le id", value="le value"
-                    )
-                ],
-            ),
+            components=[
+                modals.ModalActionRowComponent(
+                    type=components.ComponentType.ACTION_ROW,
+                    id=9817398,
+                    components=[
+                        modals.ModalTextInputComponent(
+                            type=components.ComponentType.TEXT_INPUT, id=9817398, custom_id="le id", value="le value"
+                        )
+                    ],
+                )
+            ],
             entitlements=[
                 monetization.Entitlement(
                     id=snowflakes.Snowflake(123123),
@@ -87,6 +90,9 @@ class TestModalInteraction:
             resolved=object(),
             attachment_size_limit=12345,
         )
+
+    def test_hash(self, mock_modal_interaction):
+        assert isinstance(hash(mock_modal_interaction), int)
 
     def test_build_response(self, mock_modal_interaction, mock_app):
         mock_app.rest.interaction_message_builder = mock.Mock()
