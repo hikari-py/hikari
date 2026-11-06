@@ -268,6 +268,7 @@ class TestTextChannel:
         mock_embeds = object()
         mock_attachments = [object(), object(), object()]
         mock_reply = object()
+        mock_theme = object()
 
         await model.send(
             content="test content",
@@ -279,6 +280,7 @@ class TestTextChannel:
             components=mock_components,
             embed=mock_embed,
             embeds=mock_embeds,
+            shared_client_theme=mock_theme,
             sticker=543,
             stickers=[132, 65423],
             reply=mock_reply,
@@ -301,6 +303,7 @@ class TestTextChannel:
             components=mock_components,
             embed=mock_embed,
             embeds=mock_embeds,
+            shared_client_theme=mock_theme,
             sticker=543,
             stickers=[132, 65423],
             reply=mock_reply,

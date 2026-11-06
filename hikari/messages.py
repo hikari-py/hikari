@@ -25,6 +25,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "Attachment",
     "AttachmentFlag",
+    "BaseThemeType",
     "Message",
     "MessageActivity",
     "MessageActivityType",
@@ -42,6 +43,7 @@ __all__: typing.Sequence[str] = (
     "Reaction",
     "ReactionCountDetails",
     "ReactionType",
+    "SharedClientTheme",
 )
 
 import typing
@@ -451,6 +453,44 @@ class MessageActivity:
     """The party ID of the message activity."""
 
 
+@typing.final
+class BaseThemeType(int, enums.Enum):
+    """The mode of a shared client theme."""
+
+    UNSET = 0
+    """No mode set, which is equivalent to [`hikari.messages.BaseThemeType.DARK`][]."""
+
+    DARK = 1
+    """The dark mode."""
+
+    LIGHT = 2
+    """The light mode."""
+
+    DARKER = 3
+    """The darker mode."""
+
+    MIDNIGHT = 4
+    """The midnight mode."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class SharedClientTheme:
+    """Represents a custom client theme shared through a message."""
+
+    colors: typing.Sequence[colors_.Color] = attrs.field(repr=True)
+    """The colors of the theme, up to 5."""
+
+    gradient_angle: int = attrs.field(repr=True)
+    """The direction of the theme's colors in degrees, up to 360."""
+
+    base_mix: int = attrs.field(repr=True)
+    """The intensity of the theme's colors, up to 100."""
+
+    base_theme: BaseThemeType | int | None = attrs.field(default=None, repr=True)
+    """The mode of the theme, if set."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageReference:
@@ -762,6 +802,9 @@ class PartialMessage(snowflakes.Unique):
 
     poll: undefined.UndefinedNoneOr[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
     """The message poll."""
+
+    shared_client_theme: undefined.UndefinedNoneOr[SharedClientTheme] = attrs.field(hash=False, eq=False, repr=False)
+    """The custom client theme shared through the message."""
 
     reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""
@@ -1165,6 +1208,7 @@ class PartialMessage(snowflakes.Unique):
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
+        shared_client_theme: undefined.UndefinedOr[SharedClientTheme] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1243,6 +1287,8 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message embeds.
         poll
             If provided, the poll to set on the message.
+        shared_client_theme
+            If provided, the custom client theme to share through the message.
         sticker
             If provided, object or ID of a sticker to send on the message.
 
@@ -1337,6 +1383,7 @@ class PartialMessage(snowflakes.Unique):
             embed=embed,
             embeds=embeds,
             poll=poll,
+            shared_client_theme=shared_client_theme,
             sticker=sticker,
             stickers=stickers,
             nonce=nonce,
@@ -1616,6 +1663,9 @@ class Message(PartialMessage):
 
     poll: polls_.Poll | None = attrs.field(hash=False, eq=False, repr=False)
     """The message poll."""
+
+    shared_client_theme: SharedClientTheme | None = attrs.field(hash=False, eq=False, repr=False)
+    """The custom client theme shared through the message."""
 
     reactions: typing.Sequence[Reaction] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""

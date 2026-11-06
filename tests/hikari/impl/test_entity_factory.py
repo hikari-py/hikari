@@ -6733,6 +6733,59 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
+    def shared_client_theme_payload(self):
+        return {"colors": ["5865F2", "7258F2"], "gradient_angle": 90, "base_mix": 58, "base_theme": 1}
+
+    def test_deserialize_shared_client_theme(self, entity_factory_impl, shared_client_theme_payload):
+        theme = entity_factory_impl.deserialize_shared_client_theme(shared_client_theme_payload)
+
+        assert theme.colors == [color_models.Color(0x5865F2), color_models.Color(0x7258F2)]
+        assert theme.gradient_angle == 90
+        assert theme.base_mix == 58
+        assert theme.base_theme is message_models.BaseThemeType.DARK
+        assert isinstance(theme, message_models.SharedClientTheme)
+
+    def test_deserialize_shared_client_theme_with_null_and_unset_fields(
+        self, entity_factory_impl, shared_client_theme_payload
+    ):
+        shared_client_theme_payload["base_theme"] = None
+
+        theme = entity_factory_impl.deserialize_shared_client_theme(shared_client_theme_payload)
+
+        assert theme.base_theme is None
+
+        del shared_client_theme_payload["base_theme"]
+
+        theme = entity_factory_impl.deserialize_shared_client_theme(shared_client_theme_payload)
+
+        assert theme.base_theme is None
+
+    def test_serialize_shared_client_theme(self, entity_factory_impl):
+        theme = message_models.SharedClientTheme(
+            colors=[color_models.Color(0x5865F2), color_models.Color(0x7258F2)],
+            gradient_angle=90,
+            base_mix=58,
+            base_theme=message_models.BaseThemeType.LIGHT,
+        )
+
+        assert entity_factory_impl.serialize_shared_client_theme(theme) == {
+            "colors": ["5865F2", "7258F2"],
+            "gradient_angle": 90,
+            "base_mix": 58,
+            "base_theme": 2,
+        }
+
+    def test_serialize_shared_client_theme_with_null_base_theme(self, entity_factory_impl):
+        theme = message_models.SharedClientTheme(colors=[], gradient_angle=0, base_mix=0)
+
+        assert entity_factory_impl.serialize_shared_client_theme(theme) == {
+            "colors": [],
+            "gradient_angle": 0,
+            "base_mix": 0,
+            "base_theme": None,
+        }
+
+    @pytest.fixture
     def message_payload(
         self,
         user_payload,
@@ -6747,6 +6800,7 @@ class TestEntityFactoryImpl:
         attachment_payload,
         guild_public_thread_payload,
         partial_interaction_metadata_payload,
+        shared_client_theme_payload,
     ):
         member_payload = member_payload.copy()
         del member_payload["user"]
@@ -6774,6 +6828,7 @@ class TestEntityFactoryImpl:
             "attachments": [attachment_payload],
             "embeds": [embed_payload],
             "poll": poll_payload,
+            "shared_client_theme": shared_client_theme_payload,
             "reactions": [
                 {
                     "emoji": custom_emoji_payload,
@@ -6967,6 +7022,7 @@ class TestEntityFactoryImpl:
         custom_emoji_payload,
         embed_payload,
         poll_payload,
+        shared_client_theme_payload,
         referenced_message,
         action_row_payload,
         attachment_payload,
@@ -7063,6 +7119,9 @@ class TestEntityFactoryImpl:
 
         # Poll
         assert partial_message.poll == entity_factory_impl.deserialize_poll(poll_payload)
+        assert partial_message.shared_client_theme == entity_factory_impl.deserialize_shared_client_theme(
+            shared_client_theme_payload
+        )
 
     def test_deserialize_partial_message_with_snapshot(self, entity_factory_impl, message_payload):
         del message_payload["message_reference"]
@@ -7127,6 +7186,7 @@ class TestEntityFactoryImpl:
         assert partial_message.attachments is undefined.UNDEFINED
         assert partial_message.embeds is undefined.UNDEFINED
         assert partial_message.poll is undefined.UNDEFINED
+        assert partial_message.shared_client_theme is undefined.UNDEFINED
         assert partial_message.reactions is undefined.UNDEFINED
         assert partial_message.is_pinned is undefined.UNDEFINED
         assert partial_message.webhook_id is undefined.UNDEFINED
@@ -7295,6 +7355,7 @@ class TestEntityFactoryImpl:
         referenced_message,
         action_row_payload,
         poll_payload,
+        shared_client_theme_payload,
     ):
         message = entity_factory_impl.deserialize_message(message_payload)
 
@@ -7335,6 +7396,9 @@ class TestEntityFactoryImpl:
         assert message.embeds == [expected_embed]
 
         assert message.poll == entity_factory_impl.deserialize_poll(poll_payload)
+        assert message.shared_client_theme == entity_factory_impl.deserialize_shared_client_theme(
+            shared_client_theme_payload
+        )
 
         # Reaction
         reaction = message.reactions[0]
@@ -7499,6 +7563,7 @@ class TestEntityFactoryImpl:
         assert message.attachments == []
         assert message.embeds == []
         assert message.poll is None
+        assert message.shared_client_theme is None
         assert message.reactions == []
         assert message.webhook_id is None
         assert message.activity is None
