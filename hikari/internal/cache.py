@@ -432,6 +432,7 @@ class MemberData(BaseData[guilds.Member]):
     guild_id: snowflakes.Snowflake = attrs.field()
     nickname: str | None = attrs.field()
     guild_avatar_decoration: users_.AvatarDecoration | None = attrs.field()
+    guild_collectibles: users_.Collectibles | None = attrs.field()
     guild_avatar_hash: str | None = attrs.field()
     guild_banner_hash: str | None = attrs.field()
     role_ids: tuple[snowflakes.Snowflake, ...] = attrs.field()
@@ -454,6 +455,7 @@ class MemberData(BaseData[guilds.Member]):
             joined_at=member.joined_at,
             premium_since=member.premium_since,
             guild_avatar_decoration=member.guild_avatar_decoration,
+            guild_collectibles=member.guild_collectibles,
             guild_avatar_hash=member.guild_avatar_hash,
             guild_banner_hash=member.guild_banner_hash,
             is_deaf=member.is_deaf,
@@ -475,6 +477,7 @@ class MemberData(BaseData[guilds.Member]):
             role_ids=self.role_ids,
             joined_at=self.joined_at,
             guild_avatar_decoration=self.guild_avatar_decoration,
+            guild_collectibles=self.guild_collectibles,
             guild_avatar_hash=self.guild_avatar_hash,
             guild_banner_hash=self.guild_banner_hash,
             premium_since=self.premium_since,
