@@ -4340,6 +4340,14 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
 
+    async def test_delete_my_user_application_role_connection(self, rest_client):
+        expected_route = routes.DELETE_MY_USER_APPLICATION_ROLE_CONNECTIONS.compile(application=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_my_user_application_role_connection(StubModel(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_create_dm_channel(self, rest_client, mock_cache):
         dm_channel = StubModel(43234)
         user = StubModel(123)

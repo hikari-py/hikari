@@ -545,6 +545,9 @@ GET_MY_USER_APPLICATION_ROLE_CONNECTIONS: typing.Final[Route] = Route(
 PUT_MY_USER_APPLICATION_ROLE_CONNECTIONS: typing.Final[Route] = Route(
     PUT, "/users/@me/applications/{application}/role-connection"
 )  # OAuth2
+DELETE_MY_USER_APPLICATION_ROLE_CONNECTIONS: typing.Final[Route] = Route(
+    DELETE, "/users/@me/applications/{application}/role-connection"
+)  # OAuth2
 
 GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")
 

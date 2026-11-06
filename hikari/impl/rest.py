@@ -2490,6 +2490,13 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_own_application_role_connection(response)
 
     @typing_extensions.override
+    async def delete_my_user_application_role_connection(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> None:
+        route = routes.DELETE_MY_USER_APPLICATION_ROLE_CONNECTIONS.compile(application=application)
+        await self._request(route)
+
+    @typing_extensions.override
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users_.PartialUser], /) -> channels_.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
