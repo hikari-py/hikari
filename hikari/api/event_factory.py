@@ -35,6 +35,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages as messages_models
     from hikari import presences as presences_models
     from hikari import snowflakes
+    from hikari import soundboard as soundboard_models
     from hikari import stickers as sticker_models
     from hikari import users as user_models
     from hikari import voices as voices_models
@@ -53,6 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import role_events
     from hikari.events import scheduled_events
     from hikari.events import shard_events
+    from hikari.events import soundboard_events
     from hikari.events import stage_events
     from hikari.events import typing_events
     from hikari.events import user_events
@@ -1432,6 +1434,25 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_voice_channel_effect_send_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelEffectSendEvent:
+        """Parse a raw payload from Discord into a voice channel effect send event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.VoiceChannelEffectSendEvent
+            The parsed voice channel effect send event object.
+        """
+
+    @abc.abstractmethod
     def deserialize_auto_mod_rule_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleCreateEvent:
@@ -1669,4 +1690,121 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.poll_events.PollVoteDeleteEvent
             The parsed poll vote delete event object.
+        """
+
+    #####################
+    # SOUNDBOARD EVENTS #
+    #####################
+
+    @abc.abstractmethod
+    def deserialize_soundboard_sound_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundCreateEvent:
+        """Parse a raw payload from Discord into a soundboard sound create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.soundboard_events.SoundboardSoundCreateEvent
+            The parsed soundboard sound create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_soundboard_sound_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_sound: soundboard_models.SoundboardSound | None = None,
+    ) -> soundboard_events.SoundboardSoundUpdateEvent:
+        """Parse a raw payload from Discord into a soundboard sound update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+        old_sound
+            The soundboard sound object or [`None`][].
+
+        Returns
+        -------
+        hikari.events.soundboard_events.SoundboardSoundUpdateEvent
+            The parsed soundboard sound update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_soundboard_sound_delete_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_sound: soundboard_models.SoundboardSound | None = None,
+    ) -> soundboard_events.SoundboardSoundDeleteEvent:
+        """Parse a raw payload from Discord into a soundboard sound delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+        old_sound
+            The soundboard sound object or [`None`][].
+
+        Returns
+        -------
+        hikari.events.soundboard_events.SoundboardSoundDeleteEvent
+            The parsed soundboard sound delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_soundboard_sounds_update_event(
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_sounds: typing.Sequence[soundboard_models.SoundboardSound] | None = None,
+    ) -> soundboard_events.SoundboardSoundsUpdateEvent:
+        """Parse a raw payload from Discord into a soundboard sounds update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+        old_sounds
+            The sequence of soundboard sounds or [`None`][].
+
+        Returns
+        -------
+        hikari.events.soundboard_events.SoundboardSoundsUpdateEvent
+            The parsed soundboard sounds update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_soundboard_sounds_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundsEvent:
+        """Parse a raw payload from Discord into a soundboard sounds event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.soundboard_events.SoundboardSoundsEvent
+            The parsed soundboard sounds event object.
         """

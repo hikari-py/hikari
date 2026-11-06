@@ -267,6 +267,23 @@ class GatewayShard(abc.ABC):
         """
 
     @abc.abstractmethod
+    async def request_soundboard_sounds(self, guilds: snowflakes.SnowflakeishSequence[guilds.PartialGuild], /) -> None:
+        """Request the soundboard sounds of the given guilds.
+
+        The response arrives as one [`hikari.events.soundboard_events.SoundboardSoundsEvent`][] per guild.
+
+        Parameters
+        ----------
+        guilds
+            The guilds to request sounds for.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
+        """
+
+    @abc.abstractmethod
     async def request_channel_info(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[ChannelInfoField]
     ) -> None:

@@ -48,6 +48,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import soundboard_events
 from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -59,6 +60,7 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
+    from hikari import soundboard as soundboard_models
     from hikari import voices
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -191,6 +193,20 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://docs.discord.com/developers/events/gateway-events#channel-info."""
         self.dispatch(self._event_factory.deserialize_channel_info_event(shard, payload))
 
+    @event_manager_base.filtered(
+        soundboard_events.SoundboardSoundsEvent, config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+    )
+    def on_soundboard_sounds(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#soundboard-sounds for more info."""
+        event = self._event_factory.deserialize_soundboard_sounds_event(shard, payload)
+
+        if self._cache:
+            self._cache.clear_soundboard_sounds_for_guild(event.guild_id)
+            for sound in event.sounds:
+                self._cache.set_soundboard_sound(sound)
+
+        self.dispatch(event)
+
     @event_manager_base.filtered((shard_events.ShardRateLimitedEvent, shard_events.RequestGuildMembersRateLimitedEvent))
     def on_rate_limited(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://docs.discord.com/developers/events/gateway-events#rate-limited."""
@@ -295,6 +311,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             channels = event.channels if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = event.emojis if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
             stickers = event.stickers if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
+            soundboard_sounds = (
+                event.soundboard_sounds
+                if self._cache_enabled_for(config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS)
+                else None
+            )
             guild = event.guild if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = event.guild.id
             members = event.members if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
@@ -310,6 +331,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             channels = gd.channels() if self._cache_enabled_for(config.CacheComponents.GUILD_CHANNELS) else None
             emojis = gd.emojis() if self._cache_enabled_for(config.CacheComponents.EMOJIS) else None
             stickers = gd.stickers() if self._cache_enabled_for(config.CacheComponents.GUILD_STICKERS) else None
+            soundboard_sounds = (
+                gd.soundboard_sounds()
+                if self._cache_enabled_for(config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS)
+                else None
+            )
             guild = gd.guild() if self._cache_enabled_for(config.CacheComponents.GUILDS) else None
             guild_id = gd.id
             members = gd.members() if self._cache_enabled_for(config.CacheComponents.MEMBERS) else None
@@ -326,6 +352,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
             channels = None
             emojis = None
             stickers = None
+            soundboard_sounds = None
             guild = None
             guild_id = snowflakes.Snowflake(payload["id"])
             members = None
@@ -352,6 +379,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_stickers_for_guild(guild_id)
                 for sticker in stickers.values():
                     self._cache.set_sticker(sticker)
+
+            if soundboard_sounds:
+                self._cache.clear_soundboard_sounds_for_guild(guild_id)
+                for sound in soundboard_sounds.values():
+                    self._cache.set_soundboard_sound(sound)
 
             if roles:
                 self._cache.clear_roles_for_guild(guild_id)
@@ -491,6 +523,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         | config.CacheComponents.GUILD_CHANNELS
         | config.CacheComponents.EMOJIS
         | config.CacheComponents.GUILD_STICKERS
+        | config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
         | config.CacheComponents.ROLES
         | config.CacheComponents.PRESENCES
         | config.CacheComponents.VOICE_STATES
@@ -520,6 +553,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 self._cache.clear_threads_for_guild(guild_id)
                 self._cache.clear_emojis_for_guild(guild_id)
                 self._cache.clear_stickers_for_guild(guild_id)
+                self._cache.clear_soundboard_sounds_for_guild(guild_id)
                 self._cache.clear_roles_for_guild(guild_id)
 
             event = self._event_factory.deserialize_guild_leave_event(shard, payload, old_guild=old)
@@ -852,6 +886,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://docs.discord.com/developers/events/gateway-events#voice-channel-status-update."""
         self.dispatch(self._event_factory.deserialize_voice_channel_status_update_event(shard, payload))
 
+    @event_manager_base.filtered(voice_events.VoiceChannelEffectSendEvent)
+    def on_voice_channel_effect_send(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#voice-channel-effect-send for more info."""
+        self.dispatch(self._event_factory.deserialize_voice_channel_effect_send_event(shard, payload))
+
     @event_manager_base.filtered(channel_events.WebhookUpdateEvent)
     def on_webhooks_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#webhooks-update for more info."""
@@ -975,3 +1014,64 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#auto-moderation-action-execution for more info."""
         self.dispatch(self._event_factory.deserialize_auto_mod_action_execution_event(shard, payload))
+
+    @event_manager_base.filtered(
+        soundboard_events.SoundboardSoundCreateEvent, config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+    )
+    def on_guild_soundboard_sound_create(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sound-create for more info."""
+        event = self._event_factory.deserialize_soundboard_sound_create_event(shard, payload)
+
+        if self._cache:
+            self._cache.set_soundboard_sound(event.sound)
+
+        self.dispatch(event)
+
+    @event_manager_base.filtered(
+        soundboard_events.SoundboardSoundUpdateEvent, config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+    )
+    def on_guild_soundboard_sound_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sound-update for more info."""
+        old = self._cache.get_soundboard_sound(snowflakes.Snowflake(payload["sound_id"])) if self._cache else None
+        event = self._event_factory.deserialize_soundboard_sound_update_event(shard, payload, old_sound=old)
+
+        if self._cache:
+            self._cache.set_soundboard_sound(event.sound)
+
+        self.dispatch(event)
+
+    @event_manager_base.filtered(
+        soundboard_events.SoundboardSoundDeleteEvent, config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+    )
+    def on_guild_soundboard_sound_delete(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sound-delete for more info."""
+        old = self._cache.delete_soundboard_sound(snowflakes.Snowflake(payload["sound_id"])) if self._cache else None
+        self.dispatch(self._event_factory.deserialize_soundboard_sound_delete_event(shard, payload, old_sound=old))
+
+    @event_manager_base.filtered(
+        soundboard_events.SoundboardSoundsUpdateEvent, config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS
+    )
+    def on_guild_soundboard_sounds_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sounds-update for more info."""  # noqa: E501
+        old: list[soundboard_models.SoundboardSound] | None = None
+        if self._cache and self._cache_enabled_for(config.CacheComponents.GUILD_SOUNDBOARD_SOUNDS):
+            old = []
+            for sound_payload in payload["soundboard_sounds"]:
+                if cached := self._cache.get_soundboard_sound(snowflakes.Snowflake(sound_payload["sound_id"])):
+                    old.append(cached)
+
+        event = self._event_factory.deserialize_soundboard_sounds_update_event(shard, payload, old_sounds=old)
+
+        if self._cache:
+            for sound in event.sounds:
+                self._cache.set_soundboard_sound(sound)
+
+        self.dispatch(event)

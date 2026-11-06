@@ -152,6 +152,9 @@ class GuildFeature(str, enums.Enum):
     MORE_EMOJI = "MORE_EMOJI"
     """More emojis can be hosted in this guild than normal."""
 
+    MORE_SOUNDBOARD = "MORE_SOUNDBOARD"
+    """Guild has increased custom soundboard sound slots."""
+
     NEWS = "NEWS"
     """Guild has access to create news channels."""
 
@@ -164,6 +167,9 @@ class GuildFeature(str, enums.Enum):
     Relays are new infrastructure designed to handle large guilds more
     efficiently server-side.
     """
+
+    SOUNDBOARD = "SOUNDBOARD"
+    """Guild has created soundboard sounds."""
 
     VANITY_URL = "VANITY_URL"
     """Guild has access to set a vanity URL."""
