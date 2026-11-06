@@ -168,31 +168,33 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         _LOGGER.log(ux.TRACE, "attempting to connect to voice channel %s in %s via shard %s", channel, guild, shard_id)
 
-        await shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute)
-
-        _LOGGER.log(
-            ux.TRACE,
-            "waiting for voice events for connecting to voice channel %s in %s via shard %s",
-            channel,
-            guild,
-            shard_id,
-        )
-
         try:
-            state_event, server_event = await asyncio.gather(
-                # Voice state update:
-                self._app.event_manager.wait_for(
-                    voice_events.VoiceStateUpdateEvent,
-                    timeout=timeout,
-                    predicate=self._init_state_update_predicate(guild_id, user.id),
-                ),
-                # Server update:
-                self._app.event_manager.wait_for(
-                    voice_events.VoiceServerUpdateEvent,
-                    timeout=timeout,
-                    predicate=self._init_server_update_predicate(guild_id),
-                ),
-            )
+            # The shard may hold the voice state update back until it reconnects, so it shares the timeout
+            async with asyncio.timeout(timeout):
+                await shard.update_voice_state(guild, channel, self_deaf=deaf, self_mute=mute)
+
+                _LOGGER.log(
+                    ux.TRACE,
+                    "waiting for voice events for connecting to voice channel %s in %s via shard %s",
+                    channel,
+                    guild,
+                    shard_id,
+                )
+
+                state_event, server_event = await asyncio.gather(
+                    # Voice state update:
+                    self._app.event_manager.wait_for(
+                        voice_events.VoiceStateUpdateEvent,
+                        timeout=None,
+                        predicate=self._init_state_update_predicate(guild_id, user.id),
+                    ),
+                    # Server update:
+                    self._app.event_manager.wait_for(
+                        voice_events.VoiceServerUpdateEvent,
+                        timeout=None,
+                        predicate=self._init_server_update_predicate(guild_id),
+                    ),
+                )
         except TimeoutError as e:
             msg = f"Could not connect to voice channel {channel} in guild {guild}."
             raise errors.VoiceError(msg) from e

@@ -109,8 +109,15 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         """
 
     @typing_extensions.override
-    def close(self) -> None:
-        """Close the rate limiter, and shut down any pending tasks."""
+    def close(self, exception: Exception | None = None) -> None:
+        """Close the rate limiter, and shut down any pending tasks.
+
+        Parameters
+        ----------
+        exception
+            If provided, the exception to fail the pending tasks with instead
+            of cancelling them.
+        """
         if self.throttle_task is not None:
             self.throttle_task.cancel()
             self.throttle_task = None
@@ -119,8 +126,16 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         while self.queue:
             failed_tasks += 1
             future = self.queue.pop(0)
-            # Make the future complete with an exception
-            future.cancel()
+
+            # The waiter may have been cancelled while queued
+            if future.done():
+                continue
+
+            if exception is None:
+                # Make the future complete with an exception
+                future.cancel()
+            else:
+                future.set_exception(exception)
 
         if failed_tasks:
             _LOGGER.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
@@ -425,8 +440,14 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
                 await asyncio.sleep(sleep_for)
 
             while self.remaining > 0 and self.queue:
+                future = self.queue.pop(0)
+
+                # The waiter may have been cancelled while queued
+                if future.done():
+                    continue
+
                 self.remaining -= 1
-                self.queue.pop(0).set_result(None)
+                future.set_result(None)
 
         self.throttle_task = None
 
