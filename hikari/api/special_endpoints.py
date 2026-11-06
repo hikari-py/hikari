@@ -37,12 +37,15 @@ __all__: typing.Sequence[str] = (
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
     "ChannelSelectMenuBuilder",
+    "CheckboxBuilder",
+    "CheckboxGroupBuilder",
     "CommandBuilder",
     "ComponentBuilder",
     "ContainerComponentBuilder",
     "ContextMenuCommandBuilder",
     "FileComponentBuilder",
     "FileUploadComponentBuilder",
+    "GroupOptionBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
@@ -57,6 +60,7 @@ __all__: typing.Sequence[str] = (
     "ModalActionRowBuilder",
     "PollAnswerBuilder",
     "PollBuilder",
+    "RadioGroupBuilder",
     "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
@@ -1078,6 +1082,25 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
             The component builder to add to this modal.
         """
 
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this modal.
+
+        Parameters
+        ----------
+        content
+            The content of the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        InteractionModalBuilder
+            The builder object to enable chained calls.
+        """
+
 
 class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""
@@ -1740,8 +1763,11 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_required(self) -> bool:
-        """Whether the select menu should be marked as required."""
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether the select menu should be marked as required.
+
+        Only applies to select menus in modals, where Discord defaults this to [`True`][].
+        """
 
     @property
     @abc.abstractmethod
@@ -1802,7 +1828,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this select menu is required.
 
         Parameters
@@ -2953,8 +2979,11 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][],
             [`hikari.api.special_endpoints.LabelComponentBuilder.set_select_menu`][],
             [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][],
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][] or
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][]
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_radio_group`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_checkbox_group`][] or
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_checkbox`][]
             to set your component on the builder. Those methods utilize this one.
 
         Parameters
@@ -3023,9 +3052,9 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Set the child component to a select menu component for this label component.
@@ -3045,6 +3074,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            Discord requires this to be at least 1 unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3072,9 +3103,9 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
         """Set the child component to a text menu component for this label component.
@@ -3088,6 +3119,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            Discord requires this to be at least 1 unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3116,9 +3149,9 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         *,
         channel_types: typing.Sequence[channels.ChannelType] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
+        min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Set the child component to a channel menu component for this label component.
@@ -3137,6 +3170,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            Discord requires this to be at least 1 unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3160,7 +3195,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         *,
         min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        file_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Set the child component to a file upload component for this label component.
@@ -3176,8 +3212,109 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             The maximum number of files which can be uploaded.
         is_required
             Whether this file upload should be marked as required.
+        file_types
+            The file types to accept, up to 10.
+
+            Each entry is either `image`, `video`, `audio` or a dot-prefixed
+            extension such as `.pdf`. Only the file extension is matched.
         id
             The ID to give to the file upload.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_radio_group(
+        self,
+        custom_id: str,
+        /,
+        *,
+        options: typing.Sequence[GroupOptionBuilder] = (),
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a radio group component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify this radio group.
+        options
+            The options to show, between 2 and 10.
+        is_required
+            Whether a selection is required to submit the modal.
+        id
+            The ID to give to the radio group.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_checkbox_group(
+        self,
+        custom_id: str,
+        /,
+        *,
+        options: typing.Sequence[GroupOptionBuilder] = (),
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a checkbox group component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify this checkbox group.
+        options
+            The options to show, between 1 and 10.
+        min_values
+            The minimum number of options which must be selected.
+        max_values
+            The maximum number of options which can be selected.
+        is_required
+            Whether a selection is required to submit the modal.
+        id
+            The ID to give to the checkbox group.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_checkbox(
+        self,
+        custom_id: str,
+        /,
+        *,
+        is_default: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a checkbox component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify this checkbox.
+        is_default
+            Whether the checkbox should be checked by default.
+        id
+            The ID to give to the checkbox.
 
             If not provided, auto populated through increment.
 
@@ -3226,8 +3363,20 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_required(self) -> bool:
-        """Whether the file upload should be marked as required."""
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether the file upload should be marked as required.
+
+        Discord defaults this to [`True`][].
+        """
+
+    @property
+    @abc.abstractmethod
+    def file_types(self) -> undefined.UndefinedOr[typing.Sequence[str]]:
+        """The file types this upload accepts, up to 10.
+
+        Each entry is either `image`, `video`, `audio` or a dot-prefixed
+        extension such as `.pdf`. Only the file extension is matched.
+        """
 
     @abc.abstractmethod
     def set_custom_id(self, custom_id: str, /) -> Self:
@@ -3275,7 +3424,7 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this file upload is required.
 
         Parameters
@@ -3286,6 +3435,399 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
         Returns
         -------
         FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_file_types(self, file_types: undefined.UndefinedOr[typing.Sequence[str]], /) -> Self:
+        """Set the file types this upload accepts.
+
+        Parameters
+        ----------
+        file_types
+            The file types to accept, up to 10.
+
+            Each entry is either `image`, `video`, `audio` or a dot-prefixed
+            extension such as `.pdf`. Only the file extension is matched.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class GroupOptionBuilder(abc.ABC):
+    """Builder class for the options of radio groups and checkbox groups."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> str:
+        """User-facing label of the option, max 100 characters."""
+
+    @property
+    @abc.abstractmethod
+    def value(self) -> str:
+        """Developer-defined value of the option, max 100 characters."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """Description of the option, max 100 characters."""
+
+    @property
+    @abc.abstractmethod
+    def is_default(self) -> bool:
+        """Whether this option should be marked as selected by default."""
+
+    @abc.abstractmethod
+    def set_label(self, label: str, /) -> Self:
+        """Set the option's label.
+
+        Parameters
+        ----------
+        label
+            Label to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        GroupOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_value(self, value: str, /) -> Self:
+        """Set the option's value.
+
+        Parameters
+        ----------
+        value
+            Value to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        GroupOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
+        """Set the option's description.
+
+        Parameters
+        ----------
+        value
+            Description to set for this option. This can be up to 100 characters
+            long.
+
+        Returns
+        -------
+        GroupOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set whether this option should be selected by default.
+
+        Parameters
+        ----------
+        state
+            Whether this option should be selected by default.
+
+        Returns
+        -------
+        GroupOptionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class RadioGroupBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for radio group components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.RADIO_GROUP]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying this radio group."""
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[GroupOptionBuilder]:
+        """Sequence of the options set for this radio group."""
+
+    @property
+    @abc.abstractmethod
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether a selection is required to submit the modal.
+
+        Discord defaults this to [`True`][] when not provided.
+        """
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the developer set custom ID used for identifying this radio group.
+
+        Parameters
+        ----------
+        custom_id
+            Developer set custom ID used for identifying this radio group.
+
+        Returns
+        -------
+        RadioGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_option(
+        self,
+        label: str,
+        value: str,
+        /,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        is_default: bool = False,
+    ) -> Self:
+        """Add an option to this radio group.
+
+        Parameters
+        ----------
+        label
+            The user-facing label of this option, max 100 characters.
+        value
+            The developer defined value of this option, max 100 characters.
+        description
+            The option's description, max 100 characters.
+        is_default
+            Whether this option should be selected by default.
+
+        Returns
+        -------
+        RadioGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        """Set whether a selection is required to submit the modal.
+
+        Parameters
+        ----------
+        state
+            Whether a selection is required to submit the modal.
+
+        Returns
+        -------
+        RadioGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class CheckboxGroupBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for checkbox group components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.CHECKBOX_GROUP]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying this checkbox group."""
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[GroupOptionBuilder]:
+        """Sequence of the options set for this checkbox group."""
+
+    @property
+    @abc.abstractmethod
+    def min_values(self) -> undefined.UndefinedOr[int]:
+        """Minimum number of options which must be selected.
+
+        Discord defaults this to 1 when not provided.
+        """
+
+    @property
+    @abc.abstractmethod
+    def max_values(self) -> undefined.UndefinedOr[int]:
+        """Maximum number of options which can be selected.
+
+        Discord defaults this to the number of options when not provided.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether a selection is required to submit the modal.
+
+        Discord defaults this to [`True`][] when not provided.
+        """
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the developer set custom ID used for identifying this checkbox group.
+
+        Parameters
+        ----------
+        custom_id
+            Developer set custom ID used for identifying this checkbox group.
+
+        Returns
+        -------
+        CheckboxGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_option(
+        self,
+        label: str,
+        value: str,
+        /,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        is_default: bool = False,
+    ) -> Self:
+        """Add an option to this checkbox group.
+
+        Parameters
+        ----------
+        label
+            The user-facing label of this option, max 100 characters.
+        value
+            The developer defined value of this option, max 100 characters.
+        description
+            The option's description, max 100 characters.
+        is_default
+            Whether this option should be selected by default.
+
+        Returns
+        -------
+        CheckboxGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_min_values(self, min_values: undefined.UndefinedOr[int], /) -> Self:
+        """Set the minimum number of options which must be selected.
+
+        Parameters
+        ----------
+        min_values
+            The minimum number of options which must be selected.
+
+        Returns
+        -------
+        CheckboxGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_max_values(self, max_values: undefined.UndefinedOr[int], /) -> Self:
+        """Set the maximum number of options which can be selected.
+
+        Parameters
+        ----------
+        max_values
+            The maximum number of options which can be selected.
+
+        Returns
+        -------
+        CheckboxGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        """Set whether a selection is required to submit the modal.
+
+        Parameters
+        ----------
+        state
+            Whether a selection is required to submit the modal.
+
+        Returns
+        -------
+        CheckboxGroupBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class CheckboxBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for checkbox components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.CHECKBOX]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying this checkbox."""
+
+    @property
+    @abc.abstractmethod
+    def is_default(self) -> undefined.UndefinedOr[bool]:
+        """Whether the checkbox should be checked by default."""
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the developer set custom ID used for identifying this checkbox.
+
+        Parameters
+        ----------
+        custom_id
+            Developer set custom ID used for identifying this checkbox.
+
+        Returns
+        -------
+        CheckboxBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_default(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        """Set whether the checkbox should be checked by default.
+
+        Parameters
+        ----------
+        state
+            Whether the checkbox should be checked by default.
+
+        Returns
+        -------
+        CheckboxBuilder
             The builder object to enable chained calls.
         """
 
@@ -3396,7 +3938,14 @@ if typing.TYPE_CHECKING:
     SectionBuilderAccessoriesT = ButtonBuilder | ThumbnailComponentBuilder
     SectionBuilderComponentsT = TextDisplayComponentBuilder
 
-    LabelBuilderComponentsT = SelectMenuBuilder | TextInputBuilder | FileUploadComponentBuilder
+    LabelBuilderComponentsT = (
+        SelectMenuBuilder
+        | TextInputBuilder
+        | FileUploadComponentBuilder
+        | RadioGroupBuilder
+        | CheckboxGroupBuilder
+        | CheckboxBuilder
+    )
 
 
 class AutoModActionBuilder(abc.ABC):
