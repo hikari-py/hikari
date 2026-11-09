@@ -1732,8 +1732,25 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_disabled(self) -> bool:
-        """Whether the select menu should be marked as disabled."""
+    def is_disabled(self) -> undefined.UndefinedOr[bool]:
+        """Whether the select menu should be marked as disabled.
+
+        If left undefined, Discord defaults this to [`False`][].
+
+        !!! warning
+            Modals cannot contain disabled components and will error if this is set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        """Whether a selection is required to submit the modal this menu is in.
+
+        If left undefined, Discord defaults this to [`True`][].
+
+        !!! note
+            This is only used by select menus in modals and ignored in messages.
+        """
 
     @property
     @abc.abstractmethod
@@ -1742,20 +1759,24 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def min_values(self) -> int:
+    def min_values(self) -> undefined.UndefinedOr[int]:
         """Minimum number of options which must be chosen.
 
-        Defaults to 1.
+        If left undefined, Discord defaults this to 1.
         Must be less than or equal to [`hikari.api.special_endpoints.SelectMenuBuilder.max_values`][] and greater
         than or equal to 0.
+
+        !!! note
+            In modals this must be at least 1 unless
+            [`hikari.api.special_endpoints.SelectMenuBuilder.is_required`][] is [`False`][].
         """
 
     @property
     @abc.abstractmethod
-    def max_values(self) -> int:
+    def max_values(self) -> undefined.UndefinedOr[int]:
         """Maximum number of options which can be chosen.
 
-        Defaults to 1.
+        If left undefined, Discord defaults this to 1.
         Must be greater than or equal to [`hikari.api.special_endpoints.SelectMenuBuilder.min_values`][] and
         less than or equal to 25.
         """
@@ -1776,13 +1797,34 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
-        """Set whether this option is disabled.
+    def set_is_disabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        """Set whether this menu is disabled.
+
+        !!! warning
+            Modals cannot contain disabled components and will error if this is set.
 
         Parameters
         ----------
         state
-            Whether this option is disabled.
+            Whether this menu is disabled.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        """Set whether a selection is required to submit the modal this menu is in.
+
+        !!! note
+            This is only used by select menus in modals and ignored in messages.
+
+        Parameters
+        ----------
+        state
+            Whether a selection is required.
 
         Returns
         -------
@@ -1807,12 +1849,14 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_min_values(self, value: int, /) -> Self:
+    def set_min_values(self, value: undefined.UndefinedOr[int], /) -> Self:
         """Set the minimum amount of options which need to be selected for this menu.
 
         !!! note
-            This defaults to 1 if not set and must be greater than or equal to 0
+            Discord defaults this to 1 if not set and it must be greater than or equal to 0
             and less than or equal to [`hikari.api.special_endpoints.SelectMenuBuilder.max_values`][].
+            In modals this must be at least 1 unless
+            [`hikari.api.special_endpoints.SelectMenuBuilder.is_required`][] is [`False`][].
 
         Parameters
         ----------
@@ -1826,11 +1870,11 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_max_values(self, value: int, /) -> Self:
+    def set_max_values(self, value: undefined.UndefinedOr[int], /) -> Self:
         """Set the maximum amount of options which can be selected for this menu.
 
         !!! note
-            This defaults to 1 if not set and must be less than or equal to 25
+            Discord defaults this to 1 if not set and it must be less than or equal to 25
             and greater than or equal to [`hikari.api.special_endpoints.SelectMenuBuilder.min_values`][].
 
         Parameters
@@ -1902,17 +1946,22 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel_types(self) -> typing.Sequence[channels.ChannelType]:
-        """The channel types that can be selected in this menu."""
+    def channel_types(self) -> undefined.UndefinedOr[typing.Sequence[channels.ChannelType]]:
+        """The channel types that can be selected in this menu.
+
+        If left undefined, all channel types can be selected.
+        """
 
     @abc.abstractmethod
-    def set_channel_types(self, value: typing.Sequence[channels.ChannelType], /) -> Self:
+    def set_channel_types(self, value: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]], /) -> Self:
         """Set the valid channel types for this menu.
 
         Parameters
         ----------
         value
             The valid channel types for this menu.
+
+            If left undefined, all channel types can be selected.
 
         Returns
         -------
@@ -2240,9 +2289,9 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a select menu component to this action row builder.
@@ -2262,10 +2311,16 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            If left undefined, Discord defaults this to 1.
         max_values
             The maximum amount of entries which can be selected.
+
+            If left undefined, Discord defaults this to 1.
         is_disabled
             Whether this select menu should be marked as disabled.
+
+            If left undefined, Discord defaults this to [`False`][].
         id
             The ID to give to the menu.
 
@@ -2288,11 +2343,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
         *,
-        channel_types: typing.Sequence[channels.ChannelType] = (),
+        channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel select menu component to this action row builder.
@@ -2305,16 +2360,21 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         channel_types
             The channel types this select menu should allow.
 
-            If left as an empty sequence then there will be no
-            channel type restriction.
+            If left undefined then there will be no channel type restriction.
         placeholder
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            If left undefined, Discord defaults this to 1.
         max_values
             The maximum amount of entries which can be selected.
+
+            If left undefined, Discord defaults this to 1.
         is_disabled
             Whether this select menu should be marked as disabled.
+
+            If left undefined, Discord defaults this to [`False`][].
         id
             The ID to give to the menu.
 
@@ -2338,9 +2398,9 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
@@ -2354,10 +2414,16 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             Placeholder text to show when no entries have been selected.
         min_values
             The minimum amount of entries which need to be selected.
+
+            If left undefined, Discord defaults this to 1.
         max_values
             The maximum amount of entries which can be selected.
+
+            If left undefined, Discord defaults this to 1.
         is_disabled
             Whether this select menu should be marked as disabled.
+
+            If left undefined, Discord defaults this to [`False`][].
         id
             The ID to give to the menu.
 
