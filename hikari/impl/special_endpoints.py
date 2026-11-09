@@ -2229,17 +2229,82 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         return payload, attachments
 
 
-@attrs_extensions.with_copy
-@attrs.define(kw_only=True, weakref_slot=False)
-class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder):
+@attrs.define(init=False, weakref_slot=False)
+class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder[_ParentT_co]):
     """Builder class for channel select menus."""
 
-    _channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = attrs.field(
-        alias="channel_types", default=undefined.UNDEFINED
-    )
-    _type: typing.Literal[component_models.ComponentType.CHANNEL_SELECT_MENU] = attrs.field(
-        default=component_models.ComponentType.CHANNEL_SELECT_MENU, init=False
-    )
+    _channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = attrs.field()
+    _parent: _ParentT_co | None = attrs.field()
+    _type: typing.Literal[component_models.ComponentType.CHANNEL_SELECT_MENU] = attrs.field()
+
+    if not typing.TYPE_CHECKING:
+        # This will not work with the generated for attrs copy methods.
+        __copy__ = None
+        __deepcopy__ = None
+
+    @typing.overload
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co,
+        channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    @typing.overload
+    def __init__(
+        self: ChannelSelectMenuBuilder[typing.NoReturn],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co | None = None,
+        channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        super().__init__(
+            type=component_models.ComponentType.CHANNEL_SELECT_MENU,
+            id=id,
+            custom_id=custom_id,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+            is_required=is_required,
+        )
+        self._channel_types = channel_types
+        self._parent = parent
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> _ParentT_co:
+        if self._parent is None:
+            msg = "This menu has no parent"
+            raise RuntimeError(msg)
+
+        return self._parent
 
     @property
     @typing_extensions.override
@@ -2501,18 +2566,19 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> Self:
-        return self.add_component(
-            ChannelSelectMenuBuilder(
-                id=id,
-                custom_id=custom_id,
-                placeholder=placeholder,
-                channel_types=channel_types,
-                min_values=min_values,
-                max_values=max_values,
-                is_disabled=is_disabled,
-            )
+    ) -> special_endpoints.ChannelSelectMenuBuilder[Self]:
+        component = ChannelSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            parent=self,
+            placeholder=placeholder,
+            channel_types=channel_types,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
         )
+        self.add_component(component)
+        return component
 
     @typing_extensions.override
     def add_text_menu(

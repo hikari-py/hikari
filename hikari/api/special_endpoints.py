@@ -1939,10 +1939,15 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_
         """
 
 
-class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
+class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
     """Builder class for a channel select menu."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> _ParentT_co:
+        """Parent object which initialised this builder."""
 
     @property
     @abc.abstractmethod
@@ -2349,7 +2354,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> Self:
+    ) -> ChannelSelectMenuBuilder[Self]:
         """Add a channel select menu component to this action row builder.
 
         Parameters
@@ -2382,8 +2387,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        ActionRowBuilder
-            The action row builder to enable chained calls.
+        ChannelSelectMenuBuilder
+            The channel select menu builder.
+
+            [`hikari.api.special_endpoints.ChannelSelectMenuBuilder.parent`][] can be used to return to this
+            action row while chaining calls.
 
         Raises
         ------
