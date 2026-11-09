@@ -2026,9 +2026,10 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     _type: component_models.ComponentType | int = attrs.field(alias="type")
     _custom_id: str = attrs.field(alias="custom_id")
     _placeholder: undefined.UndefinedOr[str] = attrs.field(alias="placeholder", default=undefined.UNDEFINED)
-    _min_values: int = attrs.field(alias="min_values", default=0)
-    _max_values: int = attrs.field(alias="max_values", default=1)
-    _is_disabled: bool = attrs.field(alias="is_disabled", default=False)
+    _min_values: undefined.UndefinedOr[int] = attrs.field(alias="min_values", default=undefined.UNDEFINED)
+    _max_values: undefined.UndefinedOr[int] = attrs.field(alias="max_values", default=undefined.UNDEFINED)
+    _is_disabled: undefined.UndefinedOr[bool] = attrs.field(alias="is_disabled", default=undefined.UNDEFINED)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
 
     @property
     @typing_extensions.override
@@ -2047,8 +2048,13 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
     @property
     @typing_extensions.override
-    def is_disabled(self) -> bool:
+    def is_disabled(self) -> undefined.UndefinedOr[bool]:
         return self._is_disabled
+
+    @property
+    @typing_extensions.override
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        return self._is_required
 
     @property
     @typing_extensions.override
@@ -2057,12 +2063,12 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
     @property
     @typing_extensions.override
-    def min_values(self) -> int:
+    def min_values(self) -> undefined.UndefinedOr[int]:
         return self._min_values
 
     @property
     @typing_extensions.override
-    def max_values(self) -> int:
+    def max_values(self) -> undefined.UndefinedOr[int]:
         return self._max_values
 
     @typing_extensions.override
@@ -2071,8 +2077,13 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         return self
 
     @typing_extensions.override
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_disabled = state
+        return self
+
+    @typing_extensions.override
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        self._is_required = state
         return self
 
     @typing_extensions.override
@@ -2081,12 +2092,12 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         return self
 
     @typing_extensions.override
-    def set_min_values(self, value: int, /) -> Self:
+    def set_min_values(self, value: undefined.UndefinedOr[int], /) -> Self:
         self._min_values = value
         return self
 
     @typing_extensions.override
-    def set_max_values(self, value: int, /) -> Self:
+    def set_max_values(self, value: undefined.UndefinedOr[int], /) -> Self:
         self._max_values = value
         return self
 
@@ -2103,6 +2114,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         data.put("min_values", self._min_values)
         data.put("max_values", self._max_values)
         data.put("disabled", self._is_disabled)
+        data.put("required", self._is_required)
         return data, []
 
 
@@ -2128,9 +2140,10 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         parent: _ParentT_co,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     @typing.overload
@@ -2141,9 +2154,10 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         custom_id: str,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     def __init__(
@@ -2154,9 +2168,10 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         parent: _ParentT_co | None = None,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         super().__init__(
             type=component_models.ComponentType.TEXT_SELECT_MENU,
@@ -2166,6 +2181,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
             min_values=min_values,
             max_values=max_values,
             is_disabled=is_disabled,
+            is_required=is_required,
         )
         self._options = list(options)
         self._parent = parent
@@ -2218,18 +2234,20 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
 class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder):
     """Builder class for channel select menus."""
 
-    _channel_types: typing.Sequence[channels.ChannelType] = attrs.field(alias="channel_types", factory=list)
+    _channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = attrs.field(
+        alias="channel_types", default=undefined.UNDEFINED
+    )
     _type: typing.Literal[component_models.ComponentType.CHANNEL_SELECT_MENU] = attrs.field(
         default=component_models.ComponentType.CHANNEL_SELECT_MENU, init=False
     )
 
     @property
     @typing_extensions.override
-    def channel_types(self) -> typing.Sequence[channels.ChannelType]:
+    def channel_types(self) -> undefined.UndefinedOr[typing.Sequence[channels.ChannelType]]:
         return self._channel_types
 
     @typing_extensions.override
-    def set_channel_types(self, value: typing.Sequence[channels.ChannelType], /) -> Self:
+    def set_channel_types(self, value: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]], /) -> Self:
         self._channel_types = value
         return self
 
@@ -2239,7 +2257,9 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload, attachments = super().build()
 
-        payload["channel_types"] = self._channel_types
+        if self._channel_types is not undefined.UNDEFINED:
+            payload["channel_types"] = self._channel_types
+
         return payload, attachments
 
 
@@ -2452,9 +2472,9 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2475,11 +2495,11 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         custom_id: str,
         /,
         *,
-        channel_types: typing.Sequence[channels.ChannelType] = (),
+        channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2501,9 +2521,9 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 0,
-        max_values: int = 1,
-        is_disabled: bool = False,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(

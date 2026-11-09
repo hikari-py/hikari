@@ -1989,6 +1989,10 @@ class TestSelectMenuBuilder:
         assert menu.set_is_disabled(True) is menu
         assert menu.is_disabled is True
 
+    def test_set_is_required(self, menu):
+        assert menu.set_is_required(False) is menu
+        assert menu.is_required is False
+
     def test_set_placeholder(self, menu):
         assert menu.set_placeholder("place") is menu
         assert menu.placeholder == "place"
@@ -2010,6 +2014,7 @@ class TestSelectMenuBuilder:
             min_values=5,
             max_values=23,
             is_disabled=True,
+            is_required=False,
         )
 
         payload, attachments = menu.build()
@@ -2020,6 +2025,7 @@ class TestSelectMenuBuilder:
             "custom_id": "45234fsdf",
             "placeholder": "meep",
             "disabled": True,
+            "required": False,
             "min_values": 5,
             "max_values": 23,
         }
@@ -2031,13 +2037,7 @@ class TestSelectMenuBuilder:
 
         payload, attachments = menu.build()
 
-        assert payload == {
-            "type": components.ComponentType.ROLE_SELECT_MENU,
-            "custom_id": "o2o2o2",
-            "disabled": False,
-            "min_values": 0,
-            "max_values": 1,
-        }
+        assert payload == {"type": components.ComponentType.ROLE_SELECT_MENU, "custom_id": "o2o2o2"}
 
         assert attachments == []
 
@@ -2088,6 +2088,7 @@ class TestTextSelectMenuBuilder:
             min_values=22,
             max_values=53,
             is_disabled=True,
+            is_required=False,
             options=[special_endpoints.SelectOptionBuilder("meow", "vault")],
         )
 
@@ -2101,6 +2102,7 @@ class TestTextSelectMenuBuilder:
             "min_values": 22,
             "max_values": 53,
             "disabled": True,
+            "required": False,
             "options": [{"label": "meow", "value": "vault", "default": False}],
         }
 
@@ -2111,14 +2113,7 @@ class TestTextSelectMenuBuilder:
 
         payload, attachments = menu.build()
 
-        assert payload == {
-            "type": components.ComponentType.TEXT_SELECT_MENU,
-            "custom_id": "fds  qw",
-            "min_values": 0,
-            "max_values": 1,
-            "disabled": False,
-            "options": [],
-        }
+        assert payload == {"type": components.ComponentType.TEXT_SELECT_MENU, "custom_id": "fds  qw", "options": []}
 
         assert attachments == []
 
@@ -2143,6 +2138,7 @@ class TestChannelSelectMenuBuilder:
             min_values=22,
             max_values=53,
             is_disabled=True,
+            is_required=False,
             channel_types=[channels.ChannelType.GUILD_CATEGORY],
         )
 
@@ -2156,6 +2152,7 @@ class TestChannelSelectMenuBuilder:
             "min_values": 22,
             "max_values": 53,
             "disabled": True,
+            "required": False,
             "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
@@ -2166,14 +2163,7 @@ class TestChannelSelectMenuBuilder:
 
         payload, attachments = menu.build()
 
-        assert payload == {
-            "type": components.ComponentType.CHANNEL_SELECT_MENU,
-            "custom_id": "42312312",
-            "min_values": 0,
-            "max_values": 1,
-            "disabled": False,
-            "channel_types": [],
-        }
+        assert payload == {"type": components.ComponentType.CHANNEL_SELECT_MENU, "custom_id": "42312312"}
 
         assert attachments == []
 
