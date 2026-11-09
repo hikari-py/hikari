@@ -2123,6 +2123,18 @@ class TestChannelSelectMenuBuilder:
         menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="id")
         assert menu.type is components.ComponentType.CHANNEL_SELECT_MENU
 
+    def test_parent_property(self):
+        mock_parent = object()
+        menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
+
+        assert menu.parent is mock_parent
+
+    def test_parent_property_when_none(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="o2o2o2")
+
+        with pytest.raises(RuntimeError, match="This menu has no parent"):
+            menu.parent
+
     def test_set_channel_types(self):
         menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="hi")
 
@@ -2317,7 +2329,7 @@ class TestMessageActionRowBuilder:
     def test_add_channel_menu(self):
         row = special_endpoints.MessageActionRowBuilder()
 
-        row.add_channel_menu(
+        menu = row.add_channel_menu(
             "flex",
             channel_types=[channels.ChannelType.GROUP_DM],
             placeholder="The pasion",
@@ -2326,9 +2338,15 @@ class TestMessageActionRowBuilder:
             is_disabled=True,
         )
 
-        assert len(row.components) == 1
-        component = row.components[0]
-        assert isinstance(component, special_endpoints_api.SelectMenuBuilder)
+        assert row.components == [menu]
+        assert isinstance(menu, special_endpoints_api.ChannelSelectMenuBuilder)
+        assert menu.parent is row
+        assert menu.custom_id == "flex"
+        assert menu.channel_types == [channels.ChannelType.GROUP_DM]
+        assert menu.placeholder == "The pasion"
+        assert menu.min_values == 4
+        assert menu.max_values == 9
+        assert menu.is_disabled is True
 
     def test_add_text_menu(self):
         row = special_endpoints.MessageActionRowBuilder()
