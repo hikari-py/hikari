@@ -34,6 +34,7 @@ __all__: typing.Sequence[str] = (
     "AutoModSpamTriggerBuilder",
     "AutoModTimeoutActionBuilder",
     "AutoModTriggerBuilder",
+    "AutoPopulatedSelectMenuBuilder",
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
     "ChannelSelectMenuBuilder",
@@ -51,10 +52,12 @@ __all__: typing.Sequence[str] = (
     "LinkButtonBuilder",
     "MediaGalleryComponentBuilder",
     "MediaGalleryItemBuilder",
+    "MentionableSelectMenuBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
     "PollAnswerBuilder",
     "PollBuilder",
+    "RoleSelectMenuBuilder",
     "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
@@ -65,6 +68,7 @@ __all__: typing.Sequence[str] = (
     "TextSelectMenuBuilder",
     "ThumbnailComponentBuilder",
     "TypingIndicator",
+    "UserSelectMenuBuilder",
 )
 
 import abc
@@ -73,6 +77,7 @@ import typing
 from hikari import components as components_
 from hikari import polls
 from hikari import undefined
+from hikari.internal import deprecation
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
@@ -1939,7 +1944,135 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_
         """
 
 
-class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
+class AutoPopulatedSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
+    """Base class for builders of select menus whose options are populated by Discord."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def default_values(self) -> undefined.UndefinedOr[typing.Sequence[components_.SelectDefaultValue]]:
+        """The entities selected by default when the menu is shown.
+
+        The amount of default values must be between
+        [`hikari.api.special_endpoints.SelectMenuBuilder.min_values`][] and
+        [`hikari.api.special_endpoints.SelectMenuBuilder.max_values`][].
+        """
+
+    @abc.abstractmethod
+    def set_default_values(
+        self, values: undefined.UndefinedOr[typing.Sequence[components_.SelectDefaultValue]], /
+    ) -> Self:
+        """Set the entities selected by default when the menu is shown.
+
+        Parameters
+        ----------
+        values
+            The default values to set.
+
+            Each value must be of a type the menu can list.
+
+        Returns
+        -------
+        AutoPopulatedSelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class UserSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
+    """Builder class for a user select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> _ParentT_co:
+        """Parent object which initialised this builder."""
+
+    @abc.abstractmethod
+    def add_default_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> Self:
+        """Add a user which is selected by default when the menu is shown.
+
+        Parameters
+        ----------
+        user
+            Object or ID of the user to select by default.
+
+        Returns
+        -------
+        UserSelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class RoleSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
+    """Builder class for a role select menu."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> _ParentT_co:
+        """Parent object which initialised this builder."""
+
+    @abc.abstractmethod
+    def add_default_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> Self:
+        """Add a role which is selected by default when the menu is shown.
+
+        Parameters
+        ----------
+        role
+            Object or ID of the role to select by default.
+
+        Returns
+        -------
+        RoleSelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class MentionableSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
+    """Builder class for a mentionable select menu, which lists both users and roles."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> _ParentT_co:
+        """Parent object which initialised this builder."""
+
+    @abc.abstractmethod
+    def add_default_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> Self:
+        """Add a user which is selected by default when the menu is shown.
+
+        Parameters
+        ----------
+        user
+            Object or ID of the user to select by default.
+
+        Returns
+        -------
+        MentionableSelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_default_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> Self:
+        """Add a role which is selected by default when the menu is shown.
+
+        Parameters
+        ----------
+        role
+            Object or ID of the role to select by default.
+
+        Returns
+        -------
+        MentionableSelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class ChannelSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, abc.ABC, typing.Generic[_ParentT_co]):
     """Builder class for a channel select menu."""
 
     __slots__: typing.Sequence[str] = ()
@@ -1948,6 +2081,21 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_Paren
     @abc.abstractmethod
     def parent(self) -> _ParentT_co:
         """Parent object which initialised this builder."""
+
+    @abc.abstractmethod
+    def add_default_channel(self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /) -> Self:
+        """Add a channel which is selected by default when the menu is shown.
+
+        Parameters
+        ----------
+        channel
+            Object or ID of the channel to select by default.
+
+        Returns
+        -------
+        ChannelSelectMenuBuilder
+            The builder object to enable chained calls.
+        """
 
     @property
     @abc.abstractmethod
@@ -2287,6 +2435,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    @deprecation.deprecated("Use 'add_user_menu', 'add_role_menu' or 'add_mentionable_menu' instead.")
     def add_select_menu(
         self,
         type_: components_.ComponentType | int,
@@ -2300,6 +2449,12 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a select menu component to this action row builder.
+
+        !!! deprecated 2.7.1
+            Use [`hikari.api.special_endpoints.MessageActionRowBuilder.add_user_menu`][],
+            [`hikari.api.special_endpoints.MessageActionRowBuilder.add_role_menu`][] or
+            [`hikari.api.special_endpoints.MessageActionRowBuilder.add_mentionable_menu`][]
+            instead. This will be removed in `2.9.0`.
 
         For channel select menus and text select menus see
         [`hikari.api.special_endpoints.MessageActionRowBuilder.add_channel_menu`][]
@@ -2451,6 +2606,153 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         ------
         ValueError
             If an invalid select menu type is passed.
+        """
+
+    @abc.abstractmethod
+    def add_user_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> UserSelectMenuBuilder[Self]:
+        """Add a user select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder
+            Placeholder text to show when no entries have been selected.
+        min_values
+            The minimum amount of entries which need to be selected.
+
+            If left undefined, Discord defaults this to 1.
+        max_values
+            The maximum amount of entries which can be selected.
+
+            If left undefined, Discord defaults this to 1.
+        is_disabled
+            Whether this select menu should be marked as disabled.
+
+            If left undefined, Discord defaults this to [`False`][].
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        UserSelectMenuBuilder
+            The user select menu builder.
+
+            The `add_default_*` methods of the returned builder can be used to
+            set default values then
+            [`hikari.api.special_endpoints.UserSelectMenuBuilder.parent`][] can be used to
+            return to this action row while chaining calls.
+        """
+
+    @abc.abstractmethod
+    def add_role_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> RoleSelectMenuBuilder[Self]:
+        """Add a role select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder
+            Placeholder text to show when no entries have been selected.
+        min_values
+            The minimum amount of entries which need to be selected.
+
+            If left undefined, Discord defaults this to 1.
+        max_values
+            The maximum amount of entries which can be selected.
+
+            If left undefined, Discord defaults this to 1.
+        is_disabled
+            Whether this select menu should be marked as disabled.
+
+            If left undefined, Discord defaults this to [`False`][].
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        RoleSelectMenuBuilder
+            The role select menu builder.
+
+            The `add_default_*` methods of the returned builder can be used to
+            set default values then
+            [`hikari.api.special_endpoints.RoleSelectMenuBuilder.parent`][] can be used to
+            return to this action row while chaining calls.
+        """
+
+    @abc.abstractmethod
+    def add_mentionable_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> MentionableSelectMenuBuilder[Self]:
+        """Add a mentionable select menu component to this action row builder.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder
+            Placeholder text to show when no entries have been selected.
+        min_values
+            The minimum amount of entries which need to be selected.
+
+            If left undefined, Discord defaults this to 1.
+        max_values
+            The maximum amount of entries which can be selected.
+
+            If left undefined, Discord defaults this to 1.
+        is_disabled
+            Whether this select menu should be marked as disabled.
+
+            If left undefined, Discord defaults this to [`False`][].
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        MentionableSelectMenuBuilder
+            The mentionable select menu builder.
+
+            The `add_default_*` methods of the returned builder can be used to
+            set default values then
+            [`hikari.api.special_endpoints.MentionableSelectMenuBuilder.parent`][] can be used to
+            return to this action row while chaining calls.
         """
 
 
