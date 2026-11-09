@@ -533,6 +533,13 @@ class Member(users.User):
         This takes precedence over [`hikari.guilds.Member.avatar_decoration`][] in the client.
     """
 
+    guild_collectibles: users.Collectibles | None = attrs.field(eq=False, hash=False, repr=False)
+    """The member's guild collectibles if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.collectibles`][] in the client.
+    """
+
     guild_avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild avatar if set, else [`None`][].
 
@@ -569,6 +576,11 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
+    def collectibles(self) -> users.Collectibles | None:
+        return self.user.collectibles
+
+    @property
+    @typing_extensions.override
     def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 
@@ -581,6 +593,11 @@ class Member(users.User):
     @typing_extensions.override
     def display_avatar_decoration(self) -> users.AvatarDecoration | None:
         return self.guild_avatar_decoration or self.user.display_avatar_decoration
+
+    @property
+    @typing_extensions.override
+    def display_collectibles(self) -> users.Collectibles | None:
+        return self.guild_collectibles or self.user.display_collectibles
 
     @property
     @typing_extensions.override
