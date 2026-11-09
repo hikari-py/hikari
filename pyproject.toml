@@ -111,7 +111,7 @@ pytest = [
     "pytest==9.2.0",
     "pytest-asyncio==1.4.1.post1",
     "pytest-cov==7.1.0",
-    "pytest-randomly==5.0.0",
+    "pytest-randomly==5.1.0",
     { include-group = "coverage" },
 ]
 release = ["twine==7.0.0"]
