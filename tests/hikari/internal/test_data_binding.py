@@ -134,7 +134,7 @@ class TestStringMapBuilder:
         mapping.put("foo", m1)
         mapping.put("foo", m2)
         assert mapping.getall("foo") == [m1.__str__(), m2.__str__()]
-        assert list(mapping.keys()) == ["foo", "foo"]
+        assert list(mapping.items()) == [("foo", m1.__str__()), ("foo", m2.__str__())]
 
     def test_put_Unique(self):
         mapping = data_binding.StringMapBuilder()
