@@ -3052,7 +3052,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 1,
+        min_values: int = 0,
         max_values: int = 1,
         is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -3075,7 +3075,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         min_values
             The minimum amount of entries which need to be selected.
 
-            Discord requires this to be at least 1 unless `is_required` is [`False`][].
+            This defaults to `0`, which Discord rejects unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3103,7 +3103,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         /,
         *,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 1,
+        min_values: int = 0,
         max_values: int = 1,
         is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -3120,7 +3120,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         min_values
             The minimum amount of entries which need to be selected.
 
-            Discord requires this to be at least 1 unless `is_required` is [`False`][].
+            This defaults to `0`, which Discord rejects unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
@@ -3149,7 +3149,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         *,
         channel_types: typing.Sequence[channels.ChannelType] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        min_values: int = 1,
+        min_values: int = 0,
         max_values: int = 1,
         is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -3171,7 +3171,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         min_values
             The minimum amount of entries which need to be selected.
 
-            Discord requires this to be at least 1 unless `is_required` is [`False`][].
+            This defaults to `0`, which Discord rejects unless `is_required` is [`False`][].
         max_values
             The maximum amount of entries which can be selected.
         is_required
