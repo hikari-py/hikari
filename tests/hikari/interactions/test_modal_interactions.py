@@ -84,6 +84,7 @@ class TestModalInteraction:
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            resolved=object(),
             attachment_size_limit=12345,
         )
 

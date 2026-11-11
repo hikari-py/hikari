@@ -42,12 +42,14 @@ __all__: typing.Sequence[str] = (
     "ContainerComponentBuilder",
     "ContextMenuCommandBuilder",
     "FileComponentBuilder",
+    "FileUploadComponentBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
     "InteractionModalBuilder",
     "InteractionResponseBuilder",
     "InteractiveButtonBuilder",
+    "LabelComponentBuilder",
     "LinkButtonBuilder",
     "MediaGalleryComponentBuilder",
     "MediaGalleryItemBuilder",
@@ -1737,6 +1739,11 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def is_required(self) -> bool:
+        """Whether the select menu should be marked as required."""
+
+    @property
+    @abc.abstractmethod
     def placeholder(self) -> undefined.UndefinedOr[str]:
         """Placeholder text to display when no options are selected."""
 
@@ -1779,10 +1786,28 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option is disabled.
 
+        !!! warning
+            Modals are not allowed to have disabled components in them and will error if used.
+
         Parameters
         ----------
         state
             Whether this option is disabled.
+
+        Returns
+        -------
+        SelectMenuBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set whether this select menu is required.
+
+        Parameters
+        ----------
+        state
+            Whether this select menu is required.
 
         Returns
         -------
@@ -1944,8 +1969,16 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def label(self) -> str:
-        """Label above this text input."""
+    def label(self) -> undefined.UndefinedOr[str]:
+        """Label above this text input.
+
+        !!! deprecated
+            Discord deprecated this field in favour of wrapping text inputs in a
+            [`hikari.api.special_endpoints.LabelComponentBuilder`][], which
+            carries its own `label` and `description`. Only set this when using
+            the legacy [`hikari.api.special_endpoints.ModalActionRowBuilder`][]
+            modal layout.
+        """
 
     @property
     @abc.abstractmethod
@@ -2008,7 +2041,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_label(self, label: str, /) -> Self:
+    def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
         """Set the label above this text input.
 
         Parameters
@@ -2402,8 +2435,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
         !!! warning
             It is generally better to use
-            [`hikari.api.special_endpoints.MessageActionRowBuilder.add_interactive_button`][]
-            and [`hikari.api.special_endpoints.MessageActionRowBuilder.add_select_menu`][]
+            [`hikari.api.special_endpoints.ModalActionRowBuilder.add_text_input`][]
             to add your component to the builder. Those methods utilize this one.
 
         Parameters
@@ -2873,6 +2905,378 @@ class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
         """
 
 
+class LabelComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for label components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.LABEL]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> str:
+        """The name of the label component."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description of the label component."""
+
+    @property
+    @abc.abstractmethod
+    def component(self) -> LabelBuilderComponentsT:
+        """The component attached to the label."""
+
+    @abc.abstractmethod
+    def set_component(self, component: LabelBuilderComponentsT, /) -> Self:
+        """Set the child component of this label component.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_select_menu`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][] or
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][]
+            to set your component on the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to set as the component.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_text_input(
+        self,
+        custom_id: str,
+        /,
+        *,
+        style: components_.TextInputStyle = components_.TextInputStyle.SHORT,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        value: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        required: bool = True,
+        min_length: int = 0,
+        max_length: int = 4000,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a text input component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            Developer set custom ID used for identifying this text input.
+        style
+            The text input's style.
+        placeholder
+            Placeholder text to display when the text input is empty.
+        value
+            Default text to pre-fill the field with.
+        required
+            Whether text must be supplied for this text input.
+        min_length
+            Minimum length the input text can be.
+
+            This can be greater than or equal to 0 and less than or equal to 4000.
+        max_length
+            Maximum length the input text can be.
+
+            This can be greater than or equal to 1 and less than or equal to 4000.
+        id
+            The ID to give to the text input.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable call chaining.
+        """
+
+    @abc.abstractmethod
+    def set_select_menu(
+        self,
+        type_: components_.ComponentType | int,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a select menu component for this label component.
+
+        For channel select menus and text select menus see
+        [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][]
+        and [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][].
+
+        Parameters
+        ----------
+        type_
+            The type for the select menu.
+        custom_id
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder
+            Placeholder text to show when no entries have been selected.
+        min_values
+            The minimum amount of entries which need to be selected.
+        max_values
+            The maximum amount of entries which can be selected.
+        is_required
+            Whether this select menu should be marked as required.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+
+        Raises
+        ------
+        ValueError
+            If an invalid select menu type is passed.
+        """
+
+    @abc.abstractmethod
+    def set_text_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> TextSelectMenuBuilder[Self]:
+        """Set the child component to a text menu component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        placeholder
+            Placeholder text to show when no entries have been selected.
+        min_values
+            The minimum amount of entries which need to be selected.
+        max_values
+            The maximum amount of entries which can be selected.
+        is_required
+            Whether this select menu should be marked as required.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        TextSelectMenuBuilder
+            The text select menu builder.
+
+            [`hikari.api.special_endpoints.TextSelectMenuBuilder.add_option`][] should be called to add
+            options to the returned builder then
+            [`hikari.api.special_endpoints.TextSelectMenuBuilder.parent`][] can be used to return to this
+            label component while chaining calls.
+        """
+
+    @abc.abstractmethod
+    def set_channel_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        channel_types: typing.Sequence[channels.ChannelType] = (),
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a channel menu component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify which menu
+            triggered component interactions.
+        channel_types
+            The channel types this select menu should allow.
+
+            If left as an empty sequence then there will be no
+            channel type restriction.
+        placeholder
+            Placeholder text to show when no entries have been selected.
+        min_values
+            The minimum amount of entries which need to be selected.
+        max_values
+            The maximum amount of entries which can be selected.
+        is_required
+            Whether this select menu should be marked as required.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_file_upload(
+        self,
+        custom_id: str,
+        /,
+        *,
+        min_values: int = 1,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set the child component to a file upload component for this label component.
+
+        Parameters
+        ----------
+        custom_id
+            A developer-defined custom identifier used to identify which file
+            upload triggered component interactions.
+        min_values
+            The minimum number of files which must be uploaded.
+        max_values
+            The maximum number of files which can be uploaded.
+        is_required
+            Whether this file upload should be marked as required.
+        id
+            The ID to give to the file upload.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        LabelComponentBuilder
+            The label component builder to enable chained calls.
+        """
+
+
+class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for file upload components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.FILE_UPLOAD]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def custom_id(self) -> str:
+        """Developer set custom ID used for identifying interactions with this file upload component."""
+
+    @property
+    @abc.abstractmethod
+    def min_values(self) -> int:
+        """Minimum number of files which must be uploaded.
+
+        Defaults to 1.
+        Must be less than or equal to [`hikari.api.special_endpoints.FileUploadComponentBuilder.max_values`][]
+        and greater than or equal to 0.
+        """
+
+    @property
+    @abc.abstractmethod
+    def max_values(self) -> int:
+        """Maximum number of files which can be uploaded.
+
+        Defaults to 1.
+        Must be greater than or equal to [`hikari.api.special_endpoints.FileUploadComponentBuilder.min_values`][] and
+        less than or equal to 10.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_required(self) -> bool:
+        """Whether the file upload should be marked as required."""
+
+    @abc.abstractmethod
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        """Set the developer set custom ID used for identifying this file upload.
+
+        Parameters
+        ----------
+        custom_id
+            Developer set custom ID used for identifying this file upload.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_min_values(self, min_values: int, /) -> Self:
+        """Set the minimum number of files which must be uploaded.
+
+        Parameters
+        ----------
+        min_values
+            The minimum number of files which must be uploaded.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_max_values(self, max_values: int, /) -> Self:
+        """Set the maximum number of files which can be uploaded.
+
+        Parameters
+        ----------
+        max_values
+            The maximum number of files which can be uploaded.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_is_required(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set whether this file upload is required.
+
+        Parameters
+        ----------
+        state
+            Whether this file upload is required.
+
+        Returns
+        -------
+        FileUploadComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
 class PollBuilder(abc.ABC):
     """Builder class for polls."""
 
@@ -2978,6 +3382,8 @@ if typing.TYPE_CHECKING:
 
     SectionBuilderAccessoriesT = ButtonBuilder | ThumbnailComponentBuilder
     SectionBuilderComponentsT = TextDisplayComponentBuilder
+
+    LabelBuilderComponentsT = SelectMenuBuilder | TextInputBuilder | FileUploadComponentBuilder
 
 
 class AutoModActionBuilder(abc.ABC):
