@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 
 import mock.mock
 import pytest
@@ -288,13 +289,45 @@ def test_get_or_make_loop_handles_runtime_error():
     assert asyncio.get_event_loop() is mock_loop
 
 
-def test_get_or_make_loop_with_loop_factory():
+def test_get_or_make_loop_with_loop_factory_ignores_current_loop_before_3_14():
     asyncio.set_event_loop(mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False)))
     mock_loop = mock.Mock(asyncio.AbstractEventLoop)
     loop_factory = mock.Mock(return_value=mock_loop)
 
-    with mock.patch.object(asyncio, "new_event_loop") as new_event_loop:
+    with mock.patch.object(sys, "version_info", (3, 13)):
+        with mock.patch.object(asyncio, "new_event_loop") as new_event_loop:
+            assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
+
+    loop_factory.assert_called_once_with()
+    new_event_loop.assert_not_called()
+    assert asyncio.get_event_loop() is mock_loop
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
+
+
+def test_get_or_make_loop_with_loop_factory_reuses_current_loop():
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False))
+    asyncio.set_event_loop(mock_loop)
+    loop_factory = mock.Mock()
+
+    with mock.patch.object(sys, "version_info", (3, 14)):
         assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
+
+    loop_factory.assert_not_called()
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
+
+
+def test_get_or_make_loop_with_loop_factory_when_no_current_loop():
+    asyncio.set_event_loop(None)
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop)
+    loop_factory = mock.Mock(return_value=mock_loop)
+
+    with mock.patch.object(sys, "version_info", (3, 14)):
+        with mock.patch.object(asyncio, "new_event_loop") as new_event_loop:
+            assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
 
     loop_factory.assert_called_once_with()
     new_event_loop.assert_not_called()

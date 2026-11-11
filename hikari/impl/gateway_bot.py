@@ -812,9 +812,12 @@ class GatewayBot(traits.GatewayBotAware):
             event.
         loop_factory
             A callable which creates the event loop to run the bot on, for
-            example `uvloop.new_event_loop`. If [`None`][], the current event
-            loop is reused when there is one, otherwise a new asyncio event
-            loop is created.
+            example `uvloop.new_event_loop`. If [`None`][], a new asyncio
+            event loop is created.
+
+            The factory is only used when there is no current event loop to
+            reuse. Before Python 3.14 a current event loop is ignored when
+            this is passed.
         propagate_interrupts
             If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
             that is raises as a result of catching an OS level signal will

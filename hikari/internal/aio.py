@@ -25,6 +25,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("all_of", "completed_future", "destroy_loop", "first_completed", "get_or_make_loop")
 
 import asyncio
+import sys
 import typing
 import warnings
 
@@ -149,15 +150,20 @@ def get_or_make_loop(
     Parameters
     ----------
     loop_factory
-        A callable which creates the event loop. If passed, a new loop is
-        always created with it and set as the current event loop.
+        A callable which creates the event loop when there is no usable
+        current one.
+
+        Before Python 3.14 a current event loop cannot be told apart from
+        one asyncio created implicitly, so there a new loop is always
+        created with the factory.
 
     Returns
     -------
     asyncio.AbstractEventLoop
         The requested loop.
     """
-    if loop_factory is not None:
+    # Before 3.14 get_event_loop implicitly creates a loop on the main thread, which would shadow the factory.
+    if loop_factory is not None and sys.version_info < (3, 14):
         loop = loop_factory()
         asyncio.set_event_loop(loop)
         return loop
@@ -176,7 +182,7 @@ def get_or_make_loop(
     except RuntimeError:
         pass
 
-    loop = asyncio.new_event_loop()
+    loop = loop_factory() if loop_factory is not None else asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     return loop
 

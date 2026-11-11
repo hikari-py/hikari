@@ -547,9 +547,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             TCP/IP host or a sequence of hosts for the HTTP server.
         loop_factory
             A callable which creates the event loop to run the bot on, for
-            example `uvloop.new_event_loop`. If [`None`][], the current event
-            loop is reused when there is one, otherwise a new asyncio event
-            loop is created.
+            example `uvloop.new_event_loop`. If [`None`][], a new asyncio
+            event loop is created.
+
+            The factory is only used when there is no current event loop to
+            reuse. Before Python 3.14 a current event loop is ignored when
+            this is passed.
         port
             TCP/IP port for the HTTP server.
         propagate_interrupts
