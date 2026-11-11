@@ -25,6 +25,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("all_of", "completed_future", "destroy_loop", "first_completed", "get_or_make_loop")
 
 import asyncio
+import sys
 import typing
 import warnings
 
@@ -141,29 +142,50 @@ async def all_of(*aws: typing.Awaitable[T_co]) -> typing.Sequence[T_co]:
             pass
 
 
-def get_or_make_loop() -> asyncio.AbstractEventLoop:
+def get_or_make_loop(
+    *, loop_factory: typing.Callable[[], asyncio.AbstractEventLoop] | None = None
+) -> asyncio.AbstractEventLoop:
     """Get the current usable event loop or create a new one.
+
+    Parameters
+    ----------
+    loop_factory
+        A callable which creates the event loop when there is no usable
+        current one. Defaults to [`asyncio.new_event_loop`][].
 
     Returns
     -------
     asyncio.AbstractEventLoop
         The requested loop.
+
+    Raises
+    ------
+    RuntimeError
+        If `loop_factory` is passed on a Python version older than 3.12.
     """
-    # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-    # if it was just called with None or if it's called on a thread which isn't the main Thread.
+    # 3.11 implicitly creates a loop without any way to tell, which would shadow the factory.
+    if loop_factory is not None and sys.version_info < (3, 12):
+        msg = "'loop_factory' requires Python 3.12 or newer"
+        raise RuntimeError(msg)
+
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            loop = asyncio.get_event_loop_policy().get_event_loop()
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always", DeprecationWarning)
+            loop = asyncio.get_event_loop()
+
+    except RuntimeError:
+        pass
+
+    else:
+        # 3.12 and 3.13 warn when get_event_loop had to implicitly create the loop.
+        if loop_factory is not None and caught_warnings:
+            loop.close()
 
         # Closed loops cannot be reused.
         if not loop.is_closed():
             return loop
 
-    except RuntimeError:
-        pass
-
-    loop = asyncio.new_event_loop()
+    loop = loop_factory() if loop_factory is not None else asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     return loop
 

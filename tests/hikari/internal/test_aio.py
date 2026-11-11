@@ -21,6 +21,8 @@
 from __future__ import annotations
 
 import asyncio
+import sys
+import warnings
 
 import mock.mock
 import pytest
@@ -285,7 +287,81 @@ def test_get_or_make_loop_handles_runtime_error():
 
         new_event_loop.assert_called_once_with()
 
-    assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
+    assert asyncio.get_event_loop() is mock_loop
+
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="The loop factory requires 3.12 or newer")
+def test_get_or_make_loop_with_loop_factory_reuses_current_loop():
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False))
+    asyncio.set_event_loop(mock_loop)
+    loop_factory = mock.Mock()
+
+    assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
+
+    loop_factory.assert_not_called()
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="The loop factory requires 3.12 or newer")
+def test_get_or_make_loop_with_loop_factory_when_no_current_loop():
+    asyncio.set_event_loop(None)
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop)
+    loop_factory = mock.Mock(return_value=mock_loop)
+
+    with mock.patch.object(asyncio, "new_event_loop") as new_event_loop:
+        assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
+
+    loop_factory.assert_called_once_with()
+    new_event_loop.assert_not_called()
+    assert asyncio.get_event_loop() is mock_loop
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
+
+
+def _implicitly_created(loop):
+    def get_event_loop():
+        warnings.warn("There is no current event loop", DeprecationWarning, stacklevel=2)
+        return loop
+
+    return get_event_loop
+
+
+def test_get_or_make_loop_with_loop_factory_replaces_implicitly_created_loop():
+    implicit_loop = mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False))
+    implicit_loop.close.side_effect = lambda: implicit_loop.is_closed.configure_mock(return_value=True)
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop)
+    loop_factory = mock.Mock(return_value=mock_loop)
+
+    with mock.patch.object(sys, "version_info", (3, 12)):
+        with mock.patch.object(asyncio, "get_event_loop", new=_implicitly_created(implicit_loop)):
+            with mock.patch.object(asyncio, "set_event_loop") as set_event_loop:
+                assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
+
+    implicit_loop.close.assert_called_once_with()
+    loop_factory.assert_called_once_with()
+    set_event_loop.assert_called_once_with(mock_loop)
+
+
+def test_get_or_make_loop_keeps_implicitly_created_loop_without_loop_factory():
+    implicit_loop = mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False))
+
+    with mock.patch.object(asyncio, "get_event_loop", new=_implicitly_created(implicit_loop)):
+        assert aio.get_or_make_loop() is implicit_loop
+
+    implicit_loop.close.assert_not_called()
+
+
+def test_get_or_make_loop_with_loop_factory_before_3_12():
+    loop_factory = mock.Mock()
+
+    with mock.patch.object(sys, "version_info", (3, 11)):
+        with pytest.raises(RuntimeError, match="'loop_factory' requires Python 3.12 or newer"):
+            aio.get_or_make_loop(loop_factory=loop_factory)
+
+    loop_factory.assert_not_called()
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
@@ -298,4 +374,4 @@ def test_get_or_make_loop_handles_closed_loop():
 
         new_event_loop.assert_called_once_with()
 
-    assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
+    assert asyncio.get_event_loop() is mock_loop

@@ -743,6 +743,7 @@ class GatewayBot(traits.GatewayBotAware):
         idle_since: datetime.datetime | None = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
+        loop_factory: typing.Callable[[], asyncio.AbstractEventLoop] | None = None,
         propagate_interrupts: bool = False,
         status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Sequence[int] | None = None,
@@ -809,6 +810,13 @@ class GatewayBot(traits.GatewayBotAware):
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the [GUILD CREATE][]
             event.
+        loop_factory
+            A callable which creates the event loop to run the bot on, for
+            example `uvloop.new_event_loop`. If [`None`][], a new asyncio
+            event loop is created.
+
+            The factory is only used when there is no current event loop to
+            reuse, and requires Python 3.12 or newer.
         propagate_interrupts
             If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
             that is raises as a result of catching an OS level signal will
@@ -840,6 +848,8 @@ class GatewayBot(traits.GatewayBotAware):
         ------
         hikari.errors.ComponentStateConflictError
             If bot is already running.
+        RuntimeError
+            If `loop_factory` is passed on a Python version older than 3.12.
         TypeError
             If `shard_ids` is passed without `shard_count`.
         ValueError
@@ -857,7 +867,7 @@ class GatewayBot(traits.GatewayBotAware):
             msg = "'startup_window_delay' must be at least 5 seconds"
             raise ValueError(msg)
 
-        loop = aio.get_or_make_loop()
+        loop = aio.get_or_make_loop(loop_factory=loop_factory)
 
         if asyncio_debug:
             loop.set_debug(True)
