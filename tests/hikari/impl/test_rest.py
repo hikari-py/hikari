@@ -63,6 +63,7 @@ from hikari.impl import rate_limits
 from hikari.impl import rest
 from hikari.impl import special_endpoints
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -1367,9 +1368,15 @@ class TestRESTClientImpl:
 
     def test_build_modal_action_row(self, rest_client):
         with mock.patch.object(special_endpoints, "ModalActionRowBuilder") as action_row_builder:
-            assert rest_client.build_modal_action_row() is action_row_builder.return_value
+            with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+                assert rest_client.build_modal_action_row() is action_row_builder.return_value
 
         action_row_builder.assert_called_once_with()
+        warn_deprecated.assert_called_once_with(
+            "RESTClient.build_modal_action_row",
+            removal_version="2.9.0",
+            additional_info="Use 'LabelComponentBuilder' instead.",
+        )
 
     def test__build_message_payload_with_undefined_args(self, rest_client):
         with mock.patch.object(
