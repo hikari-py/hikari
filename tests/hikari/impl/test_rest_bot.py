@@ -463,6 +463,16 @@ class TestRESTBot:
 
         get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
 
+    def test_run_with_loop_factory(self, mock_rest_bot):
+        mock_rest_bot.start = mock.Mock()
+        mock_rest_bot.join = mock.Mock()
+        loop_factory = mock.Mock()
+
+        with mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop:
+            mock_rest_bot.run(loop_factory=loop_factory, close_loop=False)
+
+        get_or_make_loop.assert_called_once_with(loop_factory=loop_factory)
+
     def test_run_with_coroutine_tracking_depth(self, mock_rest_bot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()

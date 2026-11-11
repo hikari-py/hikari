@@ -288,18 +288,22 @@ speedups, `ciso8601` and `orjson` which will provide you with a substantial perf
 
 **If you use a UNIX-like system**, you will get additional performance benefits from using a library called `uvloop`.
 This replaces the default `asyncio` event loop with one that uses `libuv` internally. You can run `pip install uvloop`
-and then amend your script to be something similar to the following example to utilise it in your application:
+and then pass its loop factory to `run` to utilise it in your application:
 
 ```py
-import asyncio
 import os
 
+import hikari
+
+bot = hikari.GatewayBot("...")
+
+loop_factory = None
 if os.name != "nt":
     import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
+    loop_factory = uvloop.new_event_loop
 
-# Your code goes here
+bot.run(loop_factory=loop_factory)
 ```
 
 ## Show your support!

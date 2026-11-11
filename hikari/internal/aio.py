@@ -141,20 +141,33 @@ async def all_of(*aws: typing.Awaitable[T_co]) -> typing.Sequence[T_co]:
             pass
 
 
-def get_or_make_loop() -> asyncio.AbstractEventLoop:
+def get_or_make_loop(
+    *, loop_factory: typing.Callable[[], asyncio.AbstractEventLoop] | None = None
+) -> asyncio.AbstractEventLoop:
     """Get the current usable event loop or create a new one.
+
+    Parameters
+    ----------
+    loop_factory
+        A callable which creates the event loop. If passed, a new loop is
+        always created with it and set as the current event loop.
 
     Returns
     -------
     asyncio.AbstractEventLoop
         The requested loop.
     """
-    # get_event_loop will error under oddly specific cases such as if set_event_loop has been called before even
-    # if it was just called with None or if it's called on a thread which isn't the main Thread.
+    if loop_factory is not None:
+        loop = loop_factory()
+        asyncio.set_event_loop(loop)
+        return loop
+
+    # get_event_loop raises if there is no current loop, which includes threads other than the main
+    # thread and set_event_loop(None) having been called, and warns about it on Python 3.12 and 3.13.
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            loop = asyncio.get_event_loop_policy().get_event_loop()
+            loop = asyncio.get_event_loop()
 
         # Closed loops cannot be reused.
         if not loop.is_closed():

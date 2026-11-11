@@ -285,7 +285,23 @@ def test_get_or_make_loop_handles_runtime_error():
 
         new_event_loop.assert_called_once_with()
 
-    assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
+    assert asyncio.get_event_loop() is mock_loop
+
+
+def test_get_or_make_loop_with_loop_factory():
+    asyncio.set_event_loop(mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=False)))
+    mock_loop = mock.Mock(asyncio.AbstractEventLoop)
+    loop_factory = mock.Mock(return_value=mock_loop)
+
+    with mock.patch.object(asyncio, "new_event_loop") as new_event_loop:
+        assert aio.get_or_make_loop(loop_factory=loop_factory) is mock_loop
+
+    loop_factory.assert_called_once_with()
+    new_event_loop.assert_not_called()
+    assert asyncio.get_event_loop() is mock_loop
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
 
 
 @pytest.mark.filterwarnings("ignore::DeprecationWarning")
@@ -298,4 +314,4 @@ def test_get_or_make_loop_handles_closed_loop():
 
         new_event_loop.assert_called_once_with()
 
-    assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
+    assert asyncio.get_event_loop() is mock_loop
