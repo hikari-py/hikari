@@ -37,11 +37,14 @@ __all__: typing.Sequence[str] = (
     "AutoModTimeoutActionBuilder",
     "AutocompleteChoiceBuilder",
     "ChannelSelectMenuBuilder",
+    "CheckboxBuilder",
+    "CheckboxGroupBuilder",
     "CommandBuilder",
     "ContainerComponentBuilder",
     "ContextMenuCommandBuilder",
     "FileComponentBuilder",
     "FileUploadComponentBuilder",
+    "GroupOptionBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
@@ -56,6 +59,7 @@ __all__: typing.Sequence[str] = (
     "PollAnswerBuilder",
     "PollBuilder",
     "PremiumButtonBuilder",
+    "RadioGroupBuilder",
     "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
@@ -1489,6 +1493,10 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
         return self
 
     @typing_extensions.override
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        return self.add_component(TextDisplayComponentBuilder(id=id, content=content))
+
+    @typing_extensions.override
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -2032,7 +2040,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     _min_values: int = attrs.field(alias="min_values", default=0)
     _max_values: int = attrs.field(alias="max_values", default=1)
     _is_disabled: bool = attrs.field(alias="is_disabled", default=False)
-    _is_required: bool = attrs.field(alias="is_required", default=True)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
 
     @property
     @typing_extensions.override
@@ -2056,7 +2064,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
     @property
     @typing_extensions.override
-    def is_required(self) -> bool:
+    def is_required(self) -> undefined.UndefinedOr[bool]:
         return self._is_required
 
     @property
@@ -2085,7 +2093,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         return self
 
     @typing_extensions.override
-    def set_is_required(self, state: bool, /) -> Self:
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_required = state
         return self
 
@@ -2146,7 +2154,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     @typing.overload
@@ -2160,7 +2168,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     def __init__(
@@ -2174,7 +2182,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         super().__init__(
             type=component_models.ComponentType.TEXT_SELECT_MENU,
@@ -2490,7 +2498,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2502,7 +2509,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
-                is_required=is_required,
             )
         )
 
@@ -2517,7 +2523,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2529,7 +2534,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
-                is_required=is_required,
             )
         )
 
@@ -2543,7 +2547,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
-        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
@@ -2554,7 +2557,6 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             min_values=min_values,
             max_values=max_values,
             is_disabled=is_disabled,
-            is_required=is_required,
         )
         self.add_component(component)
         return component
@@ -3192,7 +3194,7 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.set_component(
@@ -3216,7 +3218,7 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
@@ -3241,7 +3243,7 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         component = ChannelSelectMenuBuilder(
@@ -3264,14 +3266,68 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         *,
         min_values: int = 1,
         max_values: int = 1,
-        is_required: bool = True,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        file_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         component = FileUploadComponentBuilder(
-            id=id, custom_id=custom_id, min_values=min_values, max_values=max_values, is_required=is_required
+            id=id,
+            custom_id=custom_id,
+            min_values=min_values,
+            max_values=max_values,
+            is_required=is_required,
+            file_types=file_types,
         )
         self.set_component(component)
         return self
+
+    @typing_extensions.override
+    def set_radio_group(
+        self,
+        custom_id: str,
+        /,
+        *,
+        options: typing.Sequence[special_endpoints.GroupOptionBuilder] = (),
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        return self.set_component(
+            RadioGroupBuilder(id=id, custom_id=custom_id, options=list(options), is_required=is_required)
+        )
+
+    @typing_extensions.override
+    def set_checkbox_group(
+        self,
+        custom_id: str,
+        /,
+        *,
+        options: typing.Sequence[special_endpoints.GroupOptionBuilder] = (),
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        return self.set_component(
+            CheckboxGroupBuilder(
+                id=id,
+                custom_id=custom_id,
+                options=list(options),
+                min_values=min_values,
+                max_values=max_values,
+                is_required=is_required,
+            )
+        )
+
+    @typing_extensions.override
+    def set_checkbox(
+        self,
+        custom_id: str,
+        /,
+        *,
+        is_default: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        return self.set_component(CheckboxBuilder(id=id, custom_id=custom_id, is_default=is_default))
 
     @typing_extensions.override
     def build(
@@ -3296,7 +3352,10 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
     _custom_id: str = attrs.field(alias="custom_id")
     _min_values: int = attrs.field(alias="min_values", default=1)
     _max_values: int = attrs.field(alias="max_values", default=1)
-    _is_required: bool = attrs.field(alias="is_required", default=True)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
+    _file_types: undefined.UndefinedOr[typing.Sequence[str]] = attrs.field(
+        alias="file_types", default=undefined.UNDEFINED
+    )
 
     @property
     @typing_extensions.override
@@ -3325,8 +3384,13 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
 
     @property
     @typing_extensions.override
-    def is_required(self) -> bool:
+    def is_required(self) -> undefined.UndefinedOr[bool]:
         return self._is_required
+
+    @property
+    @typing_extensions.override
+    def file_types(self) -> undefined.UndefinedOr[typing.Sequence[str]]:
+        return self._file_types
 
     @typing_extensions.override
     def set_custom_id(self, custom_id: str, /) -> Self:
@@ -3344,8 +3408,13 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
         return self
 
     @typing_extensions.override
-    def set_is_required(self, state: bool, /) -> Self:
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_required = state
+        return self
+
+    @typing_extensions.override
+    def set_file_types(self, file_types: undefined.UndefinedOr[typing.Sequence[str]], /) -> Self:
+        self._file_types = file_types
         return self
 
     @typing_extensions.override
@@ -3359,6 +3428,294 @@ class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
         payload.put("min_values", self._min_values)
         payload.put("max_values", self._max_values)
         payload.put("required", self._is_required)
+        payload.put_array("file_types", self._file_types)
+
+        return payload, []
+
+
+@attrs_extensions.with_copy
+@attrs.define(weakref_slot=False)
+class GroupOptionBuilder(special_endpoints.GroupOptionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.GroupOptionBuilder`][]."""
+
+    _label: str = attrs.field(alias="label")
+    _value: str = attrs.field(alias="value")
+    _description: undefined.UndefinedOr[str] = attrs.field(
+        alias="description", default=undefined.UNDEFINED, kw_only=True
+    )
+    _is_default: bool = attrs.field(alias="is_default", default=False, kw_only=True)
+
+    @property
+    @typing_extensions.override
+    def label(self) -> str:
+        return self._label
+
+    @property
+    @typing_extensions.override
+    def value(self) -> str:
+        return self._value
+
+    @property
+    @typing_extensions.override
+    def description(self) -> undefined.UndefinedOr[str]:
+        return self._description
+
+    @property
+    @typing_extensions.override
+    def is_default(self) -> bool:
+        return self._is_default
+
+    @typing_extensions.override
+    def set_label(self, label: str, /) -> Self:
+        self._label = label
+        return self
+
+    @typing_extensions.override
+    def set_value(self, value: str, /) -> Self:
+        self._value = value
+        return self
+
+    @typing_extensions.override
+    def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
+        self._description = value
+        return self
+
+    @typing_extensions.override
+    def set_is_default(self, state: bool, /) -> Self:
+        self._is_default = state
+        return self
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        data = data_binding.JSONObjectBuilder()
+        data["label"] = self._label
+        data["value"] = self._value
+        data["default"] = self._is_default
+        data.put("description", self._description)
+
+        return data
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class RadioGroupBuilder(special_endpoints.RadioGroupBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.RadioGroupBuilder`][]."""
+
+    _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
+    _custom_id: str = attrs.field(alias="custom_id")
+    _options: list[special_endpoints.GroupOptionBuilder] = attrs.field(alias="options", factory=list)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def type(self) -> typing.Literal[component_models.ComponentType.RADIO_GROUP]:
+        return component_models.ComponentType.RADIO_GROUP
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[int]:
+        return self._id
+
+    @property
+    @typing_extensions.override
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    @typing_extensions.override
+    def options(self) -> typing.Sequence[special_endpoints.GroupOptionBuilder]:
+        return self._options.copy()
+
+    @property
+    @typing_extensions.override
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        return self._is_required
+
+    @typing_extensions.override
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        self._custom_id = custom_id
+        return self
+
+    @typing_extensions.override
+    def add_option(
+        self,
+        label: str,
+        value: str,
+        /,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        is_default: bool = False,
+    ) -> Self:
+        self._options.append(
+            GroupOptionBuilder(label=label, value=value, description=description, is_default=is_default)
+        )
+        return self
+
+    @typing_extensions.override
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        self._is_required = state
+        return self
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+        payload["type"] = self.type
+        payload.put("id", self._id)
+        payload["custom_id"] = self._custom_id
+        payload["options"] = [option.build() for option in self._options]
+        payload.put("required", self._is_required)
+
+        return payload, []
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class CheckboxGroupBuilder(special_endpoints.CheckboxGroupBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.CheckboxGroupBuilder`][]."""
+
+    _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
+    _custom_id: str = attrs.field(alias="custom_id")
+    _options: list[special_endpoints.GroupOptionBuilder] = attrs.field(alias="options", factory=list)
+    _min_values: undefined.UndefinedOr[int] = attrs.field(alias="min_values", default=undefined.UNDEFINED)
+    _max_values: undefined.UndefinedOr[int] = attrs.field(alias="max_values", default=undefined.UNDEFINED)
+    _is_required: undefined.UndefinedOr[bool] = attrs.field(alias="is_required", default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def type(self) -> typing.Literal[component_models.ComponentType.CHECKBOX_GROUP]:
+        return component_models.ComponentType.CHECKBOX_GROUP
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[int]:
+        return self._id
+
+    @property
+    @typing_extensions.override
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    @typing_extensions.override
+    def options(self) -> typing.Sequence[special_endpoints.GroupOptionBuilder]:
+        return self._options.copy()
+
+    @property
+    @typing_extensions.override
+    def min_values(self) -> undefined.UndefinedOr[int]:
+        return self._min_values
+
+    @property
+    @typing_extensions.override
+    def max_values(self) -> undefined.UndefinedOr[int]:
+        return self._max_values
+
+    @property
+    @typing_extensions.override
+    def is_required(self) -> undefined.UndefinedOr[bool]:
+        return self._is_required
+
+    @typing_extensions.override
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        self._custom_id = custom_id
+        return self
+
+    @typing_extensions.override
+    def add_option(
+        self,
+        label: str,
+        value: str,
+        /,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        is_default: bool = False,
+    ) -> Self:
+        self._options.append(
+            GroupOptionBuilder(label=label, value=value, description=description, is_default=is_default)
+        )
+        return self
+
+    @typing_extensions.override
+    def set_min_values(self, min_values: undefined.UndefinedOr[int], /) -> Self:
+        self._min_values = min_values
+        return self
+
+    @typing_extensions.override
+    def set_max_values(self, max_values: undefined.UndefinedOr[int], /) -> Self:
+        self._max_values = max_values
+        return self
+
+    @typing_extensions.override
+    def set_is_required(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        self._is_required = state
+        return self
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+        payload["type"] = self.type
+        payload.put("id", self._id)
+        payload["custom_id"] = self._custom_id
+        payload["options"] = [option.build() for option in self._options]
+        payload.put("min_values", self._min_values)
+        payload.put("max_values", self._max_values)
+        payload.put("required", self._is_required)
+
+        return payload, []
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class CheckboxBuilder(special_endpoints.CheckboxBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.CheckboxBuilder`][]."""
+
+    _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
+    _custom_id: str = attrs.field(alias="custom_id")
+    _is_default: undefined.UndefinedOr[bool] = attrs.field(alias="is_default", default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def type(self) -> typing.Literal[component_models.ComponentType.CHECKBOX]:
+        return component_models.ComponentType.CHECKBOX
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[int]:
+        return self._id
+
+    @property
+    @typing_extensions.override
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    @typing_extensions.override
+    def is_default(self) -> undefined.UndefinedOr[bool]:
+        return self._is_default
+
+    @typing_extensions.override
+    def set_custom_id(self, custom_id: str, /) -> Self:
+        self._custom_id = custom_id
+        return self
+
+    @typing_extensions.override
+    def set_is_default(self, state: undefined.UndefinedOr[bool], /) -> Self:
+        self._is_default = state
+        return self
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+        payload["type"] = self.type
+        payload.put("id", self._id)
+        payload["custom_id"] = self._custom_id
+        payload.put("default", self._is_default)
 
         return payload, []
 
