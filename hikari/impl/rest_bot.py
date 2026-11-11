@@ -551,8 +551,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             event loop is created.
 
             The factory is only used when there is no current event loop to
-            reuse. Before Python 3.14 a current event loop is ignored when
-            this is passed.
+            reuse.
         port
             TCP/IP port for the HTTP server.
         propagate_interrupts

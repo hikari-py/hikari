@@ -816,8 +816,7 @@ class GatewayBot(traits.GatewayBotAware):
             event loop is created.
 
             The factory is only used when there is no current event loop to
-            reuse. Before Python 3.14 a current event loop is ignored when
-            this is passed.
+            reuse.
         propagate_interrupts
             If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
             that is raises as a result of catching an OS level signal will
