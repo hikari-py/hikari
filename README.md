@@ -306,6 +306,9 @@ if os.name != "nt":
 bot.run(loop_factory=loop_factory)
 ```
 
+`loop_factory` requires Python 3.12 or newer. On Python 3.11, call `asyncio.set_event_loop(uvloop.new_event_loop())`
+before `run` instead.
+
 ## Show your support!
 
 If you made it this far into the readme, leave us a ⭐ on our GitHub repository. It really helps us out ❤️

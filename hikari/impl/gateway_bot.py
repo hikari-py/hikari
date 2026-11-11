@@ -816,7 +816,7 @@ class GatewayBot(traits.GatewayBotAware):
             event loop is created.
 
             The factory is only used when there is no current event loop to
-            reuse.
+            reuse, and requires Python 3.12 or newer.
         propagate_interrupts
             If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
             that is raises as a result of catching an OS level signal will
@@ -848,6 +848,8 @@ class GatewayBot(traits.GatewayBotAware):
         ------
         hikari.errors.ComponentStateConflictError
             If bot is already running.
+        RuntimeError
+            If `loop_factory` is passed on a Python version older than 3.12.
         TypeError
             If `shard_ids` is passed without `shard_count`.
         ValueError
