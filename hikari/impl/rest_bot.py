@@ -490,6 +490,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         coroutine_tracking_depth: int | None = None,
         enable_signal_handlers: bool | None = None,
         host: str | typing.Sequence[str] | None = None,
+        loop_factory: typing.Callable[[], asyncio.AbstractEventLoop] | None = None,
         path: str | None = None,
         port: int | None = None,
         propagate_interrupts: bool = False,
@@ -544,6 +545,13 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             signal handling yourself.
         host
             TCP/IP host or a sequence of hosts for the HTTP server.
+        loop_factory
+            A callable which creates the event loop to run the bot on, for
+            example `uvloop.new_event_loop`. If [`None`][], a new asyncio
+            event loop is created.
+
+            The factory is only used when there is no current event loop to
+            reuse, and requires Python 3.12 or newer.
         port
             TCP/IP port for the HTTP server.
         propagate_interrupts
@@ -575,7 +583,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             msg = "Cannot start a bot that's already active"
             raise errors.ComponentStateConflictError(msg)
 
-        loop = aio.get_or_make_loop()
+        loop = aio.get_or_make_loop(loop_factory=loop_factory)
         if asyncio_debug:
             loop.set_debug(True)
 
