@@ -23,18 +23,18 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ChannelSelectMenuInteractionComponent",
-    "FileUploadInteractionComponent",
-    "InteractionComponentTypesT",
-    "InteractionLabelTypesT",
-    "LabelInteractionComponent",
-    "MentionableSelectMenuInteractionComponent",
-    "PartialInteractionComponent",
-    "RoleSelectMenuInteractionComponent",
-    "SelectMenuInteractionComponent",
-    "TextInputInteractionComponent",
-    "TextSelectMenuInteractionComponent",
-    "UserSelectMenuInteractionComponent",
+    "ModalChannelSelectMenuComponent",
+    "ModalComponentTypesT",
+    "ModalFileUploadComponent",
+    "ModalLabelComponent",
+    "ModalLabelComponentTypesT",
+    "ModalMentionableSelectMenuComponent",
+    "ModalRoleSelectMenuComponent",
+    "ModalSelectMenuComponent",
+    "ModalTextInputComponent",
+    "ModalTextSelectMenuComponent",
+    "ModalUserSelectMenuComponent",
+    "PartialModalComponent",
 )
 
 import typing
@@ -47,8 +47,8 @@ if typing.TYPE_CHECKING:
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class PartialInteractionComponent:
-    """Base class for all component entities."""
+class PartialModalComponent:
+    """Base class for all components submitted through a modal."""
 
     type: components.ComponentType | int = attrs.field()
     """The type of component this is."""
@@ -58,56 +58,56 @@ class PartialInteractionComponent:
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class SelectMenuInteractionComponent(PartialInteractionComponent):
-    """Represents a select menu interaction component."""
+class ModalSelectMenuComponent(PartialModalComponent):
+    """Represents a select menu component submitted through a modal."""
 
     custom_id: str = attrs.field()
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class TextSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a text select menu interaction component."""
+class ModalTextSelectMenuComponent(ModalSelectMenuComponent):
+    """Represents a text select menu component submitted through a modal."""
 
     values: typing.Sequence[str] = attrs.field()
     """The values that have been selected."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class UserSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a user select menu interaction component."""
+class ModalUserSelectMenuComponent(ModalSelectMenuComponent):
+    """Represents a user select menu component submitted through a modal."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class RoleSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a role select menu interaction component."""
+class ModalRoleSelectMenuComponent(ModalSelectMenuComponent):
+    """Represents a role select menu component submitted through a modal."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MentionableSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a mentionable select menu interaction component."""
+class ModalMentionableSelectMenuComponent(ModalSelectMenuComponent):
+    """Represents a mentionable select menu component submitted through a modal."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ChannelSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a channel select menu interaction component."""
+class ModalChannelSelectMenuComponent(ModalSelectMenuComponent):
+    """Represents a channel select menu component submitted through a modal."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
     """The values that have been selected."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class TextInputInteractionComponent(PartialInteractionComponent):
-    """Represents a text input component."""
+class ModalTextInputComponent(PartialModalComponent):
+    """Represents a text input component submitted through a modal."""
 
     custom_id: str = attrs.field()
     """Developer set custom ID used for identifying this text input."""
@@ -117,16 +117,16 @@ class TextInputInteractionComponent(PartialInteractionComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class LabelInteractionComponent(PartialInteractionComponent):
-    """Represents a label component."""
+class ModalLabelComponent(PartialModalComponent):
+    """Represents a label component submitted through a modal."""
 
-    component: InteractionLabelTypesT = attrs.field()
+    component: ModalLabelComponentTypesT = attrs.field()
     """The component within the label."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class FileUploadInteractionComponent(PartialInteractionComponent):
-    """Represents a file upload component."""
+class ModalFileUploadComponent(PartialModalComponent):
+    """Represents a file upload component submitted through a modal."""
 
     custom_id: str = attrs.field()
     """Developer set custom ID used for identifying interactions with this file upload."""
@@ -135,32 +135,32 @@ class FileUploadInteractionComponent(PartialInteractionComponent):
     """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
 
 
-InteractionComponentTypesT = LabelInteractionComponent
-"""Type hints of the values which are valid for interaction components.
+ModalComponentTypesT = ModalLabelComponent
+"""Type hints of the top-level components a submitted modal can contain.
 
 The following values are valid for this:
 
-* [`hikari.interactions.interaction_components.LabelInteractionComponent`][]
+* [`hikari.modals.ModalLabelComponent`][]
 """
 
-InteractionLabelTypesT = (
-    TextInputInteractionComponent
-    | TextSelectMenuInteractionComponent
-    | UserSelectMenuInteractionComponent
-    | RoleSelectMenuInteractionComponent
-    | MentionableSelectMenuInteractionComponent
-    | ChannelSelectMenuInteractionComponent
-    | FileUploadInteractionComponent
+ModalLabelComponentTypesT = (
+    ModalTextInputComponent
+    | ModalTextSelectMenuComponent
+    | ModalUserSelectMenuComponent
+    | ModalRoleSelectMenuComponent
+    | ModalMentionableSelectMenuComponent
+    | ModalChannelSelectMenuComponent
+    | ModalFileUploadComponent
 )
-"""Type hints of the values which are valid for interaction label components.
+"""Type hints of the components a submitted modal label can contain.
 
 The following values are valid for this:
 
-* [`hikari.interactions.interaction_components.TextInputInteractionComponent`][]
-* [`hikari.interactions.interaction_components.TextSelectMenuInteractionComponent`][]
-* [`hikari.interactions.interaction_components.UserSelectMenuInteractionComponent`][]
-* [`hikari.interactions.interaction_components.RoleSelectMenuInteractionComponent`][]
-* [`hikari.interactions.interaction_components.MentionableSelectMenuInteractionComponent`][]
-* [`hikari.interactions.interaction_components.ChannelSelectMenuInteractionComponent`][]
-* [`hikari.interactions.interaction_components.FileUploadInteractionComponent`][]
+* [`hikari.modals.ModalTextInputComponent`][]
+* [`hikari.modals.ModalTextSelectMenuComponent`][]
+* [`hikari.modals.ModalUserSelectMenuComponent`][]
+* [`hikari.modals.ModalRoleSelectMenuComponent`][]
+* [`hikari.modals.ModalMentionableSelectMenuComponent`][]
+* [`hikari.modals.ModalChannelSelectMenuComponent`][]
+* [`hikari.modals.ModalFileUploadComponent`][]
 """
