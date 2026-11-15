@@ -1544,6 +1544,16 @@ class TestRESTClientImpl:
             [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)]
         )
 
+    def test__build_message_payload_with_shared_client_theme(self, rest_client):
+        theme = object()
+        rest_client._entity_factory.serialize_shared_client_theme.return_value = {"theme": 1}
+
+        body, form = rest_client._build_message_payload(shared_client_theme=theme)
+
+        assert body["shared_client_theme"] == {"theme": 1}
+        assert form is None
+        rest_client._entity_factory.serialize_shared_client_theme.assert_called_once_with(theme)
+
     def test__build_message_payload_with_plural_args(self, rest_client):
         attachment1 = object()
         attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
@@ -3058,6 +3068,7 @@ class TestRESTClientImplAsync:
         embed_obj = object()
         embed_obj2 = object()
         poll_obj = object()
+        theme_obj = object()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -3075,6 +3086,7 @@ class TestRESTClientImplAsync:
             embed=embed_obj,
             embeds=[embed_obj2],
             poll=poll_obj,
+            shared_client_theme=theme_obj,
             sticker=54234,
             stickers=[564123, 431123],
             tts=True,
@@ -3098,6 +3110,7 @@ class TestRESTClientImplAsync:
             embed=embed_obj,
             embeds=[embed_obj2],
             poll=poll_obj,
+            shared_client_theme=theme_obj,
             sticker=54234,
             stickers=[564123, 431123],
             tts=True,
@@ -3160,6 +3173,7 @@ class TestRESTClientImplAsync:
             embed=embed_obj,
             embeds=[embed_obj2],
             poll=undefined.UNDEFINED,
+            shared_client_theme=undefined.UNDEFINED,
             sticker=543345,
             stickers=[123321, 6572345],
             tts=True,

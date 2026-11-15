@@ -3754,6 +3754,25 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=message_models.MessageActivityType(payload["type"]), party_id=payload.get("party_id")
         )
 
+    @typing_extensions.override
+    def deserialize_shared_client_theme(self, payload: data_binding.JSONObject) -> message_models.SharedClientTheme:
+        raw_base_theme = payload.get("base_theme")
+        return message_models.SharedClientTheme(
+            colors=[color_models.Color.from_hex_code(color) for color in payload["colors"]],
+            gradient_angle=payload["gradient_angle"],
+            base_mix=payload["base_mix"],
+            base_theme=message_models.BaseThemeType(raw_base_theme) if raw_base_theme is not None else None,
+        )
+
+    @typing_extensions.override
+    def serialize_shared_client_theme(self, theme: message_models.SharedClientTheme) -> data_binding.JSONObject:
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("colors", [color.raw_hex_code for color in theme.colors])
+        payload.put("gradient_angle", theme.gradient_angle)
+        payload.put("base_mix", theme.base_mix)
+        payload.put("base_theme", theme.base_theme)
+        return payload
+
     def _deserialize_message_application(self, payload: data_binding.JSONObject) -> message_models.MessageApplication:
         return message_models.MessageApplication(
             id=snowflakes.Snowflake(payload["id"]),
@@ -4003,6 +4022,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "poll" in payload:
             poll = self.deserialize_poll(payload["poll"])
 
+        shared_client_theme: undefined.UndefinedOr[message_models.SharedClientTheme] = undefined.UNDEFINED
+        if "shared_client_theme" in payload:
+            shared_client_theme = self.deserialize_shared_client_theme(payload["shared_client_theme"])
+
         reactions: undefined.UndefinedOr[list[message_models.Reaction]] = undefined.UNDEFINED
         if "reactions" in payload:
             reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
@@ -4083,6 +4106,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             attachments=attachments,
             embeds=embeds,
             poll=poll,
+            shared_client_theme=shared_client_theme,
             reactions=reactions,
             is_pinned=payload.get("pinned", undefined.UNDEFINED),
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED,
@@ -4127,6 +4151,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         poll: poll_models.Poll | None = None
         if "poll" in payload:
             poll = self.deserialize_poll(payload["poll"])
+
+        shared_client_theme: message_models.SharedClientTheme | None = None
+        if "shared_client_theme" in payload:
+            shared_client_theme = self.deserialize_shared_client_theme(payload["shared_client_theme"])
 
         if "reactions" in payload:
             reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
@@ -4193,6 +4221,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             attachments=attachments,
             embeds=embeds,
             poll=poll,
+            shared_client_theme=shared_client_theme,
             reactions=reactions,
             is_pinned=payload["pinned"],
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else None,

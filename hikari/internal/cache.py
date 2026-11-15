@@ -754,6 +754,7 @@ class MessageData(BaseData[messages.Message]):
     embeds: tuple[embeds_.Embed, ...] = attrs.field()
     reactions: tuple[messages.Reaction, ...] = attrs.field()
     poll: polls_.Poll | None = attrs.field()
+    shared_client_theme: messages.SharedClientTheme | None = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: snowflakes.Snowflake | None = attrs.field()
     type: messages.MessageType | int = attrs.field()
@@ -819,6 +820,7 @@ class MessageData(BaseData[messages.Message]):
             attachments=tuple(map(copy.copy, message.attachments)),
             embeds=tuple(map(_copy_embed, message.embeds)),
             poll=message.poll,
+            shared_client_theme=message.shared_client_theme,
             reactions=tuple(map(copy.copy, message.reactions)),
             is_pinned=message.is_pinned,
             webhook_id=message.webhook_id,
@@ -869,6 +871,7 @@ class MessageData(BaseData[messages.Message]):
             attachments=tuple(map(copy.copy, self.attachments)),
             embeds=tuple(map(_copy_embed, self.embeds)),
             poll=self.poll,
+            shared_client_theme=self.shared_client_theme,
             reactions=tuple(map(copy.copy, self.reactions)),
             is_pinned=self.is_pinned,
             webhook_id=self.webhook_id,
