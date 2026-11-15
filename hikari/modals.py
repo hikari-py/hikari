@@ -25,13 +25,17 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "ModalActionRowComponent",
     "ModalChannelSelectMenuComponent",
+    "ModalCheckboxComponent",
+    "ModalCheckboxGroupComponent",
     "ModalComponentTypesT",
     "ModalFileUploadComponent",
     "ModalLabelComponent",
     "ModalLabelComponentTypesT",
     "ModalMentionableSelectMenuComponent",
+    "ModalRadioGroupComponent",
     "ModalRoleSelectMenuComponent",
     "ModalSelectMenuComponent",
+    "ModalTextDisplayComponent",
     "ModalTextInputComponent",
     "ModalTextSelectMenuComponent",
     "ModalUserSelectMenuComponent",
@@ -164,13 +168,55 @@ class ModalFileUploadComponent(PartialModalComponent):
     """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
 
 
-ModalComponentTypesT = ModalLabelComponent | ModalActionRowComponent
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalRadioGroupComponent(PartialModalComponent):
+    """Represents a radio group component submitted through a modal."""
+
+    custom_id: str = attrs.field()
+    """Developer set custom ID used for identifying this radio group."""
+
+    value: str | None = attrs.field()
+    """The value of the selected option, or [`None`][] if no option was selected."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalCheckboxGroupComponent(PartialModalComponent):
+    """Represents a checkbox group component submitted through a modal."""
+
+    custom_id: str = attrs.field()
+    """Developer set custom ID used for identifying this checkbox group."""
+
+    values: typing.Sequence[str] = attrs.field()
+    """The values of the selected options."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalCheckboxComponent(PartialModalComponent):
+    """Represents a checkbox component submitted through a modal."""
+
+    custom_id: str = attrs.field()
+    """Developer set custom ID used for identifying this checkbox."""
+
+    is_checked: bool = attrs.field()
+    """Whether the checkbox was checked."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalTextDisplayComponent(PartialModalComponent):
+    """Represents a text display component submitted through a modal.
+
+    Discord only sends back the type and ID of text displays, not their content.
+    """
+
+
+ModalComponentTypesT = ModalLabelComponent | ModalActionRowComponent | ModalTextDisplayComponent
 """Type hints of the top-level components a submitted modal can contain.
 
 The following values are valid for this:
 
 * [`hikari.modals.ModalLabelComponent`][]
 * [`hikari.modals.ModalActionRowComponent`][]
+* [`hikari.modals.ModalTextDisplayComponent`][]
 """
 
 ModalLabelComponentTypesT = (
@@ -181,6 +227,9 @@ ModalLabelComponentTypesT = (
     | ModalMentionableSelectMenuComponent
     | ModalChannelSelectMenuComponent
     | ModalFileUploadComponent
+    | ModalRadioGroupComponent
+    | ModalCheckboxGroupComponent
+    | ModalCheckboxComponent
 )
 """Type hints of the components a submitted modal label can contain.
 
@@ -193,4 +242,7 @@ The following values are valid for this:
 * [`hikari.modals.ModalMentionableSelectMenuComponent`][]
 * [`hikari.modals.ModalChannelSelectMenuComponent`][]
 * [`hikari.modals.ModalFileUploadComponent`][]
+* [`hikari.modals.ModalRadioGroupComponent`][]
+* [`hikari.modals.ModalCheckboxGroupComponent`][]
+* [`hikari.modals.ModalCheckboxComponent`][]
 """

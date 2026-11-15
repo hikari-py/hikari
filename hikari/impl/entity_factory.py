@@ -593,6 +593,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             component_models.ComponentType.LABEL: self._deserialize_modal_label_component,
             component_models.ComponentType.ACTION_ROW: self._deserialize_modal_action_row_component,
+            component_models.ComponentType.TEXT_DISPLAY: self._deserialize_modal_text_display_component,
         }
         self._modal_action_row_component_mapping: dict[
             component_models.ComponentType, typing.Callable[[data_binding.JSONObject], modals.ModalTextInputComponent]
@@ -609,6 +610,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             ),
             component_models.ComponentType.CHANNEL_SELECT_MENU: (self._deserialize_modal_channel_select_menu_component),
             component_models.ComponentType.FILE_UPLOAD: self._deserialize_modal_file_upload_component,
+            component_models.ComponentType.RADIO_GROUP: self._deserialize_modal_radio_group_component,
+            component_models.ComponentType.CHECKBOX_GROUP: self._deserialize_modal_checkbox_group_component,
+            component_models.ComponentType.CHECKBOX: self._deserialize_modal_checkbox_component,
         }
         self._container_component_mapping: dict[
             component_models.ComponentType, typing.Callable[[data_binding.JSONObject], component_models.ContainerTypesT]
@@ -3779,6 +3783,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=component_models.ComponentType(payload["type"]), id=payload["id"], components=components
         )
 
+    def _deserialize_modal_text_display_component(
+        self, payload: data_binding.JSONObject
+    ) -> modals.ModalTextDisplayComponent:
+        return modals.ModalTextDisplayComponent(type=component_models.ComponentType(payload["type"]), id=payload["id"])
+
     def _deserialize_modal_text_input_component(
         self, payload: data_binding.JSONObject
     ) -> modals.ModalTextInputComponent:
@@ -3847,6 +3856,34 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
+        )
+
+    def _deserialize_modal_radio_group_component(
+        self, payload: data_binding.JSONObject
+    ) -> modals.ModalRadioGroupComponent:
+        return modals.ModalRadioGroupComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=payload["id"],
+            custom_id=payload["custom_id"],
+            value=payload["value"],
+        )
+
+    def _deserialize_modal_checkbox_group_component(
+        self, payload: data_binding.JSONObject
+    ) -> modals.ModalCheckboxGroupComponent:
+        return modals.ModalCheckboxGroupComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=payload["id"],
+            custom_id=payload["custom_id"],
+            values=payload["values"],
+        )
+
+    def _deserialize_modal_checkbox_component(self, payload: data_binding.JSONObject) -> modals.ModalCheckboxComponent:
+        return modals.ModalCheckboxComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=payload["id"],
+            custom_id=payload["custom_id"],
+            is_checked=payload["value"],
         )
 
     ##################
