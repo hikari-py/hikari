@@ -24,6 +24,7 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "ActionRowComponent",
+    "AutoPopulatedSelectMenuComponent",
     "ButtonComponent",
     "ButtonStyle",
     "ChannelSelectMenuComponent",
@@ -39,12 +40,16 @@ __all__: typing.Sequence[str] = (
     "MediaLoadingType",
     "MediaResource",
     "MediaResourceFlag",
+    "MentionableSelectMenuComponent",
     "MessageActionRowComponent",
     "MessageComponentTypesT",
     "ModalActionRowComponent",
     "ModalComponentTypesT",
     "PartialComponent",
+    "RoleSelectMenuComponent",
     "SectionComponent",
+    "SelectDefaultValue",
+    "SelectDefaultValueType",
     "SelectMenuComponent",
     "SelectMenuOption",
     "SeparatorComponent",
@@ -55,6 +60,7 @@ __all__: typing.Sequence[str] = (
     "TextSelectMenuComponent",
     "ThumbnailComponent",
     "TopLevelComponentTypesT",
+    "UserSelectMenuComponent",
 )
 
 import typing
@@ -74,6 +80,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import emojis
+    from hikari import snowflakes
 
 
 @typing.final
@@ -379,6 +386,31 @@ class SelectMenuOption:
     """Whether this option will be selected by default."""
 
 
+@typing.final
+class SelectDefaultValueType(str, enums.Enum):
+    """The type of entity a select menu default value refers to."""
+
+    USER = "user"
+    """A user."""
+
+    ROLE = "role"
+    """A role."""
+
+    CHANNEL = "channel"
+    """A channel."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class SelectDefaultValue:
+    """Represents an entity selected by default in an auto-populated select menu."""
+
+    id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The ID of the user, role or channel."""
+
+    type: SelectDefaultValueType | str = attrs.field(repr=True)
+    """The type of entity the ID refers to."""
+
+
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class SelectMenuComponent(PartialComponent):
     """Represents a select menu component."""
@@ -416,7 +448,30 @@ class TextSelectMenuComponent(SelectMenuComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ChannelSelectMenuComponent(SelectMenuComponent):
+class AutoPopulatedSelectMenuComponent(SelectMenuComponent):
+    """Base class for select menu components whose options are populated by Discord."""
+
+    default_values: typing.Sequence[SelectDefaultValue] = attrs.field(eq=False)
+    """The entities selected by default when the menu is shown."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class UserSelectMenuComponent(AutoPopulatedSelectMenuComponent):
+    """Represents a user select menu component."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class RoleSelectMenuComponent(AutoPopulatedSelectMenuComponent):
+    """Represents a role select menu component."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MentionableSelectMenuComponent(AutoPopulatedSelectMenuComponent):
+    """Represents a mentionable select menu component, which lists both users and roles."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ChannelSelectMenuComponent(AutoPopulatedSelectMenuComponent):
     """Represents a channel select menu component."""
 
     channel_types: typing.Sequence[int | channels.ChannelType] = attrs.field(eq=False)

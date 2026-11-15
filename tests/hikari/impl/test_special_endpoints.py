@@ -42,6 +42,7 @@ from hikari import undefined
 from hikari.api import special_endpoints as special_endpoints_api
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
+from hikari.internal import deprecation
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
@@ -2118,6 +2119,210 @@ class TestTextSelectMenuBuilder:
         assert attachments == []
 
 
+class TestUserSelectMenuBuilder:
+    @pytest.fixture
+    def menu(self):
+        return special_endpoints.UserSelectMenuBuilder(custom_id="o2o2o2")
+
+    def test_type_property(self, menu):
+        assert menu.type is components.ComponentType.USER_SELECT_MENU
+
+    def test_parent_property(self):
+        mock_parent = object()
+        menu = special_endpoints.UserSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
+
+        assert menu.parent is mock_parent
+
+    def test_parent_property_when_none(self, menu):
+        with pytest.raises(RuntimeError, match="This menu has no parent"):
+            menu.parent
+
+    def test_set_default_values(self, menu):
+        value = components.SelectDefaultValue(id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.USER)
+
+        assert menu.set_default_values([value]) is menu
+        assert menu.default_values == [value]
+
+    def test_add_default_user(self, menu):
+        assert menu.add_default_user(123) is menu
+        assert menu.default_values == [
+            components.SelectDefaultValue(id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.USER)
+        ]
+
+    def test_build(self):
+        menu = special_endpoints.UserSelectMenuBuilder(
+            id=5855932,
+            custom_id="o2o2o2",
+            placeholder="hi",
+            default_values=[
+                components.SelectDefaultValue(id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.USER)
+            ],
+            min_values=1,
+            max_values=3,
+            is_disabled=True,
+        )
+
+        payload, attachments = menu.build()
+
+        assert payload == {
+            "id": 5855932,
+            "type": components.ComponentType.USER_SELECT_MENU,
+            "custom_id": "o2o2o2",
+            "placeholder": "hi",
+            "default_values": [{"id": "123", "type": components.SelectDefaultValueType.USER}],
+            "min_values": 1,
+            "max_values": 3,
+            "disabled": True,
+        }
+
+        assert attachments == []
+
+    def test_build_without_optional_fields(self):
+        menu = special_endpoints.UserSelectMenuBuilder(custom_id="o2o2o2")
+
+        payload, _ = menu.build()
+
+        assert "default_values" not in payload
+
+
+class TestRoleSelectMenuBuilder:
+    @pytest.fixture
+    def menu(self):
+        return special_endpoints.RoleSelectMenuBuilder(custom_id="o2o2o2")
+
+    def test_type_property(self, menu):
+        assert menu.type is components.ComponentType.ROLE_SELECT_MENU
+
+    def test_parent_property(self):
+        mock_parent = object()
+        menu = special_endpoints.RoleSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
+
+        assert menu.parent is mock_parent
+
+    def test_parent_property_when_none(self, menu):
+        with pytest.raises(RuntimeError, match="This menu has no parent"):
+            menu.parent
+
+    def test_add_default_role(self, menu):
+        assert menu.add_default_role(456) is menu
+        assert menu.default_values == [
+            components.SelectDefaultValue(id=snowflakes.Snowflake(456), type=components.SelectDefaultValueType.ROLE)
+        ]
+
+    def test_build(self):
+        menu = special_endpoints.RoleSelectMenuBuilder(
+            id=5855932,
+            custom_id="o2o2o2",
+            placeholder="hi",
+            default_values=[
+                components.SelectDefaultValue(id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.ROLE)
+            ],
+            min_values=1,
+            max_values=3,
+            is_disabled=True,
+        )
+
+        payload, attachments = menu.build()
+
+        assert payload == {
+            "id": 5855932,
+            "type": components.ComponentType.ROLE_SELECT_MENU,
+            "custom_id": "o2o2o2",
+            "placeholder": "hi",
+            "default_values": [{"id": "123", "type": components.SelectDefaultValueType.ROLE}],
+            "min_values": 1,
+            "max_values": 3,
+            "disabled": True,
+        }
+
+        assert attachments == []
+
+    def test_build_without_optional_fields(self):
+        menu = special_endpoints.RoleSelectMenuBuilder(custom_id="o2o2o2")
+
+        payload, _ = menu.build()
+
+        assert "default_values" not in payload
+
+
+class TestMentionableSelectMenuBuilder:
+    @pytest.fixture
+    def menu(self):
+        return special_endpoints.MentionableSelectMenuBuilder(custom_id="o2o2o2")
+
+    def test_type_property(self, menu):
+        assert menu.type is components.ComponentType.MENTIONABLE_SELECT_MENU
+
+    def test_parent_property(self):
+        mock_parent = object()
+        menu = special_endpoints.MentionableSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
+
+        assert menu.parent is mock_parent
+
+    def test_parent_property_when_none(self, menu):
+        with pytest.raises(RuntimeError, match="This menu has no parent"):
+            menu.parent
+
+    def test_add_default_user(self, menu):
+        assert menu.add_default_user(123) is menu
+        assert menu.default_values == [
+            components.SelectDefaultValue(id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.USER)
+        ]
+
+    def test_add_default_role(self, menu):
+        assert menu.add_default_role(456) is menu
+        assert menu.default_values == [
+            components.SelectDefaultValue(id=snowflakes.Snowflake(456), type=components.SelectDefaultValueType.ROLE)
+        ]
+
+    def test_add_default_value_appends_to_existing_values(self, menu):
+        menu.set_default_values(
+            [components.SelectDefaultValue(id=snowflakes.Snowflake(1), type=components.SelectDefaultValueType.ROLE)]
+        )
+
+        menu.add_default_user(2)
+
+        assert menu.default_values == [
+            components.SelectDefaultValue(id=snowflakes.Snowflake(1), type=components.SelectDefaultValueType.ROLE),
+            components.SelectDefaultValue(id=snowflakes.Snowflake(2), type=components.SelectDefaultValueType.USER),
+        ]
+
+    def test_build(self):
+        menu = special_endpoints.MentionableSelectMenuBuilder(
+            id=5855932,
+            custom_id="o2o2o2",
+            placeholder="hi",
+            default_values=[
+                components.SelectDefaultValue(id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.USER)
+            ],
+            min_values=1,
+            max_values=3,
+            is_disabled=True,
+        )
+
+        payload, attachments = menu.build()
+
+        assert payload == {
+            "id": 5855932,
+            "type": components.ComponentType.MENTIONABLE_SELECT_MENU,
+            "custom_id": "o2o2o2",
+            "placeholder": "hi",
+            "default_values": [{"id": "123", "type": components.SelectDefaultValueType.USER}],
+            "min_values": 1,
+            "max_values": 3,
+            "disabled": True,
+        }
+
+        assert attachments == []
+
+    def test_build_without_optional_fields(self):
+        menu = special_endpoints.MentionableSelectMenuBuilder(custom_id="o2o2o2")
+
+        payload, _ = menu.build()
+
+        assert "default_values" not in payload
+
+
 class TestChannelSelectMenuBuilder:
     def test_type_property(self):
         menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="id")
@@ -2142,6 +2347,14 @@ class TestChannelSelectMenuBuilder:
 
         assert menu.channel_types == [channels.ChannelType.DM, channels.ChannelType.GUILD_FORUM]
 
+    def test_add_default_channel(self):
+        menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="hi")
+
+        assert menu.add_default_channel(789) is menu
+        assert menu.default_values == [
+            components.SelectDefaultValue(id=snowflakes.Snowflake(789), type=components.SelectDefaultValueType.CHANNEL)
+        ]
+
     def test_build(self):
         menu = special_endpoints.ChannelSelectMenuBuilder(
             id=5855932,
@@ -2152,6 +2365,11 @@ class TestChannelSelectMenuBuilder:
             is_disabled=True,
             is_required=False,
             channel_types=[channels.ChannelType.GUILD_CATEGORY],
+            default_values=[
+                components.SelectDefaultValue(
+                    id=snowflakes.Snowflake(123), type=components.SelectDefaultValueType.CHANNEL
+                )
+            ],
         )
 
         payload, attachments = menu.build()
@@ -2165,6 +2383,7 @@ class TestChannelSelectMenuBuilder:
             "max_values": 53,
             "disabled": True,
             "required": False,
+            "default_values": [{"id": "123", "type": components.SelectDefaultValueType.CHANNEL}],
             "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
@@ -2313,15 +2532,21 @@ class TestMessageActionRowBuilder:
     def test_add_select_menu(self):
         row = special_endpoints.MessageActionRowBuilder()
 
-        row.add_select_menu(
-            components.ComponentType.ROLE_SELECT_MENU,
-            "two trucks",
-            placeholder="holding hands",
-            min_values=6,
-            max_values=9,
-            is_disabled=True,
-        )
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            row.add_select_menu(
+                components.ComponentType.ROLE_SELECT_MENU,
+                "two trucks",
+                placeholder="holding hands",
+                min_values=6,
+                max_values=9,
+                is_disabled=True,
+            )
 
+        warn_deprecated.assert_called_once_with(
+            "MessageActionRowBuilder.add_select_menu",
+            removal_version="2.9.0",
+            additional_info="Use 'add_user_menu', 'add_role_menu' or 'add_mentionable_menu' instead.",
+        )
         assert len(row.components) == 1
         component = row.components[0]
         assert isinstance(component, special_endpoints_api.SelectMenuBuilder)
@@ -2346,6 +2571,54 @@ class TestMessageActionRowBuilder:
         assert menu.placeholder == "The pasion"
         assert menu.min_values == 4
         assert menu.max_values == 9
+        assert menu.is_disabled is True
+
+    def test_add_user_menu(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        menu = row.add_user_menu(
+            "Two pickup trucks", placeholder="American made", min_values=5, max_values=6, is_disabled=True
+        )
+
+        assert row.components == [menu]
+        assert isinstance(menu, special_endpoints_api.UserSelectMenuBuilder)
+        assert menu.parent is row
+        assert menu.custom_id == "Two pickup trucks"
+        assert menu.placeholder == "American made"
+        assert menu.min_values == 5
+        assert menu.max_values == 6
+        assert menu.is_disabled is True
+
+    def test_add_role_menu(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        menu = row.add_role_menu(
+            "Two pickup trucks", placeholder="American made", min_values=5, max_values=6, is_disabled=True
+        )
+
+        assert row.components == [menu]
+        assert isinstance(menu, special_endpoints_api.RoleSelectMenuBuilder)
+        assert menu.parent is row
+        assert menu.custom_id == "Two pickup trucks"
+        assert menu.placeholder == "American made"
+        assert menu.min_values == 5
+        assert menu.max_values == 6
+        assert menu.is_disabled is True
+
+    def test_add_mentionable_menu(self):
+        row = special_endpoints.MessageActionRowBuilder()
+
+        menu = row.add_mentionable_menu(
+            "Two pickup trucks", placeholder="American made", min_values=5, max_values=6, is_disabled=True
+        )
+
+        assert row.components == [menu]
+        assert isinstance(menu, special_endpoints_api.MentionableSelectMenuBuilder)
+        assert menu.parent is row
+        assert menu.custom_id == "Two pickup trucks"
+        assert menu.placeholder == "American made"
+        assert menu.min_values == 5
+        assert menu.max_values == 6
         assert menu.is_disabled is True
 
     def test_add_text_menu(self):
