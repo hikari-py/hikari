@@ -41,8 +41,6 @@ __all__: typing.Sequence[str] = (
     "MediaResourceFlag",
     "MessageActionRowComponent",
     "MessageComponentTypesT",
-    "ModalActionRowComponent",
-    "ModalComponentTypesT",
     "PartialComponent",
     "SectionComponent",
     "SelectMenuComponent",
@@ -100,18 +98,20 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     TEXT_INPUT = 4
     """A text input component.
 
     !!! note
-        This component may only be used inside a modal container.
+        This component may only be used inside a modal action row or a label component.
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     USER_SELECT_MENU = 5
@@ -119,7 +119,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     ROLE_SELECT_MENU = 6
@@ -127,7 +128,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     MENTIONABLE_SELECT_MENU = 7
@@ -135,7 +137,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     CHANNEL_SELECT_MENU = 8
@@ -143,7 +146,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     SECTION = 9
@@ -180,6 +184,21 @@ class ComponentType(int, enums.Enum):
     !!! note
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
+    """
+
+    LABEL = 18
+    """A label component.
+
+    !!! note
+        This is a top-level component which is only valid in modals.
+    """
+
+    FILE_UPLOAD = 19
+    """A file upload component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.LABEL`][].
     """
 
 
@@ -753,18 +772,9 @@ The following values are valid for this:
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
-ModalComponentTypesT = TextInputComponent
-"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
-
-The following values are valid for this:
-
-* [`hikari.components.TextInputComponent`][]
-"""  # noqa: E501
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
-ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
-"""A modal action row component."""
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
     (
