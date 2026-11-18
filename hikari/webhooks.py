@@ -117,7 +117,7 @@ class ExecutableWebhook(abc.ABC):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds_.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
@@ -480,7 +480,7 @@ class PartialWebhook(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: WebhookType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: WebhookType = attrs.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
     name: str = attrs.field(eq=False, hash=False, repr=True)
