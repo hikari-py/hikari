@@ -83,6 +83,7 @@ class TestGuildAvailableEvent:
             guild=mock.Mock(guilds.Guild),
             emojis={},
             stickers={},
+            soundboard_sounds={},
             roles={},
             channels={},
             members={},

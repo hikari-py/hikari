@@ -229,6 +229,12 @@ class Intents(enums.Flag):
     """Subscribes to the events listed below.
 
     * `GUILD_EMOJIS_UPDATE`
+    * `GUILD_SOUNDBOARD_SOUND_CREATE`
+    * `GUILD_SOUNDBOARD_SOUND_UPDATE`
+    * `GUILD_SOUNDBOARD_SOUND_DELETE`
+    * `GUILD_SOUNDBOARD_SOUNDS_UPDATE`
+
+    Discord calls this intent `GUILD_EXPRESSIONS`.
     """
 
     GUILD_INTEGRATIONS = 1 << 4
@@ -256,6 +262,7 @@ class Intents(enums.Flag):
     """Subscribes to the events listed below.
 
     * `VOICE_STATE_UPDATE`
+    * `VOICE_CHANNEL_EFFECT_SEND`
     """
 
     GUILD_PRESENCES = 1 << 8
