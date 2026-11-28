@@ -149,7 +149,7 @@ class ScheduledEventRecurrenceNWeekday:
     n: int = attrs.field(repr=True)
     """The week within the month to recur on, between 1 and 5."""
 
-    day: ScheduledEventRecurrenceWeekday | int = attrs.field(repr=True)
+    day: ScheduledEventRecurrenceWeekday = attrs.field(repr=True)
     """The day within the week to recur on."""
 
 
@@ -168,7 +168,7 @@ class ScheduledEventRecurrenceRule:
     start: datetime.datetime = attrs.field(repr=True)
     """The starting time of the recurrence interval."""
 
-    frequency: ScheduledEventRecurrenceFrequency | int = attrs.field(repr=True)
+    frequency: ScheduledEventRecurrenceFrequency = attrs.field(repr=True)
     """How often the event occurs."""
 
     interval: int = attrs.field(default=1, repr=True)
@@ -179,13 +179,13 @@ class ScheduledEventRecurrenceRule:
     an `interval` of `2` would be "every-other week".
     """
 
-    by_weekday: typing.Sequence[ScheduledEventRecurrenceWeekday | int] | None = attrs.field(default=None, repr=False)
+    by_weekday: typing.Sequence[ScheduledEventRecurrenceWeekday] | None = attrs.field(default=None, repr=False)
     """The specific days within a week for the event to recur on, if set."""
 
     by_n_weekday: typing.Sequence[ScheduledEventRecurrenceNWeekday] | None = attrs.field(default=None, repr=False)
     """The specific days within specific weeks for the event to recur on, if set."""
 
-    by_month: typing.Sequence[ScheduledEventRecurrenceMonth | int] | None = attrs.field(default=None, repr=False)
+    by_month: typing.Sequence[ScheduledEventRecurrenceMonth] | None = attrs.field(default=None, repr=False)
     """The specific months to recur on, if set."""
 
     by_month_day: typing.Sequence[int] | None = attrs.field(default=None, repr=False)

@@ -153,8 +153,34 @@ _Enum = NotImplemented
 
 class _EnumMeta(type):
     def __call__(cls, value: object) -> Enum:
-        """Cast a value to the enum, returning the raw value that was passed if value not found."""
-        return cls._value_to_member_map_.get(value, value)
+        """Cast a value to the enum, returning an unknown member if the value is not a known one."""
+        objtype = cls.__objtype__
+        if type(value) is not objtype:
+            if not isinstance(value, objtype):
+                msg = f"{cls.__name__} values must be of type {objtype.__name__}, not {type(value).__name__}"
+                raise TypeError(msg)
+
+            # Subclasses such as bool must not end up as the raw value of a cached unknown member.
+            value = objtype(value)
+
+        try:
+            return cls._value_to_member_map_[value]
+        except KeyError:
+            # Discord adds new variants to its enums over time, so unknown values must never
+            # error; they instead become synthetic "unknown members" which keep hold of the
+            # raw value so it can still be introspected and serialized.
+            try:
+                # Try to get a cached value.
+                return cls._temp_members_[value]
+            except KeyError:
+                member = cls.__new__(cls, value)
+                member._name_ = None
+                member._value_ = value
+                cls._temp_members_[value] = member
+                if len(cls._temp_members_) > _MAX_CACHED_MEMBERS:
+                    cls._temp_members_.popitem()
+
+                return member
 
     def __getitem__(cls, name: str) -> Enum:
         try:
@@ -195,6 +221,9 @@ class _EnumMeta(type):
             "__enumtype__": enum_type,
             "_name_to_member_map_": (name_to_member := {}),
             "_value_to_member_map_": (value_to_member := {}),
+            # Cache of unknown members, keyed by the raw value they were created from.
+            # Manually limited in size to avoid consuming masses of memory.
+            "_temp_members_": {},
             "_member_names_": (member_names := []),
             # Required to be immutable by enum API itself.
             "__members__": types.MappingProxyType(namespace.names_to_values),
@@ -306,8 +335,9 @@ class Enum(metaclass=_EnumMeta):
         [`AttributeError`][] if it is not present.
     * `EnumType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
-        has the same __value__. If this fails, you should expect a
-        [`ValueError`][] to be raised.
+        has the same __value__. If this fails, a special __unknown__ member is
+        made which keeps hold of `x` as its value. If `x` is not of the type
+        the enum is derived from, a [`TypeError`][] is raised instead.
 
     Operators on each enum member
     -----------------------------
@@ -323,10 +353,13 @@ class Enum(metaclass=_EnumMeta):
     Special properties on each enum member
     --------------------------------------
     * `name` : [`str`][]
-        The name of the member.
+        The name of the member. For unknown members, this will be generated.
     * `value` :
         The value of the member. The type depends on the implementation type
         of the enum you are using.
+    * `is_unknown` : [`bool`][]
+        Whether the member is an unknown value which is not documented as part
+        of the enum.
 
     All other methods and operators on enum members are inherited from the
     member's __value__. For example, an enum extending [`int`][] would
@@ -335,16 +368,19 @@ class Enum(metaclass=_EnumMeta):
 
     _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Enum]]
     _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Enum]]
+    _temp_members_: typing.ClassVar[typing.Mapping[typing.Any, Enum]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Enum]]
     __objtype__: typing.ClassVar[type[typing.Any]]
     __enumtype__: typing.ClassVar[type[Enum]]
-    _name_: str
+    _name_: str | None
     _value_: typing.Any
 
     @property
     def name(self) -> str:
         """Return the name of the enum member as a [`str`][]."""
+        if self._name_ is None:
+            self._name_ = f"UNKNOWN {self._value_!r}"
         return self._name_
 
     @property
@@ -352,13 +388,18 @@ class Enum(metaclass=_EnumMeta):
         """Return the value of the enum member."""
         return self._value_
 
+    @property
+    def is_unknown(self) -> bool:
+        """Whether the member is an unknown value which is not documented as part of the enum."""
+        return self._value_ not in self._value_to_member_map_
+
     @typing_extensions.override
     def __repr__(self) -> str:
-        return f"<{type(self).__name__}.{self._name_}: {self._value_!r}>"
+        return f"<{type(self).__name__}.{self.name}: {self._value_!r}>"
 
     @typing_extensions.override
     def __str__(self) -> str:
-        return self._name_
+        return self.name
 
 
 _Flag = NotImplemented
@@ -386,10 +427,14 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
 
 class _FlagMeta(type):
     def __call__(cls, value: int = 0) -> Flag:
-        """Cast a value to the flag enum, returning the raw value that was passed if values not found."""
-        # We want to handle value invariantly to avoid issues brought in by different behaviours from sub-classed ints
-        # and floats. This also ensures that .__int__ only returns an invariant int.
-        value = int(value)
+        """Cast a value to the flag enum, generating a pseudo-member for unknown or composite values."""
+        if type(value) is not int:
+            if not isinstance(value, int):
+                msg = f"{cls.__name__} values must be of type int, not {type(value).__name__}"
+                raise TypeError(msg)
+
+            # Sub-classed ints must be handled invariantly, which also ensures .__int__ only returns an invariant int.
+            value = int(value)
         try:
             return cls._value_to_member_map_[value]
         except KeyError:
@@ -584,8 +629,10 @@ class Flag(metaclass=_FlagMeta):
     * `FlagType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, then a special __composite__
-        instance of the type is made. The name of this type is a combination of
-        all members that combine to make the bitwise value.
+        instance of the type is made which keeps hold of the raw bits. Its name
+        is a combination of all documented members that combine to make the
+        bitwise value, with any undocumented bits rendered in hex (or as
+        `UNKNOWN 0x...` if no documented members match).
 
     Operators on each flag member
     -----------------------------
@@ -646,6 +693,9 @@ class Flag(metaclass=_FlagMeta):
         The name of the member. For composite members, this will be generated.
     * `e.value` : [`int`][]
         The value of the member.
+    * `e.is_unknown` : [`bool`][]
+        Whether the value contains any bits which are not documented as part
+        of the flag.
 
     Special members on each flag member
     -----------------------------------
@@ -696,6 +746,11 @@ class Flag(metaclass=_FlagMeta):
     def value(self) -> int:
         """Return the [`int`][] value of the flag."""
         return self._value_
+
+    @property
+    def is_unknown(self) -> bool:
+        """Whether the value contains any bits which are not documented as part of the flag."""
+        return bool(self._value_ & ~self.__class__.__everything__._value_)
 
     def all(self, *flags: Self) -> bool:
         """Check if all of the given flags are part of this value.
