@@ -538,6 +538,7 @@ class TextableChannel(PartialChannel):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        shared_client_theme: undefined.UndefinedOr[messages_.SharedClientTheme] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -614,6 +615,8 @@ class TextableChannel(PartialChannel):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        shared_client_theme
+            If provided, the custom client theme to share through the message.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
@@ -702,6 +705,7 @@ class TextableChannel(PartialChannel):
             components=components,
             embed=embed,
             embeds=embeds,
+            shared_client_theme=shared_client_theme,
             sticker=sticker,
             stickers=stickers,
             nonce=nonce,

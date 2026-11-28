@@ -1720,6 +1720,36 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_shared_client_theme(self, payload: data_binding.JSONObject) -> message_models.SharedClientTheme:
+        """Parse a raw payload from Discord into a shared client theme object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.SharedClientTheme
+            The deserialized shared client theme object.
+        """
+
+    @abc.abstractmethod
+    def serialize_shared_client_theme(self, theme: message_models.SharedClientTheme) -> data_binding.JSONObject:
+        """Serialize a shared client theme object to a json serializable dict.
+
+        Parameters
+        ----------
+        theme
+            The shared client theme object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the shared client theme.
+        """
+
+    @abc.abstractmethod
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
         """Parse a raw payload from Discord into a partial message object.
 
