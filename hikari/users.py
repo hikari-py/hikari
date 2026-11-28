@@ -22,7 +22,17 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("OwnUser", "PartialUser", "PremiumType", "PrimaryGuild", "User", "UserFlag")
+__all__: typing.Sequence[str] = (
+    "Collectibles",
+    "Nameplate",
+    "NameplatePalette",
+    "OwnUser",
+    "PartialUser",
+    "PremiumType",
+    "PrimaryGuild",
+    "User",
+    "UserFlag",
+)
 
 import abc
 import typing
@@ -203,6 +213,72 @@ class AvatarDecoration:
         )
 
 
+@typing.final
+class NameplatePalette(str, enums.Enum):
+    """The background color of a nameplate."""
+
+    CRIMSON = "crimson"
+    """Crimson."""
+
+    BERRY = "berry"
+    """Berry."""
+
+    SKY = "sky"
+    """Sky."""
+
+    TEAL = "teal"
+    """Teal."""
+
+    FOREST = "forest"
+    """Forest."""
+
+    BUBBLE_GUM = "bubble_gum"
+    """Bubble gum."""
+
+    VIOLET = "violet"
+    """Violet."""
+
+    COBALT = "cobalt"
+    """Cobalt."""
+
+    CLOVER = "clover"
+    """Clover."""
+
+    LEMON = "lemon"
+    """Lemon."""
+
+    WHITE = "white"
+    """White."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class Nameplate:
+    """Data for a nameplate collectible."""
+
+    sku_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The ID of the nameplate's SKU."""
+
+    asset: str = attrs.field(repr=True)
+    """The path of the nameplate's asset."""
+
+    label: str = attrs.field(repr=False)
+    """The label of the nameplate.
+
+    As of writing, Discord does not use this.
+    """
+
+    palette: NameplatePalette | str = attrs.field(repr=True)
+    """The background color of the nameplate."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class Collectibles:
+    """The collectibles of a user, excluding avatar decorations and profile effects."""
+
+    nameplate: Nameplate | None = attrs.field(repr=True)
+    """The nameplate of the user, if they have one."""
+
+
 @attrs.define(kw_only=True, weakref_slot=False)
 class PrimaryGuild:
     """Data for the users primary guild."""
@@ -298,6 +374,11 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @abc.abstractmethod
     def avatar_decoration(self) -> undefined.UndefinedNoneOr[AvatarDecoration]:
         """Avatar decoration for the user, if they have one, otherwise [`None`][]."""
+
+    @property
+    @abc.abstractmethod
+    def collectibles(self) -> undefined.UndefinedNoneOr[Collectibles]:
+        """Collectibles of the user, if they have any, otherwise [`None`][]."""
 
     @property
     @abc.abstractmethod
@@ -652,6 +733,12 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     @typing_extensions.override
+    def collectibles(self) -> Collectibles | None:
+        """Collectibles of the user, if they have any, otherwise [`None`][]."""
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
     def avatar_hash(self) -> str | None:
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
@@ -680,6 +767,14 @@ class User(PartialUser, abc.ABC):
         Will be [`None`][] if no avatar decoration is set.
         """
         return self.avatar_decoration
+
+    @property
+    def display_collectibles(self) -> Collectibles | None:
+        """Display collectibles for the user, if they have any set.
+
+        Will be [`None`][] if no collectibles are set.
+        """
+        return self.collectibles
 
     @property
     def display_avatar_url(self) -> files.URL:
@@ -896,6 +991,9 @@ class PartialUserImpl(PartialUser):
     avatar_decoration: undefined.UndefinedNoneOr[AvatarDecoration] = attrs.field(eq=False, hash=False, repr=False)
     """Avatar decoration of the user, if an avatar decoration is set."""
 
+    collectibles: undefined.UndefinedNoneOr[Collectibles] = attrs.field(eq=False, hash=False, repr=False)
+    """Collectibles of the user, if any are set."""
+
     avatar_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
@@ -964,6 +1062,9 @@ class UserImpl(PartialUserImpl, User):
 
     avatar_decoration: AvatarDecoration | None = attrs.field(eq=False, hash=False, repr=False)
     """Avatar decoration of the user, if they have one."""
+
+    collectibles: Collectibles | None = attrs.field(eq=False, hash=False, repr=False)
+    """Collectibles of the user, if they have any."""
 
     avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise [`None`][]."""
