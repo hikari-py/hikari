@@ -363,6 +363,9 @@ POST_DELETE_CHANNEL_MESSAGES_BULK: typing.Final[Route] = Route(POST, "/channels/
 PUT_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(PUT, "/channels/{channel}/permissions/{overwrite}")
 DELETE_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/permissions/{overwrite}")
 
+GET_CHANNEL_MEMBER_PERMISSIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/permissions/member/{user}")
+GET_CHANNEL_ROLE_PERMISSIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/permissions/role/{role}")
+
 GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/pins")
 PUT_CHANNEL_PINS: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/pins/{message}")
 DELETE_CHANNEL_PIN: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/pins/{message}")
@@ -480,6 +483,9 @@ GET_GUILD_MESSAGES_SEARCH: typing.Final[Route] = Route(GET, "/guilds/{guild}/mes
 
 PUT_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(PUT, "/guilds/{guild}/members/{user}/roles/{role}")
 DELETE_GUILD_MEMBER_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/members/{user}/roles/{role}")
+
+GET_GUILD_MEMBER_PERMISSIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/permissions/member/{user}")
+GET_GUILD_ROLE_PERMISSIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/permissions/role/{role}")
 
 GET_GUILD_PREVIEW: typing.Final[Route] = Route(GET, "/guilds/{guild}/preview")
 

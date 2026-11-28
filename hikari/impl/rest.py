@@ -1105,6 +1105,36 @@ class RESTClientImpl(rest_api.RESTClient):
         return result
 
     @typing_extensions.override
+    async def fetch_channel_member_permissions(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+        *,
+        implicit: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> permissions_.Permissions:
+        route = routes.GET_CHANNEL_MEMBER_PERMISSIONS.compile(channel=channel, user=user)
+        query = data_binding.StringMapBuilder()
+        query.put("implicit", implicit)
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
+        return permissions_.Permissions(int(response["permissions"]))
+
+    @typing_extensions.override
+    async def fetch_channel_role_permissions(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        *,
+        implicit: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> permissions_.Permissions:
+        route = routes.GET_CHANNEL_ROLE_PERMISSIONS.compile(channel=channel, role=role)
+        query = data_binding.StringMapBuilder()
+        query.put("implicit", implicit)
+        response = await self._request(route, query=query)
+        assert isinstance(response, dict)
+        return permissions_.Permissions(int(response["permissions"]))
+
+    @typing_extensions.override
     async def edit_channel(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
@@ -3835,6 +3865,15 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
     @typing_extensions.override
+    async def fetch_member_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users_.PartialUser]
+    ) -> permissions_.Permissions:
+        route = routes.GET_GUILD_MEMBER_PERMISSIONS.compile(guild=guild, user=user)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return permissions_.Permissions(int(response["permissions"]))
+
+    @typing_extensions.override
     def fetch_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4193,6 +4232,15 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         guild_id = snowflakes.Snowflake(guild)
         return self._entity_factory.deserialize_role(response, guild_id=guild_id)
+
+    @typing_extensions.override
+    async def fetch_role_permissions(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> permissions_.Permissions:
+        route = routes.GET_GUILD_ROLE_PERMISSIONS.compile(guild=guild, role=role)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return permissions_.Permissions(int(response["permissions"]))
 
     @typing_extensions.override
     async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
