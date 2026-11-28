@@ -23,6 +23,8 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "VoiceChannelEffectAnimationType",
+    "VoiceChannelEffectSendEvent",
     "VoiceChannelStartTimeUpdateEvent",
     "VoiceChannelStatusUpdateEvent",
     "VoiceEvent",
@@ -39,11 +41,13 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import enums
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import emojis as emojis_
     from hikari import snowflakes
     from hikari import traits
     from hikari import voices
@@ -197,3 +201,54 @@ class VoiceChannelStatusUpdateEvent(VoiceEvent):
 
     This will be [`None`][] if the status was removed.
     """
+
+
+@typing.final
+class VoiceChannelEffectAnimationType(int, enums.Enum):
+    """The type of animation of a voice channel effect."""
+
+    PREMIUM = 0
+    """A fun animation, sent by a Nitro subscriber."""
+
+    BASIC = 1
+    """The standard animation."""
+
+
+@base_events.requires_intents(intents.Intents.GUILD_VOICE_STATES)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class VoiceChannelEffectSendEvent(VoiceEvent):
+    """Event fired when someone sends an effect in a voice channel the bot is connected to.
+
+    Effects are emoji reactions and soundboard sounds.
+    """
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    # <<inherited docstring from VoiceEvent>>
+
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the voice channel the effect was sent in."""
+
+    user_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the user who sent the effect."""
+
+    emoji: emojis_.Emoji | None = attrs.field(repr=True)
+    """The emoji of an emoji reaction or soundboard effect, if any."""
+
+    animation_type: VoiceChannelEffectAnimationType | int | None = attrs.field(repr=False)
+    """The animation type of an emoji reaction or soundboard effect, if any."""
+
+    animation_id: int | None = attrs.field(repr=False)
+    """ID of the emoji animation of an emoji reaction or soundboard effect, if any."""
+
+    sound_id: snowflakes.Snowflake | None = attrs.field(repr=True)
+    """ID of the soundboard sound of a soundboard effect, if any."""
+
+    sound_volume: float | None = attrs.field(repr=False)
+    """Volume of the soundboard sound of a soundboard effect, from 0 to 1, if any."""
