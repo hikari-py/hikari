@@ -42,6 +42,7 @@ from hikari import undefined
 from hikari.api import special_endpoints as special_endpoints_api
 from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
+from hikari.internal import deprecation
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
@@ -2188,10 +2189,28 @@ class TestChannelSelectMenuBuilder:
 class TestTextInput:
     @pytest.fixture
     def text_input(self):
-        return special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
+        return special_endpoints.TextInputBuilder(custom_id="o2o2o2")
 
     def test_type_property(self, text_input):
         assert text_input.type is components.ComponentType.TEXT_INPUT
+
+    def test_init_with_label_warns(self):
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            text_input = special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
+
+        assert text_input.label == "label"
+        warn_deprecated.assert_called_once_with(
+            "TextInputBuilder.label",
+            removal_version="2.9.0",
+            additional_info="Wrap the text input in a 'LabelComponentBuilder' instead.",
+            stack_level=5,
+        )
+
+    def test_init_without_label_does_not_warn(self):
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            special_endpoints.TextInputBuilder(custom_id="o2o2o2")
+
+        warn_deprecated.assert_not_called()
 
     def test_set_style(self, text_input):
         assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
@@ -2202,8 +2221,23 @@ class TestTextInput:
         assert text_input.custom_id == "custooom"
 
     def test_set_label(self, text_input):
-        assert text_input.set_label("labeeeel") is text_input
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            assert text_input.set_label("labeeeel") is text_input
+
         assert text_input.label == "labeeeel"
+        warn_deprecated.assert_called_once_with(
+            "TextInputBuilder.label",
+            removal_version="2.9.0",
+            additional_info="Wrap the text input in a 'LabelComponentBuilder' instead.",
+            stack_level=4,
+        )
+
+    def test_set_label_to_undefined_does_not_warn(self, text_input):
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            assert text_input.set_label(undefined.UNDEFINED) is text_input
+
+        assert text_input.label is undefined.UNDEFINED
+        warn_deprecated.assert_not_called()
 
     def test_set_placeholder(self, text_input):
         assert text_input.set_placeholder("place") is text_input
@@ -2226,7 +2260,7 @@ class TestTextInput:
         assert text_input.max_length == 250
 
     def test_build_partial(self):
-        text_input = special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
+        text_input = special_endpoints.TextInputBuilder(custom_id="o2o2o2")
 
         payload, attachments = text_input.build()
 
@@ -2234,7 +2268,6 @@ class TestTextInput:
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
-            "label": "label",
             "required": True,
             "min_length": 0,
             "max_length": 4000,
@@ -3076,6 +3109,17 @@ class TestFileUploadBuilder:
 
 
 class TestModalActionRow:
+    def test_init_warns(self):
+        with mock.patch.object(deprecation, "warn_deprecated") as warn_deprecated:
+            special_endpoints.ModalActionRowBuilder()
+
+        warn_deprecated.assert_called_once_with(
+            "ModalActionRowBuilder",
+            removal_version="2.9.0",
+            additional_info="Use 'LabelComponentBuilder' instead.",
+            stack_level=4,
+        )
+
     def test_type_property(self):
         row = special_endpoints.ModalActionRowBuilder()
 
@@ -3083,7 +3127,7 @@ class TestModalActionRow:
 
     def test_add_text_input(self):
         row = special_endpoints.ModalActionRowBuilder()
-        menu = row.add_text_input(
+        row.add_text_input(
             "hihihi",
             "lalbell",
             style=components.TextInputStyle.PARAGRAPH,
