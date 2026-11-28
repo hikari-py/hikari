@@ -27,6 +27,10 @@ __all__: typing.Sequence[str] = (
     "EntitlementDeleteEvent",
     "EntitlementEvent",
     "EntitlementUpdateEvent",
+    "SubscriptionCreateEvent",
+    "SubscriptionDeleteEvent",
+    "SubscriptionEvent",
+    "SubscriptionUpdateEvent",
 )
 
 import typing
@@ -76,5 +80,45 @@ class EntitlementDeleteEvent(EntitlementEvent):
     fired when a refund is issued by Discord or Discord removes the
     entitlement from a user via internal tooling.
     """
+
+    __slots__: typing.Sequence[str] = ()
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class SubscriptionEvent(shard_events.ShardEvent):
+    """Base class related to subscription change events."""
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    subscription: monetization.Subscription = attrs.field()
+    """The subscription that changed."""
+
+
+class SubscriptionCreateEvent(SubscriptionEvent):
+    """Event fired when a subscription for a premium app is created.
+
+    The subscription's status can be either inactive or active when this
+    event is received. Subsequent [`hikari.events.monetization_events.SubscriptionUpdateEvent`][]s
+    will be fired if the status is updated to active. As a best practice,
+    perks should not be granted to users until their entitlements are
+    created.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+
+class SubscriptionUpdateEvent(SubscriptionEvent):
+    """Event fired when a subscription for a premium app is updated."""
+
+    __slots__: typing.Sequence[str] = ()
+
+
+class SubscriptionDeleteEvent(SubscriptionEvent):
+    """Event fired when a subscription for a premium app is deleted."""
 
     __slots__: typing.Sequence[str] = ()
