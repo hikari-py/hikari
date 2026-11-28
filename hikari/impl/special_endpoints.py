@@ -35,6 +35,7 @@ __all__: typing.Sequence[str] = (
     "AutoModSendAlertMessageActionBuilder",
     "AutoModSpamTriggerBuilder",
     "AutoModTimeoutActionBuilder",
+    "AutoPopulatedSelectMenuBuilder",
     "AutocompleteChoiceBuilder",
     "ChannelSelectMenuBuilder",
     "CommandBuilder",
@@ -49,11 +50,13 @@ __all__: typing.Sequence[str] = (
     "LinkButtonBuilder",
     "MediaGalleryComponentBuilder",
     "MediaGalleryItemBuilder",
+    "MentionableSelectMenuBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
     "PollAnswerBuilder",
     "PollBuilder",
     "PremiumButtonBuilder",
+    "RoleSelectMenuBuilder",
     "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
@@ -65,6 +68,7 @@ __all__: typing.Sequence[str] = (
     "ThreadMembersIterator",
     "ThumbnailComponentBuilder",
     "TypingIndicator",
+    "UserSelectMenuBuilder",
 )
 
 import abc
@@ -90,6 +94,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -2229,8 +2234,317 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         return payload, attachments
 
 
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoPopulatedSelectMenuBuilder(SelectMenuBuilder, special_endpoints.AutoPopulatedSelectMenuBuilder):
+    """Base class for builders of select menus whose options are populated by Discord."""
+
+    _default_values: undefined.UndefinedOr[typing.Sequence[component_models.SelectDefaultValue]] = attrs.field(
+        alias="default_values", default=undefined.UNDEFINED
+    )
+
+    @property
+    @typing_extensions.override
+    def default_values(self) -> undefined.UndefinedOr[typing.Sequence[component_models.SelectDefaultValue]]:
+        return self._default_values
+
+    @typing_extensions.override
+    def set_default_values(
+        self, values: undefined.UndefinedOr[typing.Sequence[component_models.SelectDefaultValue]], /
+    ) -> Self:
+        self._default_values = values
+        return self
+
+    def _add_default_value(
+        self, type_: component_models.SelectDefaultValueType, entity: snowflakes.SnowflakeishOr[snowflakes.Unique], /
+    ) -> Self:
+        value = component_models.SelectDefaultValue(id=snowflakes.Snowflake(entity), type=type_)
+        self._default_values = (
+            [value] if self._default_values is undefined.UNDEFINED else [*self._default_values, value]
+        )
+        return self
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload, attachments = super().build()
+
+        if self._default_values is not undefined.UNDEFINED:
+            payload["default_values"] = [{"id": str(value.id), "type": value.type} for value in self._default_values]
+
+        return payload, attachments
+
+
 @attrs.define(init=False, weakref_slot=False)
-class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder[_ParentT_co]):
+class UserSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, special_endpoints.UserSelectMenuBuilder[_ParentT_co]):
+    """Builder class for user select menus."""
+
+    _parent: _ParentT_co | None = attrs.field()
+    _type: typing.Literal[component_models.ComponentType.USER_SELECT_MENU] = attrs.field()
+
+    if not typing.TYPE_CHECKING:
+        # This will not work with the generated for attrs copy methods.
+        __copy__ = None
+        __deepcopy__ = None
+
+    @typing.overload
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    @typing.overload
+    def __init__(
+        self: UserSelectMenuBuilder[typing.NoReturn],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co | None = None,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        super().__init__(
+            type=component_models.ComponentType.USER_SELECT_MENU,
+            id=id,
+            custom_id=custom_id,
+            default_values=default_values,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+            is_required=is_required,
+        )
+        self._parent = parent
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> _ParentT_co:
+        if self._parent is None:
+            msg = "This menu has no parent"
+            raise RuntimeError(msg)
+
+        return self._parent
+
+    @typing_extensions.override
+    def add_default_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> Self:
+        return self._add_default_value(component_models.SelectDefaultValueType.USER, user)
+
+
+@attrs.define(init=False, weakref_slot=False)
+class RoleSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, special_endpoints.RoleSelectMenuBuilder[_ParentT_co]):
+    """Builder class for role select menus."""
+
+    _parent: _ParentT_co | None = attrs.field()
+    _type: typing.Literal[component_models.ComponentType.ROLE_SELECT_MENU] = attrs.field()
+
+    if not typing.TYPE_CHECKING:
+        # This will not work with the generated for attrs copy methods.
+        __copy__ = None
+        __deepcopy__ = None
+
+    @typing.overload
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    @typing.overload
+    def __init__(
+        self: RoleSelectMenuBuilder[typing.NoReturn],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co | None = None,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        super().__init__(
+            type=component_models.ComponentType.ROLE_SELECT_MENU,
+            id=id,
+            custom_id=custom_id,
+            default_values=default_values,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+            is_required=is_required,
+        )
+        self._parent = parent
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> _ParentT_co:
+        if self._parent is None:
+            msg = "This menu has no parent"
+            raise RuntimeError(msg)
+
+        return self._parent
+
+    @typing_extensions.override
+    def add_default_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> Self:
+        return self._add_default_value(component_models.SelectDefaultValueType.ROLE, role)
+
+
+@attrs.define(init=False, weakref_slot=False)
+class MentionableSelectMenuBuilder(
+    AutoPopulatedSelectMenuBuilder, special_endpoints.MentionableSelectMenuBuilder[_ParentT_co]
+):
+    """Builder class for mentionable select menus."""
+
+    _parent: _ParentT_co | None = attrs.field()
+    _type: typing.Literal[component_models.ComponentType.MENTIONABLE_SELECT_MENU] = attrs.field()
+
+    if not typing.TYPE_CHECKING:
+        # This will not work with the generated for attrs copy methods.
+        __copy__ = None
+        __deepcopy__ = None
+
+    @typing.overload
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    @typing.overload
+    def __init__(
+        self: MentionableSelectMenuBuilder[typing.NoReturn],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        custom_id: str,
+        parent: _ParentT_co | None = None,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        is_required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> None:
+        super().__init__(
+            type=component_models.ComponentType.MENTIONABLE_SELECT_MENU,
+            id=id,
+            custom_id=custom_id,
+            default_values=default_values,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+            is_required=is_required,
+        )
+        self._parent = parent
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> _ParentT_co:
+        if self._parent is None:
+            msg = "This menu has no parent"
+            raise RuntimeError(msg)
+
+        return self._parent
+
+    @typing_extensions.override
+    def add_default_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> Self:
+        return self._add_default_value(component_models.SelectDefaultValueType.USER, user)
+
+    @typing_extensions.override
+    def add_default_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> Self:
+        return self._add_default_value(component_models.SelectDefaultValueType.ROLE, role)
+
+
+@attrs.define(init=False, weakref_slot=False)
+class ChannelSelectMenuBuilder(AutoPopulatedSelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder[_ParentT_co]):
     """Builder class for channel select menus."""
 
     _channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = attrs.field()
@@ -2250,6 +2564,9 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
         custom_id: str,
         parent: _ParentT_co,
         channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -2264,6 +2581,9 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         custom_id: str,
         channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -2278,6 +2598,9 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
         custom_id: str,
         parent: _ParentT_co | None = None,
         channel_types: undefined.UndefinedOr[typing.Sequence[channels.ChannelType]] = undefined.UNDEFINED,
+        default_values: undefined.UndefinedOr[
+            typing.Sequence[component_models.SelectDefaultValue]
+        ] = undefined.UNDEFINED,
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
@@ -2288,6 +2611,7 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
             type=component_models.ComponentType.CHANNEL_SELECT_MENU,
             id=id,
             custom_id=custom_id,
+            default_values=default_values,
             placeholder=placeholder,
             min_values=min_values,
             max_values=max_values,
@@ -2305,6 +2629,10 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
             raise RuntimeError(msg)
 
         return self._parent
+
+    @typing_extensions.override
+    def add_default_channel(self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /) -> Self:
+        return self._add_default_value(component_models.SelectDefaultValueType.CHANNEL, channel)
 
     @property
     @typing_extensions.override
@@ -2542,6 +2870,11 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
+        deprecation.warn_deprecated(
+            "MessageActionRowBuilder.add_select_menu",
+            removal_version="2.9.0",
+            additional_info="Use 'add_user_menu', 'add_role_menu' or 'add_mentionable_menu' instead.",
+        )
         return self.add_component(
             SelectMenuBuilder(
                 type=type_,
@@ -2593,6 +2926,78 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            parent=self,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+        )
+        self.add_component(component)
+        return component
+
+    @typing_extensions.override
+    def add_user_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> special_endpoints.UserSelectMenuBuilder[Self]:
+        component = UserSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            parent=self,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+        )
+        self.add_component(component)
+        return component
+
+    @typing_extensions.override
+    def add_role_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> special_endpoints.RoleSelectMenuBuilder[Self]:
+        component = RoleSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            parent=self,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+        )
+        self.add_component(component)
+        return component
+
+    @typing_extensions.override
+    def add_mentionable_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        max_values: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        is_disabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> special_endpoints.MentionableSelectMenuBuilder[Self]:
+        component = MentionableSelectMenuBuilder(
             id=id,
             custom_id=custom_id,
             parent=self,

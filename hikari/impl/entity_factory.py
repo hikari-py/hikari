@@ -73,6 +73,9 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     ValueT = typing.TypeVar("ValueT")
     EntityT = typing.TypeVar("EntityT")
+    AutoPopulatedSelectMenuT = typing.TypeVar(
+        "AutoPopulatedSelectMenuT", bound=component_models.AutoPopulatedSelectMenuComponent
+    )
     UndefinedSnowflakeMapping = undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, EntityT]]
 
 
@@ -567,9 +570,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             component_models.ComponentType.BUTTON: self._deserialize_button,
             component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_text_select_menu,
-            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_user_select_menu,
+            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_role_select_menu,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_mentionable_select_menu,
             component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
         }
         self._top_level_components_mapping: dict[
@@ -3515,16 +3518,44 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
-        return component_models.SelectMenuComponent(
+    def _deserialize_select_default_values(
+        self, payload: data_binding.JSONObject
+    ) -> list[component_models.SelectDefaultValue]:
+        return [
+            component_models.SelectDefaultValue(
+                id=snowflakes.Snowflake(value["id"]), type=component_models.SelectDefaultValueType(value["type"])
+            )
+            for value in payload.get("default_values", ())
+        ]
+
+    def _deserialize_auto_populated_select_menu(
+        self, cls: type[AutoPopulatedSelectMenuT], payload: data_binding.JSONObject
+    ) -> AutoPopulatedSelectMenuT:
+        return cls(
             type=component_models.ComponentType(payload["type"]),
             id=payload["id"],
             custom_id=payload["custom_id"],
             placeholder=payload.get("placeholder"),
+            default_values=self._deserialize_select_default_values(payload),
             min_values=payload.get("min_values", 1),
             max_values=payload.get("max_values", 1),
             is_disabled=payload.get("disabled", False),
         )
+
+    def _deserialize_user_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.UserSelectMenuComponent:
+        return self._deserialize_auto_populated_select_menu(component_models.UserSelectMenuComponent, payload)
+
+    def _deserialize_role_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.RoleSelectMenuComponent:
+        return self._deserialize_auto_populated_select_menu(component_models.RoleSelectMenuComponent, payload)
+
+    def _deserialize_mentionable_select_menu(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.MentionableSelectMenuComponent:
+        return self._deserialize_auto_populated_select_menu(component_models.MentionableSelectMenuComponent, payload)
 
     def _deserialize_text_select_menu(
         self, payload: data_binding.JSONObject
@@ -3570,6 +3601,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_id=payload["custom_id"],
             channel_types=channel_types,
             placeholder=payload.get("placeholder"),
+            default_values=self._deserialize_select_default_values(payload),
             min_values=payload.get("min_values", 1),
             max_values=payload.get("max_values", 1),
             is_disabled=payload.get("disabled", False),

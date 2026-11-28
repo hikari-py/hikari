@@ -6266,6 +6266,105 @@ class TestEntityFactoryImpl:
         assert menu.is_disabled is False
 
     @pytest.fixture
+    def auto_populated_select_menu_payload(self):
+        return {
+            "type": 7,
+            "id": 9830742,
+            "custom_id": "pick mentionables",
+            "placeholder": "Pick some mentionables",
+            "default_values": [
+                {"id": "115590097100865541", "type": "user"},
+                {"id": "41771983423143936", "type": "role"},
+            ],
+            "min_values": 2,
+            "max_values": 5,
+            "disabled": True,
+        }
+
+    @pytest.mark.parametrize(
+        ("type_", "method", "expected_cls"),
+        [
+            (5, "_deserialize_user_select_menu", component_models.UserSelectMenuComponent),
+            (6, "_deserialize_role_select_menu", component_models.RoleSelectMenuComponent),
+            (7, "_deserialize_mentionable_select_menu", component_models.MentionableSelectMenuComponent),
+        ],
+    )
+    def test__deserialize_auto_populated_select_menus(
+        self, entity_factory_impl, auto_populated_select_menu_payload, type_, method, expected_cls
+    ):
+        auto_populated_select_menu_payload["type"] = type_
+
+        menu = getattr(entity_factory_impl, method)(auto_populated_select_menu_payload)
+
+        assert menu.type == type_
+        assert menu.id == 9830742
+        assert menu.custom_id == "pick mentionables"
+        assert menu.placeholder == "Pick some mentionables"
+        assert menu.default_values == [
+            component_models.SelectDefaultValue(
+                id=snowflakes.Snowflake(115590097100865541), type=component_models.SelectDefaultValueType.USER
+            ),
+            component_models.SelectDefaultValue(
+                id=snowflakes.Snowflake(41771983423143936), type=component_models.SelectDefaultValueType.ROLE
+            ),
+        ]
+        assert menu.min_values == 2
+        assert menu.max_values == 5
+        assert menu.is_disabled is True
+        assert isinstance(menu, expected_cls)
+
+    def test__deserialize_auto_populated_select_menus_partial(self, entity_factory_impl):
+        menu = entity_factory_impl._deserialize_user_select_menu({"type": 5, "id": 0, "custom_id": "pick users"})
+
+        assert menu.placeholder is None
+        assert menu.default_values == []
+        assert menu.min_values == 1
+        assert menu.max_values == 1
+        assert menu.is_disabled is False
+
+    @pytest.fixture
+    def channel_select_menu_payload(self):
+        return {
+            "type": 8,
+            "id": 9830743,
+            "custom_id": "pick channels",
+            "channel_types": [0, 2],
+            "placeholder": "Pick some channels",
+            "default_values": [{"id": "695382395666300958", "type": "channel"}],
+            "min_values": 1,
+            "max_values": 3,
+            "disabled": False,
+        }
+
+    def test__deserialize_channel_select_menu(self, entity_factory_impl, channel_select_menu_payload):
+        menu = entity_factory_impl._deserialize_channel_select_menu(channel_select_menu_payload)
+
+        assert menu.type is component_models.ComponentType.CHANNEL_SELECT_MENU
+        assert menu.id == 9830743
+        assert menu.custom_id == "pick channels"
+        assert menu.channel_types == [channel_models.ChannelType.GUILD_TEXT, channel_models.ChannelType.GUILD_VOICE]
+        assert menu.placeholder == "Pick some channels"
+        assert menu.default_values == [
+            component_models.SelectDefaultValue(
+                id=snowflakes.Snowflake(695382395666300958), type=component_models.SelectDefaultValueType.CHANNEL
+            )
+        ]
+        assert menu.min_values == 1
+        assert menu.max_values == 3
+        assert menu.is_disabled is False
+        assert isinstance(menu, component_models.ChannelSelectMenuComponent)
+
+    def test__deserialize_channel_select_menu_partial(self, entity_factory_impl):
+        menu = entity_factory_impl._deserialize_channel_select_menu({"type": 8, "id": 0, "custom_id": "pick channels"})
+
+        assert menu.channel_types == []
+        assert menu.placeholder is None
+        assert menu.default_values == []
+        assert menu.min_values == 1
+        assert menu.max_values == 1
+        assert menu.is_disabled is False
+
+    @pytest.fixture
     def text_input_payload(self):
         return {"type": 4, "id": 3904875, "custom_id": "name", "value": "Wumpus"}
 
@@ -6624,9 +6723,9 @@ class TestEntityFactoryImpl:
         [
             (2, "_deserialize_button", "_message_component_type_mapping"),
             (3, "_deserialize_text_select_menu", "_message_component_type_mapping"),
-            (5, "_deserialize_select_menu", "_message_component_type_mapping"),
-            (6, "_deserialize_select_menu", "_message_component_type_mapping"),
-            (7, "_deserialize_select_menu", "_message_component_type_mapping"),
+            (5, "_deserialize_user_select_menu", "_message_component_type_mapping"),
+            (6, "_deserialize_role_select_menu", "_message_component_type_mapping"),
+            (7, "_deserialize_mentionable_select_menu", "_message_component_type_mapping"),
             (8, "_deserialize_channel_select_menu", "_message_component_type_mapping"),
         ],
     )
