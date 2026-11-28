@@ -549,6 +549,21 @@ class TestGatewayBot:
 
         loop.set_debug.assert_called_once_with(True)
 
+    def test_run_with_loop_factory(self, bot):
+        loop_factory = mock.Mock()
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
+        stack.enter_context(
+            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
+        )
+        get_or_make_loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
+
+        with stack:
+            bot.run(close_loop=False, loop_factory=loop_factory)
+
+        get_or_make_loop.assert_called_once_with(loop_factory=loop_factory)
+
     def test_run_with_coroutine_tracking_depth(self, bot):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
